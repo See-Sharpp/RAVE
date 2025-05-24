@@ -28,6 +28,7 @@ namespace WpfApp2
         private string outputFilePath = "temp_voice_input.wav";
         private TaskCompletionSource<bool> recordingStoppedTcs;
         private static string api = null;
+        private WakeWordHelper? _wakeWordDetector;
 
         readonly string[] excludedPaths = new string[]
         {
@@ -49,8 +50,24 @@ namespace WpfApp2
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
                 .Build();
+
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
+
+            _wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
+            Task.Run(() => _wakeWordDetector.Start()); 
+
+
         }
+
+        private void OnWakeWordDetected()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                System.Windows.MessageBox.Show("Hey Rave Detected!");
+               // ToggleVoice_Click(this, new RoutedEventArgs());
+            });
+        }
+
 
 
         private void SetupTrayIcon()
@@ -134,6 +151,33 @@ namespace WpfApp2
 
         private void StartRecording()
         {
+
+            if (waveIn != null)
+            {
+                waveIn.DataAvailable -= WaveIn_DataAvailable;
+                waveIn.RecordingStopped -= WaveIn_RecordingStopped;
+                waveIn.StopRecording();
+                waveIn.Dispose();
+                waveIn = null;
+            }
+
+            if(writer != null)
+            {
+                writer.Dispose();
+                writer = null;
+            }
+            if (File.Exists(outputFilePath))
+            {
+                try
+                {
+                    File.Delete(outputFilePath);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Error deleting existing file: {ex.Message}");
+                }
+            }
+
             waveIn = new WaveInEvent();
             waveIn.WaveFormat = new WaveFormat(16000, 1); 
             recordingStoppedTcs = new TaskCompletionSource<bool>();
@@ -143,11 +187,13 @@ namespace WpfApp2
             };
             waveIn.RecordingStopped += (s, a) =>
             {
-                writer.Dispose();
-                writer = null;
-                waveIn.Dispose();
+                if (writer != null) { 
+                    writer?.Dispose();
+                    writer = null;
+                }
+                waveIn?.Dispose();
                 waveIn = null;
-                recordingStoppedTcs.SetResult(true);
+                recordingStoppedTcs?.TrySetResult(true);
             };
 
             writer = new WaveFileWriter(outputFilePath, waveIn.WaveFormat);
@@ -156,12 +202,31 @@ namespace WpfApp2
 
 
         private async Task StopRecording()
-        { 
-            waveIn?.StopRecording();
-            if (recordingStoppedTcs != null)
+        {
+            if (waveIn != null)
             {
-                await recordingStoppedTcs.Task;
+                waveIn?.StopRecording();
+                if (recordingStoppedTcs != null)
+                {
+                    await recordingStoppedTcs.Task.ConfigureAwait(false);
+                }
             }
+        }
+
+        private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
+        {
+            writer?.Write(e.Buffer, 0, e.BytesRecorded);
+        }
+
+        private void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
+        {
+            writer?.Dispose();
+            writer = null;
+
+            waveIn?.Dispose();
+            waveIn = null;
+
+            recordingStoppedTcs.SetResult(true);
         }
 
 
