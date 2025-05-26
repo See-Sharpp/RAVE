@@ -1,5 +1,5 @@
 ﻿<mah:MetroWindow
-    x:Class="WpfApp2.MainWindow"
+    x:Class="WpfApp2.SignUp"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
@@ -48,7 +48,7 @@
                     TextAlignment="Center"
                     Margin="0,0,0,16"/>
                 <TextBlock
-                    Text="Secure Login Portal"
+                    Text="Secure Sign Up Portal"
                     FontFamily="Roboto"
                     FontSize="18"
                     FontWeight="Regular"
@@ -79,7 +79,7 @@
                 <StackPanel>
                     <!-- Header -->
                     <TextBlock
-                        Text="Welcome. Please log in"
+                        Text="Let's get started."
                         FontFamily="Poppins"
                         FontSize="30"
                         FontWeight="SemiBold"
@@ -87,7 +87,7 @@
                         Margin="0,0,0,28"
                         HorizontalAlignment="Center"/>
 
-                    <!-- Username Field -->
+                    <!-- Email Field -->
                     <Grid Margin="0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -126,11 +126,54 @@
                                 FontSize="16"
                                 Foreground="#F3F4F6"
                                 VerticalContentAlignment="Center"
-                                mah:TextBoxHelper.Watermark="Email or Username"
+                                mah:TextBoxHelper.Watermark="Username"
                                 Style="{DynamicResource MahApps.Styles.TextBox}"/>
                         </Border>
                     </Grid>
 
+                    <Grid Margin="0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <fa:IconImage
+                            Icon="Envelope"
+                            Width="22"
+                            Height="22"
+                            Margin="0,0,10,0"
+                            VerticalAlignment="Center"
+                            Foreground="#60A5FA"
+                            Grid.Column="0">
+                            <fa:IconImage.Style>
+                                <Style TargetType="fa:IconImage">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#93C5FD"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </fa:IconImage.Style>
+                        </fa:IconImage>
+                        <Border
+                            Grid.Column="1"
+                            Background="#26FFFFFF"
+                            CornerRadius="10"
+                            Padding="12"
+                            BorderBrush="#4B5563"
+                            BorderThickness="1">
+                            <TextBox
+                                x:Name="email"
+                                BorderThickness="0"
+                                Background="Transparent"
+                                FontFamily="Roboto"
+                                FontSize="16"
+                                Foreground="#F3F4F6"
+                                VerticalContentAlignment="Center"
+                                mah:TextBoxHelper.Watermark="Email"
+                                Style="{DynamicResource MahApps.Styles.TextBox}"/>
+                        </Border>
+                    </Grid>
+                    
                     <!-- Password Field -->
                     <Grid Margin="0,10">
                         <Grid.ColumnDefinitions>
@@ -156,7 +199,6 @@
                             </fa:IconImage.Style>
                         </fa:IconImage>
                         <Border
-                            Margin="0,0,0,8"
                             Grid.Column="1"
                             Background="#26FFFFFF"
                             CornerRadius="10"
@@ -176,26 +218,15 @@
                         </Border>
                     </Grid>
 
-                    <!-- Remember Me + Forgot Password -->
-                    <StackPanel
-                        Margin="0,0"
-                        Orientation="Vertical">
-                        <CheckBox
-                            Content="Remember Me"
-                            FontFamily="Roboto"
-                            FontSize="14"
-                            Foreground="#D1D5DB"
-                            IsChecked="True"
-                            Margin="0,0,0,10"/>
-                    </StackPanel>
+                  
 
-                    <!-- Login Button -->
+                    <!-- Sign Button -->
                     <Button
-                        Content="Sign In"
+                        Content="Sign Up"
                         Height="44"
-                        Margin="0,8,0,0"
+                        Margin="0,20,0,0"
                         Foreground="#F3F4F6"
-                        Click="Login"
+                        Click="Sign_Up"
                         Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button}">
@@ -237,14 +268,14 @@
                         FontFamily="Roboto"
                         FontSize="13"
                         Foreground="#D1D5DB">
-                        Don’t have an account?
+                        Already have an account?
                        <Hyperlink
                             Foreground="#60A5FA"
                             NavigateUri="#"
                             Cursor="Hand"
                             TextDecorations="None"
-                            Click="Sign_Up">
-                            Sign Up
+                            Click="login_page">
+                            Login
                         </Hyperlink>
                     </TextBlock>
                 </StackPanel>

@@ -4,6 +4,7 @@
                       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                       xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
                       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                      WindowState="Maximized"
                       Title="RAVE" Height="600" Width="1000" Background="#121212">
 
     <Controls:MetroWindow.Resources>

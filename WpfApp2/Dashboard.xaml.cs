@@ -14,7 +14,7 @@ using System.Windows.Controls; // Added for Page
 
 namespace WpfApp2
 {
-    public partial class Dashboard : Page // Changed to Page
+    public partial class Dashboard : Page 
     {
         DriveInfo[] drives = DriveInfo.GetDrives();
         List<string> allExeFiles = new List<string>();
@@ -62,10 +62,6 @@ namespace WpfApp2
                 // ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
             });
         }
-
-        // Removed SetupTrayIcon() method
-        // Removed OnClosing() override
-
         private async void ToggleVoice_Click(object sender, RoutedEventArgs e)
         {
             CommandInput.Clear();
