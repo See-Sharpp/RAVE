@@ -6,6 +6,17 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE2.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="bin\Debug\net8.0-windows\model\HEY_RAVE.onnx" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- These versions match what you said you have installed -->
@@ -14,7 +25,7 @@
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
 		<PackageReference Include="GroqSharp" Version="1.1.2" />
 		<PackageReference Include="MahApps.Metro" Version="2.4.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
+		<PackageReference Include="MahApps.Metro.IconPacks" Version="5.1.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.5" />

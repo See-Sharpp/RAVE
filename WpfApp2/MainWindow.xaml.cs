@@ -17,7 +17,7 @@ namespace WpfApp2
             // Authenticate logic here
             MessageBox.Show($"Logging in as {user}");
 
-            Dashboard dashboard = new Dashboard();
+            Navbar dashboard = new Navbar();
             dashboard.Show();
             this.Close();
         }

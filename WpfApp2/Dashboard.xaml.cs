@@ -1,5 +1,4 @@
-﻿using MahApps.Metro.Controls;
-using NAudio.Wave;
+﻿using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,23 +9,23 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
-using System.Windows.Forms;
-using System.Drawing;
 using Microsoft.Extensions.Configuration;
+using System.Windows.Controls; // Added for Page
 
 namespace WpfApp2
 {
-    public partial class Dashboard : MetroWindow
+    public partial class Dashboard : Page // Changed to Page
     {
         DriveInfo[] drives = DriveInfo.GetDrives();
         List<string> allExeFiles = new List<string>();
         List<List<string>> metadata = new List<List<string>>();
 
-        private NotifyIcon _notifyIcon=null!;
+        // Removed NotifyIcon field from here
+
         private WaveInEvent? waveIn;
         private WaveFileWriter? writer;
         private string outputFilePath = "temp_voice_input.wav";
-        private TaskCompletionSource<bool> recordingStoppedTcs;
+        private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>(); // Initialize to avoid null reference
         private static string api = null;
         private WakeWordHelper? _wakeWordDetector;
 
@@ -39,12 +38,11 @@ namespace WpfApp2
             @"C:\Recovery"
         };
 
-       
-
         public Dashboard()
         {
             InitializeComponent();
-            SetupTrayIcon();
+            // Removed SetupTrayIcon() call from here
+
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
@@ -52,10 +50,8 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            //_wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
-            //Task.Run(() => _wakeWordDetector.Start()); 
-
-
+            _wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
+            Task.Run(() => _wakeWordDetector.Start());
         }
 
         private void OnWakeWordDetected()
@@ -63,57 +59,15 @@ namespace WpfApp2
             Dispatcher.Invoke(() =>
             {
                 System.Windows.MessageBox.Show("Hey Rave Detected!");
-               // ToggleVoice_Click(this, new RoutedEventArgs());
+                // ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
             });
         }
 
+        // Removed SetupTrayIcon() method
+        // Removed OnClosing() override
 
-
-        private void SetupTrayIcon()
+        private async void ToggleVoice_Click(object sender, RoutedEventArgs e)
         {
-            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
-            _notifyIcon = new NotifyIcon
-            {
-                Icon = new Icon(iconPath), 
-                Visible = true,
-                Text = "RAVE"
-            };
-        
-            _notifyIcon.MouseClick += (s, e) =>
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    this.Show();
-                    this.WindowState = WindowState.Normal;
-                    this.Activate();
-                }
-            };
-
-            var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("Show", null, (s, e) =>
-            {
-                this.Show();
-                this.WindowState = WindowState.Maximized;
-                this.Activate();
-            });
-            contextMenu.Items.Add("Exit", null, (s, e) =>
-            {
-                _notifyIcon.Visible = false;
-                System.Windows.Application.Current.Shutdown();
-            });
-            _notifyIcon.ContextMenuStrip = contextMenu;
-        }
-
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
-        {
-           e.Cancel = true;
-            this.Hide(); 
-            _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
-        }
-
-        private async void  ToggleVoice_Click(object sender, RoutedEventArgs e)
-        {
-            
             CommandInput.Clear();
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
@@ -126,14 +80,12 @@ namespace WpfApp2
             CommandInput.Clear();
             CommandInput.AppendText(result);
             System.Windows.MessageBox.Show(result);
-
         }
 
         private async Task<string> TranscribeAsync(string audioFilePath)
         {
             using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",api);
-
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
 
             using var form = new MultipartFormDataContent();
             var fileContent = new ByteArrayContent(File.ReadAllBytes(audioFilePath));
@@ -142,6 +94,7 @@ namespace WpfApp2
             form.Add(new StringContent("whisper-large-v3-turbo"), "model");
 
             var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
+            response.EnsureSuccessStatusCode(); // Throws an exception if the HTTP response status is an error code
             var responseJson = await response.Content.ReadAsStringAsync();
 
             dynamic result = JsonConvert.DeserializeObject(responseJson);
@@ -150,7 +103,6 @@ namespace WpfApp2
 
         private void StartRecording()
         {
-
             if (waveIn != null)
             {
                 waveIn.DataAvailable -= WaveIn_DataAvailable;
@@ -160,7 +112,7 @@ namespace WpfApp2
                 waveIn = null;
             }
 
-            if(writer != null)
+            if (writer != null)
             {
                 writer.Dispose();
                 writer = null;
@@ -178,15 +130,16 @@ namespace WpfApp2
             }
 
             waveIn = new WaveInEvent();
-            waveIn.WaveFormat = new WaveFormat(16000, 1); 
-            recordingStoppedTcs = new TaskCompletionSource<bool>();
+            waveIn.WaveFormat = new WaveFormat(16000, 1);
+            recordingStoppedTcs = new TaskCompletionSource<bool>(); // Reset TCS for each new recording
             waveIn.DataAvailable += (s, a) =>
             {
                 writer.Write(a.Buffer, 0, a.BytesRecorded);
             };
             waveIn.RecordingStopped += (s, a) =>
             {
-                if (writer != null) { 
+                if (writer != null)
+                {
                     writer?.Dispose();
                     writer = null;
                 }
@@ -198,7 +151,6 @@ namespace WpfApp2
             writer = new WaveFileWriter(outputFilePath, waveIn.WaveFormat);
             waveIn.StartRecording();
         }
-
 
         private async Task StopRecording()
         {
@@ -282,12 +234,12 @@ namespace WpfApp2
                 if (IsExcludedPath(path))
                     return;
 
-                foreach (var file in Directory.EnumerateFiles(path,"*.exe"))
+                foreach (var file in Directory.EnumerateFiles(path, "*.exe"))
                 {
                     try
                     {
                         FileInfo fi = new FileInfo(file);
-                       
+
                         allExeFiles.Add(file);
                         List<string> meta = new List<string>();
                         meta.Add(FormatFileSize(fi.Length));
@@ -295,8 +247,6 @@ namespace WpfApp2
                         meta.Add(fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
                         meta.Add(fi.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss"));
                         metadata.Add(meta);
-                    
-
                     }
                     catch { /* Skip inaccessible files */ }
                 }
@@ -341,6 +291,5 @@ namespace WpfApp2
             }
             return $"{len:0.##} {sizes[order]}";
         }
-
     }
 }
