@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using WpfApp2.Context;
 
 namespace WpfApp2
 {
@@ -31,6 +33,11 @@ namespace WpfApp2
                 MessageBox.Show("Task error:\n" + e.Exception.Message, "Unobserved Task Exception");
                 e.SetObserved();
             };
+
+            using (var context = new ApplicationDbContext())
+            {
+                context.Database.Migrate();
+            }
         }
     }
 }
