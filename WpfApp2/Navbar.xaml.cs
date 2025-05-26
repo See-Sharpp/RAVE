@@ -112,6 +112,8 @@ namespace WpfApp2
 
         private void NavLogoutButton_Click(object sender, RoutedEventArgs e)
         {
+            System.Windows.MessageBox.Show("Are you sure to LogOut ? ");
+            Global.UserId = null;
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
             RemoveTrayIcon();

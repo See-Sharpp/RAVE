@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro.Controls;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Forms;
 using WpfApp2.Context;
 
 namespace WpfApp2
@@ -20,7 +21,7 @@ namespace WpfApp2
 
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
-                MessageBox.Show("Username and Password cannot be empty.");
+                System.Windows.MessageBox.Show("Username and Password cannot be empty.");
                 return;
             }
 
@@ -31,7 +32,7 @@ namespace WpfApp2
             if (User!=null)
             {
                 Global.UserId = User?.Id;
-                MessageBox.Show($"Logging in as {user}");
+                System.Windows.MessageBox.Show($"Logging in as {user}");
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
                 this.Close();
@@ -40,8 +41,8 @@ namespace WpfApp2
 
             if (User2!=null)
             {
-                Global.UserId = User?.Id;
-                MessageBox.Show($"Logging in as {user}");
+                Global.UserId = User2?.Id;
+                System.Windows.MessageBox.Show($"Logging in as {user}");
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
                 this.Close();
@@ -50,7 +51,7 @@ namespace WpfApp2
 
             if (_context.SignUpDetails.Any(u => u.Username == user && u.Password == pass) == false)
             {
-                MessageBox.Show("Invalid Username or Password.");
+                System.Windows.MessageBox.Show("Invalid Username or Password.");
                 return;
             }
         }
@@ -64,7 +65,16 @@ namespace WpfApp2
         {
             SignUp signUpWindow = new SignUp();
             signUpWindow.Show();
+            Global.SignUp = true;
             this.Close();
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if(Global.UserId == null && !Global.SignUp)
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
         }
 
     }
