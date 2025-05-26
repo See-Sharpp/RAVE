@@ -17,10 +17,7 @@ namespace WpfApp2
 {
     public partial class Dashboard : Page 
     {
-        DriveInfo[] drives = DriveInfo.GetDrives();
-        List<string> allExeFiles = new List<string>();
-        List<List<string>> metadata = new List<List<string>>();
-
+        
         private WaveInEvent? waveIn;
         private WaveFileWriter? writer;
         private string outputFilePath = "temp_voice_input.wav";
@@ -28,15 +25,7 @@ namespace WpfApp2
         private static string api = null;
         private WakeWordHelper? _wakeWordDetector;
 
-        readonly string[] excludedPaths = new string[]
-        {
-            @"C:\Windows",
-            @"C:\Program Files",
-            @"C:\Program Files (x86)",
-            @"C:\$Recycle.Bin",
-            @"C:\Recovery"
-        };
-
+       
         public Dashboard()
         {
             InitializeComponent();
@@ -189,104 +178,8 @@ namespace WpfApp2
         private void SendCommand_Click(object sender, RoutedEventArgs e)
         {
             string command = CommandInput.Text;
-            System.Windows.MessageBox.Show("Scanning for .exe files in C drive...");
-
-            string startDirectory = @"C:\";
-
-            allExeFiles.Clear();
-
-            try
-            {
-                ScanDirectoryForExe(startDirectory);
-                System.Windows.MessageBox.Show($"Found {allExeFiles.Count} useful .exe files in C drive.");
-
-                // Example command match
-                string Path = @"C:\Users\YASH SOLANKI\AppData\Local\Programs\Microsoft VS Code\Code.exe";
-                if (allExeFiles.Contains(Path, StringComparer.OrdinalIgnoreCase))
-                {
-                    System.Windows.MessageBox.Show("VS Code found.");
-                    int index = allExeFiles.IndexOf(Path);
-                    foreach (var data in metadata[index])
-                    {
-                        System.Windows.MessageBox.Show("" + data);
-                    }
-                }
-                else
-                {
-                    System.Windows.MessageBox.Show("VS Code not found.");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}");
-            }
+          
         }
-
-        private void ScanDirectoryForExe(string path)
-        {
-            try
-            {
-                if (IsExcludedPath(path))
-                    return;
-
-                foreach (var file in Directory.EnumerateFiles(path, "*.exe"))
-                {
-                    try
-                    {
-                        FileInfo fi = new FileInfo(file);
-
-                        allExeFiles.Add(file);
-                        List<string> meta = new List<string>();
-                        meta.Add(FormatFileSize(fi.Length));
-                        meta.Add(fi.Name);
-                        meta.Add(fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        meta.Add(fi.LastAccessTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        metadata.Add(meta);
-                    }
-                    catch { /* Skip inaccessible files */ }
-                }
-
-                foreach (var dir in Directory.GetDirectories(path))
-                {
-                    ScanDirectoryForExe(dir);
-                }
-            }
-            catch (UnauthorizedAccessException) { }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error accessing {path}: {ex.Message}");
-            }
-        }
-
-        private bool IsExcludedPath(string path)
-        {
-            DirectoryInfo dir = new DirectoryInfo(path);
-
-            while (dir != null)
-            {
-                if (excludedPaths.Any(ex => dir.FullName.Equals(ex, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return true;
-                }
-                dir = dir.Parent;
-            }
-
-            return false;
-        }
-
-        private string FormatFileSize(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-            return $"{len:0.##} {sizes[order]}";
-        }
-
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
             VoiceControlPanel.Effect = new BlurEffect { Radius = 3.5 };
