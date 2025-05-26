@@ -226,7 +226,9 @@
                                VerticalAlignment="Center" 
                                Margin="0,0,16,0"/>
                     <ToggleButton x:Name="VoiceToggle" 
-                                  Style="{StaticResource SlideToggleButtonStyle}"/>
+                                  Style="{StaticResource SlideToggleButtonStyle}"
+                                  Checked="VoiceToggle_Checked"
+                                  Unchecked="VoiceToggle_Unchecked"/>
                 </StackPanel>
             </Border>
 
@@ -235,7 +237,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource ModernCard}">
+                <Border x:Name="HistoryPanel" Grid.Column="0" Style="{StaticResource ModernCard}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -288,7 +290,16 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Button Grid.Column="0"
+
+                    <Grid x:Name="VoiceControlPanel" Grid.ColumnSpan="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="MicEffect" 
+                            Grid.Column="0"
                             Width="48"
                             Height="48"
                             Background="#EF4444"
@@ -296,17 +307,17 @@
                             Style="{StaticResource ModernButton}"
                             Margin="0,0,16,0"
                             VerticalAlignment="Center">
-                        <fa:IconImage Icon="Microphone" Width="20" Foreground="White"/>
-                    </Button>
+                            <fa:IconImage Icon="Microphone" Width="20" Foreground="White"/>
+                        </Button>
 
-                    <Border Grid.Column="1"
+                        <Border Grid.Column="1"
                             Background="#262626"
                             CornerRadius="12"
                             BorderBrush="#374151"
                             BorderThickness="1"
                             VerticalAlignment="Center"
                             Height="48">
-                        <TextBox x:Name="CommandInput"
+                            <TextBox x:Name="CommandInput"
                                  Foreground="White"
                                  Background="Transparent"
                                  BorderThickness="0"
@@ -317,17 +328,19 @@
                                  mah:TextBoxHelper.Watermark="Type your command or click the microphone..."
                                  GotFocus="CommandInput_GotFocus"
                                  LostFocus="CommandInput_LostFocus"/>
-                    </Border>
+                        </Border>
 
-                    <Button Grid.Column="2"
+                        <Button x:Name="SendEffect" 
+                            Grid.Column="2"
                             Width="48"
                             Height="48"
                             Click="SendCommand_Click"
                             Style="{StaticResource ModernButton}"
                             Margin="16,0,0,0"
                             VerticalAlignment="Center">
-                        <fa:IconImage Icon="PaperPlane" Width="20" Foreground="White"/>
-                    </Button>
+                            <fa:IconImage Icon="PaperPlane" Width="20" Foreground="White"/>
+                        </Button>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>
