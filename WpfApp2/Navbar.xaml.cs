@@ -71,9 +71,12 @@ namespace WpfApp2
       
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true; 
-            this.Hide();     
-            _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
+            e.Cancel = true; // Prevent the window from actually closing
+            this.Hide();     // Hide the window
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
+            }
         }
 
         private void NavHomeButton_Click(object sender, RoutedEventArgs e)
@@ -96,12 +99,23 @@ namespace WpfApp2
             MainContentFrame.Navigate(new HowItWorks());
         }
 
+
+        public void RemoveTrayIcon()
+        {
+            if (_notifyIcon != null)
+            {
+                _notifyIcon.Visible = false;
+                _notifyIcon.Dispose();
+                _notifyIcon = null!;
+            }
+        }
+
         private void NavLogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            
-            System.Windows.MessageBox.Show("You have been logged out.", "Logout", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-            
-            System.Windows.Application.Current.Shutdown();
+            MainWindow mainWindow = new MainWindow();
+            mainWindow.Show();
+            RemoveTrayIcon();
+            this.Close();
         }
     }
 }

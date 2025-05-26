@@ -1,4 +1,5 @@
 ﻿using MahApps.Metro.Controls;
+using System.ComponentModel;
 using System.Windows;
 using WpfApp2.Context;
 
@@ -56,7 +57,7 @@ namespace WpfApp2
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Redirecting to password recovery...");
+            System.Windows.MessageBox.Show("Redirecting to password recovery...");
         }
 
         private void Sign_Up(object sender, RoutedEventArgs e)
