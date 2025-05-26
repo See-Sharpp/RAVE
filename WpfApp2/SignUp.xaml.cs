@@ -69,13 +69,14 @@ namespace WpfApp2
 
                 MainWindow mainWindow = new MainWindow();
                 mainWindow.Show();
+                Global.SignUp = false;
                 this.Close();
             }
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if (Global.UserId == null && Global.SignUp)
+            if (Global.SignUp)
             {
                 System.Windows.Application.Current.Shutdown();
             }
