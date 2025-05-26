@@ -195,28 +195,28 @@
                     <Button x:Name="NavHomeButton" Click="NavHomeButton_Click"
                             Style="{StaticResource NavButton}" Content="Home">
                         <Button.Tag>
-                            <fa:IconImage Icon="Home" Width="18" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            <fa:IconImage Icon="Home" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
 
                     <Button x:Name="NavHistoryButton" Click="NavHistoryButton_Click"
                             Style="{StaticResource NavButton}" Content="History">
                         <Button.Tag>
-                            <fa:IconImage Icon="History" Width="18" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            <fa:IconImage Icon="History" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
 
                     <Button x:Name="NavScanButton" Click="NavScanButton_Click"
                             Style="{StaticResource NavButton}" Content="Scan">
                         <Button.Tag>
-                            <fa:IconImage Icon="Search" Width="18" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            <fa:IconImage Icon="Search" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
 
                     <Button x:Name="NavHowItWorksButton" Click="NavHowItWorksButton_Click"
                             Style="{StaticResource NavButton}" Content="How it works">
                         <Button.Tag>
-                            <fa:IconImage Icon="QuestionCircle" Width="18" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+                            <fa:IconImage Icon="QuestionCircle" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
                 </StackPanel>

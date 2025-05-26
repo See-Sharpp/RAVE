@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,7 @@ namespace WpfApp2
         {
             MainWindow mainWindow = new MainWindow();
             mainWindow.Show();
+            Global.SignUp = false;
             this.Close();
         }
 
@@ -71,6 +73,13 @@ namespace WpfApp2
             }
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (Global.UserId == null && Global.SignUp)
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
+        }
 
     }
 }

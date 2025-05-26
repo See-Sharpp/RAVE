@@ -51,8 +51,8 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            _wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
-            Task.Run(() => _wakeWordDetector.Start());
+            //_wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
+            //Task.Run(() => _wakeWordDetector.Start());
         }
 
         private void OnWakeWordDetected()
@@ -291,11 +291,10 @@ namespace WpfApp2
 
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
-            HistoryPanel.Effect = new BlurEffect { Radius = 2.5 };
             VoiceControlPanel.Effect = new BlurEffect { Radius = 2.5 };
             MicEffect.IsEnabled=false;
             SendEffect.IsEnabled=false;
-            CommandInput.IsEnabled=false;
+            CommandInput.IsReadOnly=true;
         }
 
         private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
@@ -303,8 +302,7 @@ namespace WpfApp2
             VoiceControlPanel.Effect = null;
             MicEffect.IsEnabled = true;
             SendEffect.IsEnabled = true;
-            CommandInput.IsEnabled = true;
-            HistoryPanel.Effect = null;
+            CommandInput.IsReadOnly = false;
         }
     }
 }
