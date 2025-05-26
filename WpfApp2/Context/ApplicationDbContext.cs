@@ -13,6 +13,8 @@ namespace WpfApp2.Context
     {
         public DbSet<SignUpDetail> SignUpDetails { get; set; }
 
+        public DbSet<AllExes> AllExes { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)

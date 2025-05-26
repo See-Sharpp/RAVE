@@ -120,7 +120,7 @@
 
         <Grid Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,60,0">
             <Border
-                Width="Auto"
+                Width="400"
                 CornerRadius="24"
                 Padding="40" Margin="-34,0,0,10">
                 <Border.Background>
@@ -311,7 +311,7 @@
 
                     <Button
                         Content="Sign In"
-                        Height="48"
+                        Height="52"
                         Margin="0,0,0,24"
                         Foreground="White"
                         Click="Sign_Up"
