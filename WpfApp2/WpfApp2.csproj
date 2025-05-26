@@ -17,10 +17,10 @@
 	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE.ico">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Resource Include="bin\Debug\net8.0-windows\Assets\RAVE2.ico">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE2.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	    <Generator></Generator>
-	  </Resource>
+	  </Content>
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="bin\Debug\net8.0-windows\model\HEY_RAVE.onnx" />

@@ -21,8 +21,6 @@ namespace WpfApp2
         List<string> allExeFiles = new List<string>();
         List<List<string>> metadata = new List<List<string>>();
 
-        // Removed NotifyIcon field from here
-
         private WaveInEvent? waveIn;
         private WaveFileWriter? writer;
         private string outputFilePath = "temp_voice_input.wav";
@@ -69,7 +67,7 @@ namespace WpfApp2
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
 
-            await Task.Delay(5000); // Simulate 5 seconds of recording
+            await Task.Delay(3000); // Simulate 3 seconds of recording
 
             await StopRecording();
 
@@ -91,7 +89,7 @@ namespace WpfApp2
             form.Add(new StringContent("whisper-large-v3-turbo"), "model");
 
             var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
-            response.EnsureSuccessStatusCode(); // Throws an exception if the HTTP response status is an error code
+            response.EnsureSuccessStatusCode(); 
             var responseJson = await response.Content.ReadAsStringAsync();
 
             dynamic result = JsonConvert.DeserializeObject(responseJson);
