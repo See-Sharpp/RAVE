@@ -35,7 +35,6 @@ namespace WpfApp2
             @"C:\Windows",
             @"C:\Program Files",
             @"C:\Program Files (x86)",
-            $@"C:\Users\{Environment.UserName}\AppData",
             @"C:\$Recycle.Bin",
             @"C:\Recovery"
         };
@@ -53,8 +52,8 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            _wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
-            Task.Run(() => _wakeWordDetector.Start()); 
+            //_wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
+            //Task.Run(() => _wakeWordDetector.Start()); 
 
 
         }
@@ -255,10 +254,10 @@ namespace WpfApp2
                 System.Windows.MessageBox.Show($"Found {allExeFiles.Count} useful .exe files in C drive.");
 
                 // Example command match
-                string Path = @"C:\Assassin's Creed\Assassins.Creed.Brotherhood-SKIDROW\autorun.exe";
+                string Path = @"C:\Users\YASH SOLANKI\AppData\Local\Programs\Microsoft VS Code\Code.exe";
                 if (allExeFiles.Contains(Path, StringComparer.OrdinalIgnoreCase))
                 {
-                    System.Windows.MessageBox.Show("AC found.");
+                    System.Windows.MessageBox.Show("VS Code found.");
                     int index = allExeFiles.IndexOf(Path);
                     foreach (var data in metadata[index])
                     {
@@ -267,7 +266,7 @@ namespace WpfApp2
                 }
                 else
                 {
-                    System.Windows.MessageBox.Show("AC not found.");
+                    System.Windows.MessageBox.Show("VS Code not found.");
                 }
             }
             catch (Exception ex)
