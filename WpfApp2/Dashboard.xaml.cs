@@ -289,7 +289,7 @@ namespace WpfApp2
 
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
-            VoiceControlPanel.Effect = new BlurEffect { Radius = 2.5 };
+            VoiceControlPanel.Effect = new BlurEffect { Radius = 3.5 };
             MicEffect.IsEnabled=false;
             SendEffect.IsEnabled=false;
             CommandInput.IsReadOnly=true;
