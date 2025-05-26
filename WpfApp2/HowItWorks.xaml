@@ -1,0 +1,463 @@
+﻿<Page x:Class="WpfApp2.HowItWorks"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+      xmlns:local="clr-namespace:WpfApp2"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="HowItWorks"
+      Background="#0F0F0F">
+
+    <Page.Resources>
+        <Style x:Key="ModernCard" TargetType="Border">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="Margin" Value="0,0,0,24"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style x:Key="SubHeader" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#6366F1"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="BodyText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#D1D5DB"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="22"/>
+            <Setter Property="Margin" Value="34,0,0,16"/>
+        </Style>
+
+        <Style x:Key="FeatureCard" TargetType="Border">
+            <Setter Property="Background" Value="#262626"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style x:Key="CommandExample" TargetType="Border">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#6366F1"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+
+        <Style x:Key="StepNumber" TargetType="Border">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="CornerRadius" Value="20"/>
+            <Setter Property="Background" Value="#6366F1"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40">
+        <StackPanel MaxWidth="1200">
+
+            <!-- Header Section -->
+            <Border Style="{StaticResource ModernCard}" Padding="40,32">
+                <StackPanel HorizontalAlignment="Center">
+                    <fa:IconImage Icon="Robot" Width="80" Foreground="#6366F1" Margin="0,0,0,24"/>
+                    <TextBlock Text="How RAVE Works"
+                   FontFamily="Segoe UI"
+                   FontSize="36"
+                   FontWeight="Bold"
+                   Foreground="White"
+                   Margin="0,0,0,16"
+                   TextAlignment="Center"/>
+                    <TextBlock Text="Your intelligent voice commander that transforms speech into actions"
+                   FontFamily="Segoe UI"
+                   FontSize="18"
+                   Foreground="#9CA3AF"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Overview Section -->
+            <Border Style="{StaticResource ModernCard}" Padding="32">
+                <StackPanel>
+                    <TextBlock Text="What is RAVE?" Style="{StaticResource SectionHeader}"/>
+                  
+                    <TextBlock Style="{StaticResource BodyText}">
+                        RAVE is an advanced voice commander application that uses AI to understand your spoken commands and execute them automatically. 
+                        Whether you want to open applications, control system settings, browse the web, or perform complex tasks, 
+                        RAVE makes it possible with just your voice.
+                    </TextBlock>
+
+                    <Grid Margin="0,24,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource FeatureCard}" Margin="0,0,12,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <fa:IconImage Icon="Microphone" Width="48" Foreground="#10B981" Margin="0,0,0,16"/>
+                                <TextBlock Text="Voice Recognition" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Advanced AI-powered speech recognition that understands natural language commands"
+                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource FeatureCard}" Margin="6,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <fa:IconImage Icon="Cogs" Width="48" Foreground="#F59E0B" Margin="0,0,0,16"/>
+                                <TextBlock Text="Smart Automation" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Automatically executes system commands, opens applications, and performs complex tasks"
+                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Style="{StaticResource FeatureCard}" Margin="12,0,0,0">
+                            <StackPanel HorizontalAlignment="Center">
+                                <fa:IconImage Icon="Brain" Width="48" Foreground="#8B5CF6" Margin="0,0,0,16"/>
+                                <TextBlock Text="AI Intelligence" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Learns from your usage patterns and provides intelligent command suggestions"
+                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+            
+            <Border Style="{StaticResource ModernCard}" Padding="32">
+                <StackPanel>
+                    <TextBlock Text="How to Use RAVE" Style="{StaticResource SectionHeader}"/>
+
+                    <!-- Step 1 -->
+                    <Grid Margin="0,0,0,32">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- <Image Grid.Column="1" Source="/" Width="200" Height="120" Margin="24,0" Stretch="Uniform"/> -->
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="1.)   Activate with Wake Word" Style="{StaticResource SubHeader}"/>
+                            <TextBlock Style="{StaticResource BodyText}">
+                                Say your custom wake word (default: "Hey RAVE") to activate the voice recognition. 
+                                The AI will start listening for your commands. You can customize your wake word in the settings panel.
+                            </TextBlock>
+                            <Border Style="{StaticResource CommandExample}">
+                                <TextBlock Text='Example: "Hey RAVE, open Visual Studio Code"' 
+                                           FontFamily="Consolas" FontSize="14" Foreground="#10B981"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Step 2 -->
+                    <Grid Margin="0,0,0,32">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- <Image Grid.Column="1" Source="/Images/voice_recording_demo.png" Width="200" Height="120" Margin="24,0" Stretch="Uniform"/> -->
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="2.)   Record Your Command" Style="{StaticResource SubHeader}"/>
+                            <TextBlock Style="{StaticResource BodyText}">
+                                Click the red microphone button to start recording your voice command. 
+                                Speak clearly and naturally - RAVE understands conversational language and context.
+                            </TextBlock>
+                            <Border Style="{StaticResource CommandExample}">
+                                <TextBlock Text='Try: "Increase volume by 20%" or "Open Chrome and search for weather"' 
+                                           FontFamily="Consolas" FontSize="14" Foreground="#10B981"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Step 3 -->
+                    <Grid Margin="0,0,0,32">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- <Image Grid.Column="1" Source="/Images/text_input_demo.png" Width="200" Height="120" Margin="24,0" Stretch="Uniform"/> -->
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="3.)   Type Commands Manually" Style="{StaticResource SubHeader}"/>
+                            <TextBlock Style="{StaticResource BodyText}">
+                                Prefer typing? Use the text input field to manually enter commands. 
+                                This is perfect for quiet environments or when you want to be more precise with your instructions.
+                            </TextBlock>
+                            <Border Style="{StaticResource CommandExample}">
+                                <TextBlock Text='Type: "open calculator" or "set brightness to 50%"' 
+                                           FontFamily="Consolas" FontSize="14" Foreground="#10B981"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Step 4 -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- <Image Grid.Column="1" Source="/Images/send_command_demo.png" Width="200" Height="120" Margin="24,0" Stretch="Uniform"/> -->
+
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock Text="4.)   Send and Execute" Style="{StaticResource SubHeader}"/>
+                            <TextBlock Style="{StaticResource BodyText}">
+                                Click the send button (paper plane icon) to execute your command. 
+                                RAVE will process your request and perform the action automatically. 
+                                Watch as your commands come to life!
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Command Examples Section -->
+            <Border Style="{StaticResource ModernCard}" Padding="32">
+                <StackPanel>
+                    <TextBlock Text="Command Examples" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Style="{StaticResource BodyText}">
+                        RAVE supports a wide variety of commands. Here are some examples of what you can do:
+                    </TextBlock>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <TextBlock Text="🎮 Application Control" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Open Visual Studio Code"' FontFamily="Consolas" Foreground="#10B981"/>
+                                    <TextBlock Text='"Launch Steam"' FontFamily="Consolas" Foreground="#10B981"/>
+                                    <TextBlock Text='"Start Spotify"' FontFamily="Consolas" Foreground="#10B981"/>
+                                    <TextBlock Text='"Open Calculator"' FontFamily="Consolas" Foreground="#10B981"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="🔊 System Control" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Increase volume by 20%"' FontFamily="Consolas" Foreground="#F59E0B"/>
+                                    <TextBlock Text='"Set brightness to 75%"' FontFamily="Consolas" Foreground="#F59E0B"/>
+                                    <TextBlock Text='"Mute microphone"' FontFamily="Consolas" Foreground="#F59E0B"/>
+                                    <TextBlock Text='"Lock computer"' FontFamily="Consolas" Foreground="#F59E0B"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="📁 File Management" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Open Documents folder"' FontFamily="Consolas" Foreground="#8B5CF6"/>
+                                    <TextBlock Text='"Create new folder on Desktop"' FontFamily="Consolas" Foreground="#8B5CF6"/>
+                                    <TextBlock Text='"Open project.txt"' FontFamily="Consolas" Foreground="#8B5CF6"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <TextBlock Text="🌐 Web Browsing" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Open Chrome and go to YouTube"' FontFamily="Consolas" Foreground="#EF4444"/>
+                                    <TextBlock Text='"Search for weather forecast"' FontFamily="Consolas" Foreground="#EF4444"/>
+                                    <TextBlock Text='"Open Gmail"' FontFamily="Consolas" Foreground="#EF4444"/>
+                                    <TextBlock Text='"Go to GitHub"' FontFamily="Consolas" Foreground="#EF4444"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="⚙️ Advanced Commands" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Take a screenshot"' FontFamily="Consolas" Foreground="#06B6D4"/>
+                                    <TextBlock Text='"Empty recycle bin"' FontFamily="Consolas" Foreground="#06B6D4"/>
+                                    <TextBlock Text='"Show system information"' FontFamily="Consolas" Foreground="#06B6D4"/>
+                                    <TextBlock Text='"Restart computer in 5 minutes"' FontFamily="Consolas" Foreground="#06B6D4"/>
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="🎵 Media Control" Style="{StaticResource SubHeader}"/>
+                            <Border Style="{StaticResource CommandExample}">
+                                <StackPanel>
+                                    <TextBlock Text='"Play music"' FontFamily="Consolas" Foreground="#F97316"/>
+                                    <TextBlock Text='"Pause current song"' FontFamily="Consolas" Foreground="#F97316"/>
+                                    <TextBlock Text='"Next track"' FontFamily="Consolas" Foreground="#F97316"/>
+                                    <TextBlock Text='"Set volume to 50%"' FontFamily="Consolas" Foreground="#F97316"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Interface Features Section -->
+            <Border Style="{StaticResource ModernCard}" Padding="32">
+                <StackPanel>
+                    <TextBlock Text="Interface Features" Style="{StaticResource SectionHeader}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <Border Style="{StaticResource FeatureCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <fa:IconImage Icon="ToggleOn" Width="24" Foreground="#10B981" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Voice Toggle Button" Style="{StaticResource SubHeader}" Margin="0"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource BodyText}">
+                                        The toggle button enables or disables voice recognition. When ON (green), RAVE actively listens for your wake word. 
+                                        When OFF (gray), voice recognition is paused to save resources.
+                                    </TextBlock>
+                                    <!-- <Image Source="/Images/toggle_button_demo.png" Height="60" Stretch="Uniform" HorizontalAlignment="Left"/> -->
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource FeatureCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <fa:IconImage Icon="History" Width="24" Foreground="#6366F1" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Command History" Style="{StaticResource SubHeader}" Margin="0"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource BodyText}">
+                                        View all your previous commands in the history panel. This helps you track what you've done and easily repeat common commands. 
+                                        Click on any historical command to execute it again.
+                                    </TextBlock>
+                                    <!-- <Image Source="/Images/history_panel_demo.png" Height="80" Stretch="Uniform" HorizontalAlignment="Left"/> -->
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <Border Style="{StaticResource FeatureCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <fa:IconImage Icon="Search" Width="24" Foreground="#F59E0B" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Smart Scan Feature" Style="{StaticResource SubHeader}" Margin="0"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource BodyText}">
+                                        The scan feature analyzes your system to suggest available commands based on installed applications and system capabilities. 
+                                        It helps discover new ways to use RAVE effectively.
+                                    </TextBlock>
+                                    <!-- <Image Source="/Images/scan_feature_demo.png" Height="60" Stretch="Uniform" HorizontalAlignment="Left"/> -->
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource FeatureCard}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                        <fa:IconImage Icon="Cog" Width="24" Foreground="#8B5CF6" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Customizable Settings" Style="{StaticResource SubHeader}" Margin="0"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource BodyText}">
+                                        Personalize your RAVE experience by setting custom wake words, selecting your preferred microphone, 
+                                        and configuring startup preferences. Make RAVE work exactly how you want it to.
+                                    </TextBlock>
+                                    <!-- <Image Source="/Images/settings_panel_demo.png" Height="80" Stretch="Uniform" HorizontalAlignment="Left"/ -->
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Tips Section -->
+            <Border Style="{StaticResource ModernCard}" Padding="32">
+                <StackPanel>
+                    <TextBlock Text="Pro Tips for Better Performance" Style="{StaticResource SectionHeader}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <Border Style="{StaticResource CommandExample}" BorderBrush="#10B981">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <fa:IconImage Icon="Lightbulb" Width="20" Foreground="#10B981" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Speak Clearly" FontWeight="SemiBold" Foreground="#10B981"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Speak at a normal pace and volume. Avoid background noise for better recognition accuracy." 
+                                               Style="{StaticResource BodyText}" Margin="0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CommandExample}" BorderBrush="#F59E0B">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <fa:IconImage Icon="Clock" Width="20" Foreground="#F59E0B" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Use Natural Language" FontWeight="SemiBold" Foreground="#F59E0B"/>
+                                    </StackPanel>
+                                    <TextBlock Text="RAVE understands conversational commands. Say 'open my music player' instead of just 'music'." 
+                                               Style="{StaticResource BodyText}" Margin="0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <Border Style="{StaticResource CommandExample}" BorderBrush="#8B5CF6">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <fa:IconImage Icon="Star" Width="20" Foreground="#8B5CF6" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Learn from History" FontWeight="SemiBold" Foreground="#8B5CF6"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Check your command history to see which phrases work best and refine your voice commands." 
+                                               Style="{StaticResource BodyText}" Margin="0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CommandExample}" BorderBrush="#EF4444">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <fa:IconImage Icon="Shield" Width="20" Foreground="#EF4444" Margin="0,0,8,0"/>
+                                        <TextBlock Text="Privacy First" FontWeight="SemiBold" Foreground="#EF4444"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Your voice data is processed locally. RAVE respects your privacy and doesn't send audio to external servers." 
+                                               Style="{StaticResource BodyText}" Margin="0"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>
