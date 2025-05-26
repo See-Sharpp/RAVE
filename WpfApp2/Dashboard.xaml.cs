@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
+using System.Windows.Media.Effects;
 using Microsoft.Extensions.Configuration;
 using System.Windows.Controls; // Added for Page
 
@@ -286,6 +287,24 @@ namespace WpfApp2
                 len /= 1024;
             }
             return $"{len:0.##} {sizes[order]}";
+        }
+
+        private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            HistoryPanel.Effect = new BlurEffect { Radius = 2.5 };
+            VoiceControlPanel.Effect = new BlurEffect { Radius = 2.5 };
+            MicEffect.IsEnabled=false;
+            SendEffect.IsEnabled=false;
+            CommandInput.IsEnabled=false;
+        }
+
+        private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            VoiceControlPanel.Effect = null;
+            MicEffect.IsEnabled = true;
+            SendEffect.IsEnabled = true;
+            CommandInput.IsEnabled = true;
+            HistoryPanel.Effect = null;
         }
     }
 }
