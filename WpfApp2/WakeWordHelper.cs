@@ -83,14 +83,14 @@ namespace WpfApp2
             float confidence = output[0];
             //System.Windows.MessageBox.Show($"Confidence: {output[0]:F4}");
 
-            if (confidence > 0.8f && !isCurrentlyActive)
+            if (confidence > 0.9f && !isCurrentlyActive)
             {
                 var now = DateTime.UtcNow;
                 if ((now - lastDetectionTime) > detectionCooldown)
                 {
                     lastDetectionTime = now;
                     isCurrentlyActive = true;
-                 
+
                     onDetected?.Invoke();
 
                     Task.Delay(500).ContinueWith(_ =>
