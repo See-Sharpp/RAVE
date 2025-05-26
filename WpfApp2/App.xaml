@@ -14,5 +14,6 @@
             <FontFamily x:Key="Poppins">pack://application:,,,/Resources/Fonts/#Poppins</FontFamily>
             <FontFamily x:Key="Roboto">pack://application:,,,/Resources/Fonts/#Roboto</FontFamily>
         </ResourceDictionary>
+       
     </Application.Resources>
 </Application>

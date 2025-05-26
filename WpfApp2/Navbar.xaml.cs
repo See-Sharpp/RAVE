@@ -17,6 +17,7 @@ namespace WpfApp2
             InitializeComponent();
             SetupTrayIcon(); 
             MainContentFrame.Navigate(new Dashboard()); // Set initial page
+            System.Windows.MessageBox.Show(""+Global.UserId);
         }
 
         private void SetupTrayIcon()
@@ -55,23 +56,23 @@ namespace WpfApp2
             contextMenu.Items.Add("Show", null, (s, e) =>
             {
                 this.Show();
-                this.WindowState = WindowState.Normal; // Bring to normal state
+                this.WindowState = WindowState.Normal; 
                 this.Activate();
             });
             contextMenu.Items.Add("Exit", null, (s, e) =>
             {
                 _notifyIcon.Visible = false;
-                _notifyIcon.Dispose(); // Clean up the NotifyIcon
+                _notifyIcon.Dispose(); 
                 System.Windows.Application.Current.Shutdown();
             });
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
-        // Override OnClosing for the main application window (Navbar)
+      
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true; // Prevent the window from actually closing
-            this.Hide();     // Hide the window
+            e.Cancel = true; 
+            this.Hide();     
             _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
         }
 

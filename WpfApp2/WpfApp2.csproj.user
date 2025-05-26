@@ -5,31 +5,10 @@
     <Compile Update="Dashboard.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="History.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="HowItWorks.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Navbar.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Scan.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="History.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="HowItWorks.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Navbar.xaml">
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Update="Scan.xaml">
-      <SubType>Designer</SubType>
-    </Page>
+    <Compile Update="SignUp.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 </Project>
