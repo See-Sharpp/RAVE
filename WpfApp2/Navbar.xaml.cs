@@ -11,29 +11,47 @@ using System.Windows.Shapes;
 using WpfApp2.Context;
 using WpfApp2.Models;
 
-
 namespace WpfApp2
 {
     public partial class Navbar : MetroWindow 
     {
         private NotifyIcon _notifyIcon = null!;
-        DriveInfo[] drives = DriveInfo.GetDrives();
-        List<string> allExeFiles = new List<string>();
-        List<List<string>> metadata = new List<List<string>>();
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isScanning = false;
 
-
         private ApplicationDbContext _context = new ApplicationDbContext();
+            readonly string[] excludedPaths = new string[]
+            {
+                @"C:\Windows",
+                @"C:\Program Files",
+                @"C:\Program Files (x86)",
+                @"C:\ProgramData",
+                @"C:\$Recycle.Bin",
+                @"C:\Recovery",
+                @"C:\System Volume Information",
+                @"C:\PerfLogs",
+                @"C:\Users\Default",
+                @"C:\Users\Default User",
+                @"C:\Users\All Users",
+                @"C:\Users\Public",
+                @"C:\Intel",
+                @"C:\Config.Msi",
+                @"C:\MSOCache",
+                @"C:\OneDriveTemp",
+                @"C:\Boot",
+                @"C:\DumpStack.log.tmp",
+                @"C:\Documents and Settings",
+                @"C:\SysReset",               // Windows Reset leftover
+                @"C:\Drivers",                // OEM driver folders
+                @"C:\OEM",                    // System builder files
+                @"C:\$WINDOWS.~BT",           // Windows upgrade leftovers
+                @"C:\$WINDOWS.~WS",           // Another upgrade folder
+                @"C:\Windows.old",            // Previous OS after upgrade
+                @"C:\EFI",                    // EFI System Partition (on FAT32 partition)
+                @"C:\Boot",                   // Boot loader files
+                @"C:\RecoveryImage",          // On some OEMs like Dell
+            };
 
-        readonly string[] excludedPaths = new string[]
-       {
-            @"C:\Windows",
-            @"C:\Program Files",
-            @"C:\Program Files (x86)",
-            @"C:\$Recycle.Bin",
-            @"C:\Recovery"
-       };
 
         public Navbar()
         {
@@ -92,7 +110,6 @@ namespace WpfApp2
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
-      
         protected override void OnClosing(CancelEventArgs e)
         {
             e.Cancel = true; // Prevent the window from actually closing
@@ -112,7 +129,6 @@ namespace WpfApp2
         {
             MainContentFrame.Navigate(new History());
         }
-
 
         private async void NavScanButton_Click(object sender, RoutedEventArgs e)
         {
@@ -149,7 +165,6 @@ namespace WpfApp2
 
             NavScanButton.IsEnabled = true;
         }
-
 
         private void ParallelScanDirectoryForExe(string rootPath, CancellationToken token)
         {
@@ -189,7 +204,6 @@ namespace WpfApp2
 
             SaveToDatabase(exeFiles.ToList());
         }
-
 
         private void SaveToDatabase(List<(string path, FileInfo info)> fileList)
         {
@@ -273,7 +287,6 @@ namespace WpfApp2
         {
             MainContentFrame.Navigate(new HowItWorks());
         }
-
 
         public void RemoveTrayIcon()
         {
