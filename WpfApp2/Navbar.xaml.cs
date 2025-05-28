@@ -1,12 +1,16 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using MahApps.Metro.Controls;
-using System.Windows.Forms;
+﻿using MahApps.Metro.Controls;
+using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.ComponentModel;
-using WpfApp2.Models;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Forms;
+using System.Windows.Shapes;
 using WpfApp2.Context;
+using WpfApp2.Models;
+
 
 namespace WpfApp2
 {
@@ -16,6 +20,9 @@ namespace WpfApp2
         DriveInfo[] drives = DriveInfo.GetDrives();
         List<string> allExeFiles = new List<string>();
         List<List<string>> metadata = new List<List<string>>();
+        private CancellationTokenSource? _cancellationTokenSource;
+        private bool _isScanning = false;
+
 
         private ApplicationDbContext _context = new ApplicationDbContext();
 
@@ -38,7 +45,8 @@ namespace WpfApp2
 
         private void SetupTrayIcon()
         {
-            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
+          string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
+
 
             // Check if the icon file exists
             if (!File.Exists(iconPath))
@@ -105,129 +113,131 @@ namespace WpfApp2
             MainContentFrame.Navigate(new History());
         }
 
+
         private async void NavScanButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show("Scanning for .exe files in C drive...");
+            System.Windows.MessageBox.Show("Scanning Started");
+            NavScanButton.IsEnabled = false;
+            if (_isScanning)
+            {
+                System.Windows.MessageBox.Show("Scan already in progress. Canceling...");
+                _cancellationTokenSource?.Cancel();
+                return;
+            }
 
-            string startDirectory = @"C:\";
-
-            allExeFiles.Clear();
+            _isScanning = true;
+            _cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken token = _cancellationTokenSource.Token;
 
             try
             {
-                ScanDirectoryForExe(startDirectory);
-                System.Windows.MessageBox.Show($"Found {allExeFiles.Count} useful .exe files in C drive.");
-
-              
-                string Path = @"C:\Users\YASH SOLANKI\AppData\Local\Programs\Microsoft VS Code\Code.exe";
-
-
-                foreach(var exes in allExeFiles)
-                {
-                    string filepath = exes;
-                    int id = Global.UserId ?? 0; 
-                    int index = allExeFiles.IndexOf(exes);
-                    string filename = null!;
-                    string size = null!;
-                    string lastWriteTime = null!;
-                    string lastAccessTime = null!;
-                    string createdTime = null!;
-                    int i = 0;
-
-                    foreach (var meta in metadata[index])
-                    {
-                        if (i == 0)
-                        {
-                            size = meta; // File size
-                        }
-                        else if(i == 1)
-                        {
-                            filename = meta; // File name
-                        }
-                        else if (i == 2)
-                        {
-                            lastWriteTime = meta; // Last write time
-                        }
-                        else if (i == 3)
-                        {
-                            lastAccessTime = meta; // Last access time
-                        }
-                        else if (i == 4)
-                        {
-                            createdTime = meta; // Creation time
-                        }
-                        i++;
-                    }
-                    try
-                    {
-
-                        AllExes allExes = new AllExes
-                        {
-
-                            FilePath = filepath,
-                            SignUpDetail = _context.SignUpDetails.FirstOrDefault(u => u.Id == id),
-                            FileName = filename,
-                            FileSize = size,
-                            LastWriteTime = DateTime.Parse(lastWriteTime),
-                            LastAccessTime = DateTime.Parse(lastAccessTime),
-                            CreatedAt = DateTime.Parse(createdTime)
-                        };
-
-                        _context.AllExes.Add(allExes);
-                        await _context.SaveChangesAsync(); // Save to database
-
-                        System.Windows.MessageBox.Show("Database updated");
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Windows.MessageBox.Show($"Error saving file {exes} to database: {ex.Message}");
-                    }
-
-                }
-                
-
+                await Task.Run(() => ParallelScanDirectoryForExe(@"C:\", token));
+            }
+            catch (OperationCanceledException)
+            {
+                System.Windows.MessageBox.Show("Scan was canceled.");
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}");
             }
+            finally
+            {
+                _isScanning = false;
+                _cancellationTokenSource = null;
+            }
+
+            NavScanButton.IsEnabled = true;
         }
 
-        private void ScanDirectoryForExe(string path)
+
+        private void ParallelScanDirectoryForExe(string rootPath, CancellationToken token)
         {
-            try
-            {
-                if (IsExcludedPath(path))
-                    return;
+            var exeFiles = new ConcurrentBag<(string path, FileInfo info)>();
+            var directories = new Stack<string>();
+            directories.Push(rootPath);
 
-                foreach (var file in Directory.EnumerateFiles(path, "*.exe"))
+            while (directories.Count > 0)
+            {
+                token.ThrowIfCancellationRequested();
+
+                var currentDir = directories.Pop();
+                if (IsExcludedPath(currentDir))
+                    continue;
+
+                try
                 {
-                    try
+                    foreach (var subDir in Directory.GetDirectories(currentDir))
                     {
-                        FileInfo fi = new FileInfo(file);
-
-                        allExeFiles.Add(file);
-                        List<string> meta = new List<string>();
-                        meta.Add(FormatFileSize(fi.Length));
-                        meta.Add(fi.Name);
-                        meta.Add(fi.LastWriteTime.ToString("yyyy-MM-dd"));
-                        meta.Add(fi.LastAccessTime.ToString("yyyy-MM-dd"));
-                        meta.Add(fi.CreationTime.ToString("yyyy-MM-dd"));
-                        metadata.Add(meta);
+                        directories.Push(subDir);
                     }
-                    catch { /* Skip inaccessible files */ }
-                }
 
-                foreach (var dir in Directory.GetDirectories(path))
+                    var files = Directory.GetFiles(currentDir, "*.exe");
+
+                    Parallel.ForEach(files, new ParallelOptions { CancellationToken = token }, file =>
+                    {
+                        try
+                        {
+                            FileInfo fi = new FileInfo(file);
+                            exeFiles.Add((file, fi));
+                        }
+                        catch { }
+                    });
+                }
+                catch { }
+            }
+
+            SaveToDatabase(exeFiles.ToList());
+        }
+
+
+        private void SaveToDatabase(List<(string path, FileInfo info)> fileList)
+        {
+            int userId = Global.UserId ?? 0;
+            var user = _context.SignUpDetails.FirstOrDefault(u => u.Id == userId);
+
+            if (user == null)
+            {
+                System.Windows.MessageBox.Show("User not found.");
+                return;
+            }
+
+            foreach(var (path,info) in fileList)
+            {
+                try
                 {
-                    ScanDirectoryForExe(dir);
+                
+                    if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
+                        continue;
+
+                    if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
+                        continue;
+
+
+                    var exes = new AllExes
+                    {
+                        FilePath = path,
+                        SignUpDetail = user,
+                        FileName = info.Name,
+                        FileSize = FormatFileSize(info.Length),
+                        LastWriteTime = info.LastWriteTime,
+                        LastAccessTime = info.LastAccessTime,
+                        CreatedAt = info.CreationTime
+                    };
+
+                    _context.AllExes.Add(exes);
+                }
+                catch(Exception e)
+                {
+                    System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
                 }
             }
-            catch (UnauthorizedAccessException) { }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error accessing {path}: {ex.Message}");
-            }
+
+           
+            _context.SaveChanges();
+            System.Windows.MessageBox.Show($"Saved {fileList.Count} .exe files to database.");
+
+           
         }
 
         private bool IsExcludedPath(string path)
