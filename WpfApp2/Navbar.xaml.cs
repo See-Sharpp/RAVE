@@ -175,8 +175,6 @@ namespace WpfApp2
 
                         _context.AllExes.Add(allExes);
                         await _context.SaveChangesAsync(); // Save to database
-
-                        System.Windows.MessageBox.Show("Database updated");
                     }
                     catch (Exception ex)
                     {
@@ -224,10 +222,6 @@ namespace WpfApp2
                 }
             }
             catch (UnauthorizedAccessException) { }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error accessing {path}: {ex.Message}");
-            }
         }
 
         private bool IsExcludedPath(string path)
