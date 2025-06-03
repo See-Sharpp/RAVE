@@ -12,12 +12,14 @@ using Newtonsoft.Json;
 using System.Windows.Media.Effects;
 using Microsoft.Extensions.Configuration;
 using System.Windows.Controls; // Added for Page
+using MahApps.Metro.Controls.Dialogs;
+
+
 
 namespace WpfApp2
 {
     public partial class Dashboard : Page 
     {
-        
         private WaveInEvent? waveIn;
         private WaveFileWriter? writer;
         private string outputFilePath = "temp_voice_input.wav";
@@ -25,11 +27,11 @@ namespace WpfApp2
         private static string api = null;
         private WakeWordHelper? _wakeWordDetector;
 
-       
+        
         public Dashboard()
         {
             InitializeComponent();
-            // Removed SetupTrayIcon() call from here
+            
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
@@ -56,14 +58,14 @@ namespace WpfApp2
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
 
-            await Task.Delay(3000); // Simulate 3 seconds of recording
+            await Task.Delay(5000); // Simulate 3 seconds of recording
 
             await StopRecording();
 
             string result = await TranscribeAsync(outputFilePath);
             CommandInput.Clear();
             CommandInput.AppendText(result);
-            System.Windows.MessageBox.Show(result);
+            // System.Windows.MessageBox.Show(result);
         }
 
         private async Task<string> TranscribeAsync(string audioFilePath)
@@ -195,5 +197,12 @@ namespace WpfApp2
             SendEffect.IsEnabled = true;
             CommandInput.IsReadOnly = false;
         }
+
+       
+     
+
+      
+
+      
     }
 }

@@ -338,7 +338,7 @@
                             FontFamily="Segoe UI"
                             FontSize="12"
                             Foreground="#6B7280"
-                            Background="{Binding Path=Background, ElementName=rightGridBorder}" Padding="16,0"
+                          
                             HorizontalAlignment="Center"/>
                     </Grid>
 

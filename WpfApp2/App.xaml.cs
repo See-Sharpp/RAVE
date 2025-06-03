@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +10,19 @@ namespace WpfApp2
 {
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            var culture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+        }
+
         public App()
         {
             // Catch unhandled exceptions in non-UI threads (e.g., Vosk callbacks)

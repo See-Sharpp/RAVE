@@ -1,13 +1,15 @@
-﻿using MahApps.Metro.Controls;
+﻿using HandyControl.Expression.Shapes;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
+using Microsoft.VisualBasic.Logging;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Forms;
-using System.Windows.Shapes;
 using WpfApp2.Context;
 using WpfApp2.Models;
 
@@ -41,7 +43,7 @@ namespace WpfApp2
                 @"C:\Boot",
                 @"C:\DumpStack.log.tmp",
                 @"C:\Documents and Settings",
-                @"C:\SysReset",               // Windows Reset leftover
+                @"C:\SysReset",               
                 @"C:\Drivers",                // OEM driver folders
                 @"C:\OEM",                    // System builder files
                 @"C:\$WINDOWS.~BT",           // Windows upgrade leftovers
@@ -58,7 +60,7 @@ namespace WpfApp2
             InitializeComponent();
             SetupTrayIcon(); 
             MainContentFrame.Navigate(new Dashboard()); // Set initial page
-            System.Windows.MessageBox.Show(""+Global.UserId);
+           
         }
 
         private void SetupTrayIcon()
@@ -154,10 +156,22 @@ namespace WpfApp2
                 }
                 return;
             }
+            var result = await scanMessage("Scanning Files will take long time. Are you sure you want to scan?");
 
-            _isScanning = true;
-            _cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken token = _cancellationTokenSource.Token;
+            if (result)
+            {
+                await scanMessageConfirm("Scanning Started...");
+                NavScanButton.IsEnabled = false;
+                if (_isScanning)
+                {
+                    System.Windows.MessageBox.Show("Scan already in progress. Canceling...");
+                    _cancellationTokenSource?.Cancel();
+                    return;
+                }
+
+                _isScanning = true;
+                _cancellationTokenSource = new CancellationTokenSource();
+                CancellationToken token = _cancellationTokenSource.Token;
 
             try
             {
@@ -182,7 +196,12 @@ namespace WpfApp2
                 _cancellationTokenSource = null;
             }
 
-            NavScanButton.IsEnabled = true;
+                NavScanButton.IsEnabled = true;
+            }
+            else
+            {
+                return;
+            }
         }
 
         private ProgressRing GetScanSpinner()
@@ -235,7 +254,7 @@ namespace WpfApp2
             SaveToDatabase(exeFiles.ToList());
         }
 
-        private void SaveToDatabase(List<(string path, FileInfo info)> fileList)
+        private async void SaveToDatabase(List<(string path, FileInfo info)> fileList)
         {
             int userId = Global.UserId ?? 0;
             var user = _context.SignUpDetails.FirstOrDefault(u => u.Id == userId);
@@ -256,13 +275,14 @@ namespace WpfApp2
 
                     if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
                         continue;
-
-
+                    var versionInfo = FileVersionInfo.GetVersionInfo(path);
+                    string displayName = versionInfo.FileDescription ?? info.Name;
                     var exes = new AllExes
                     {
                         FilePath = path,
                         SignUpDetail = user,
                         FileName = info.Name,
+                        DisplayName = displayName,
                         FileSize = FormatFileSize(info.Length),
                         LastWriteTime = info.LastWriteTime,
                         LastAccessTime = info.LastAccessTime,
@@ -279,7 +299,7 @@ namespace WpfApp2
 
            
             _context.SaveChanges();
-            System.Windows.MessageBox.Show($"Saved {fileList.Count} .exe files to database.");
+            await scanMessageConfirm($"Saved {fileList.Count} exes files to database.");
 
            
         }
@@ -328,22 +348,106 @@ namespace WpfApp2
             }
         }
 
-        private void NavLogoutButton_Click(object sender, RoutedEventArgs e)
+        private async void NavLogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxResult result = System.Windows.MessageBox.Show(
-            "Are you sure you want to log out?",
-            "Confirm Logout",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            await logoutMessage("Are you sure you want to log out?");
 
-            if (result == MessageBoxResult.Yes)
-            {
-                Global.UserId = null;
-                MainWindow mainWindow = new MainWindow();
-                mainWindow.Show();
-                RemoveTrayIcon();
-                this.Close();
-            }
         }
+
+        private async Task logoutMessage(string message)
+        {
+            var metroWindow = Window.GetWindow(this) as MahApps.Metro.Controls.MetroWindow;
+            var settings = new MahApps.Metro.Controls.Dialogs.MetroDialogSettings()
+            {
+                AffirmativeButtonText = "Yes",
+                NegativeButtonText = "No",
+                AnimateShow = true,
+                AnimateHide = false
+            };
+
+
+            if (metroWindow != null)
+            {
+                var result = await metroWindow.ShowMessageAsync("Confirm", message, MessageDialogStyle.AffirmativeAndNegative,settings);
+
+                if (result == MessageDialogResult.Affirmative)
+                {
+                    Global.UserId = null;
+                    MainWindow mainWindow = new MainWindow();
+                    mainWindow.Show();
+                    RemoveTrayIcon();
+                    this.Close();
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+        }
+
+        private async Task<bool> scanMessage(string message)
+        {
+            
+            MahApps.Metro.Controls.MetroWindow metroWindow = null;
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                metroWindow = Window.GetWindow(this) as MahApps.Metro.Controls.MetroWindow;
+            });
+
+            if (metroWindow == null)
+            {
+                return false;
+            }
+
+        
+            var settings = new MahApps.Metro.Controls.Dialogs.MetroDialogSettings()
+            {
+                AffirmativeButtonText = "Yes",
+                NegativeButtonText = "No",
+                AnimateShow = true,
+                AnimateHide = false
+            };
+
+            var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(
+                () => metroWindow.ShowMessageAsync("Confirm", message,
+                                                  MessageDialogStyle.AffirmativeAndNegative,
+                                                  settings)
+            );
+
+           
+            Task<MessageDialogResult> dialogTask = await dispatcherOp;
+
+         
+            MessageDialogResult result = await dialogTask;
+
+            return (result == MessageDialogResult.Affirmative);
+        }
+
+
+
+        private async Task scanMessageConfirm(string message)
+        {
+            MahApps.Metro.Controls.MetroWindow metroWindow = null;
+
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                metroWindow = Window.GetWindow(this) as MahApps.Metro.Controls.MetroWindow;
+            });
+
+            if (metroWindow == null)
+            {
+                return ;
+            }
+
+            var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(
+               () => metroWindow.ShowMessageAsync("Information", message)
+            );
+
+          
+            
+
+        }
+
     }
 }
