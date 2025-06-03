@@ -19,6 +19,8 @@ namespace WpfApp2.Models
         public SignUpDetail SignUpDetail { get; set; } = null!;
 
         public string? FileName { get; set; }
+
+        public string? DisplayName { get; set; }
         public string? FileSize { get; set; }
 
         public DateTime LastWriteTime { get; set; }
