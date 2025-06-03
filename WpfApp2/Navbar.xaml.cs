@@ -134,10 +134,24 @@ namespace WpfApp2
         {
             System.Windows.MessageBox.Show("Scanning Started");
             NavScanButton.IsEnabled = false;
+
+            
+            var spinner = GetScanSpinner();
+            if (spinner != null)
+            {
+                spinner.IsActive = true;
+                spinner.Visibility = Visibility.Visible;
+            }
+
             if (_isScanning)
             {
                 System.Windows.MessageBox.Show("Scan already in progress. Canceling...");
                 _cancellationTokenSource?.Cancel();
+                if (spinner != null)
+                {
+                    spinner.IsActive = false;
+                    spinner.Visibility = Visibility.Collapsed;
+                }
                 return;
             }
 
@@ -160,10 +174,26 @@ namespace WpfApp2
             finally
             {
                 _isScanning = false;
+                if (spinner != null)
+                {
+                    spinner.IsActive = false;
+                    spinner.Visibility = Visibility.Collapsed;
+                }
                 _cancellationTokenSource = null;
             }
 
             NavScanButton.IsEnabled = true;
+        }
+
+        private ProgressRing GetScanSpinner()
+        {
+            // Get the spinner from the button template
+            var template = NavScanButton.Template;
+            if (template != null)
+            {
+                return template.FindName("PART_ScanSpinner", NavScanButton) as ProgressRing;
+            }
+            return null;
         }
 
         private void ParallelScanDirectoryForExe(string rootPath, CancellationToken token)
