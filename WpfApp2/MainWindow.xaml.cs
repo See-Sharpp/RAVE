@@ -1,5 +1,7 @@
 ﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using WpfApp2.Context;
@@ -32,7 +34,7 @@ namespace WpfApp2
             if (User!=null)
             {
                 Global.UserId = User?.Id;
-                System.Windows.MessageBox.Show($"Logging in as {user}");
+           
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
                 this.Close();
@@ -42,7 +44,8 @@ namespace WpfApp2
             if (User2!=null)
             {
                 Global.UserId = User2?.Id;
-                System.Windows.MessageBox.Show($"Logging in as {user}");
+             
+           
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
                 this.Close();
@@ -76,6 +79,8 @@ namespace WpfApp2
                 System.Windows.Application.Current.Shutdown();
             }
         }
+
+     
 
     }
 }
