@@ -134,38 +134,27 @@ namespace WpfApp2
 
         private async void NavScanButton_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show("Scanning Started");
-            NavScanButton.IsEnabled = false;
-
-            
             var spinner = GetScanSpinner();
-            if (spinner != null)
-            {
-                spinner.IsActive = true;
-                spinner.Visibility = Visibility.Visible;
-            }
-
-            if (_isScanning)
-            {
-                System.Windows.MessageBox.Show("Scan already in progress. Canceling...");
-                _cancellationTokenSource?.Cancel();
-                if (spinner != null)
-                {
-                    spinner.IsActive = false;
-                    spinner.Visibility = Visibility.Collapsed;
-                }
-                return;
-            }
             var result = await scanMessage("Scanning Files will take long time. Are you sure you want to scan?");
 
             if (result)
             {
                 await scanMessageConfirm("Scanning Started...");
+                if (spinner != null)
+                {
+                    spinner.IsActive = true;
+                    spinner.Visibility = Visibility.Visible;
+                }
                 NavScanButton.IsEnabled = false;
                 if (_isScanning)
                 {
                     System.Windows.MessageBox.Show("Scan already in progress. Canceling...");
                     _cancellationTokenSource?.Cancel();
+                    if (spinner != null)
+                    {
+                        spinner.IsActive = false;
+                        spinner.Visibility = Visibility.Collapsed;
+                    }
                     return;
                 }
 
