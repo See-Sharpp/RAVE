@@ -24,28 +24,99 @@
         </Style>
 
         <Style x:Key="SlideToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="55"/>
-            <Setter Property="Height" Value="25"/>
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
                         <Grid>
                             <Border x:Name="SwitchBorder"
-                            CornerRadius="14"
-                            Background="Gray"
-                            BorderBrush="DarkGray"
-                            BorderThickness="1"/>
+                            Width="{TemplateBinding Width}" 
+                            Height="{TemplateBinding Height}"
+                            CornerRadius="16" 
+                            Background="#E5E7EB" BorderThickness="0">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.1"/>
+                                </Border.Effect>
+                            </Border>
                             <Ellipse x:Name="SwitchKnob"
-                             Width="18"
-                             Height="18"
-                             Fill="White"
-                             Margin="2"
-                             HorizontalAlignment="Left"/>
+                             Width="24" Height="24"
+                             Fill="White" 
+                             Margin="4"
+                             HorizontalAlignment="Left">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="6" ShadowDepth="1" Opacity="0.2"/>
+                                </Ellipse.Effect>
+                                <Ellipse.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform x:Name="KnobScaleTransform" ScaleX="1.0" ScaleY="1.0" CenterX="12" CenterY="12"/>
+                                        <TranslateTransform x:Name="KnobTranslateTransform" X="0"/>
+                                    </TransformGroup>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="SwitchBorder" Property="Background" Value="#4da6a6"/>
-                                <Setter TargetName="SwitchKnob" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="SwitchBorder" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#6366F1" Offset="0"/>
+                                            <GradientStop Color="#8B5CF6" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobTranslateTransform" Storyboard.TargetProperty="X"
+                                                     To="28" Duration="0:0:0.25">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobTranslateTransform" Storyboard.TargetProperty="X"
+                                                     To="0" Duration="0:0:0.25">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CubicEase EasingMode="EaseInOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="SwitchKnob" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+
+                            <Trigger Property="IsPressed" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobScaleTransform" Storyboard.TargetProperty="ScaleX" To="0.92" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="KnobScaleTransform" Storyboard.TargetProperty="ScaleY" To="0.92" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="KnobScaleTransform" Storyboard.TargetProperty="ScaleX" To="1.0" Duration="0:0:0.1"/>
+                                            <DoubleAnimation Storyboard.TargetName="KnobScaleTransform" Storyboard.TargetProperty="ScaleY" To="1.0" Duration="0:0:0.1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
