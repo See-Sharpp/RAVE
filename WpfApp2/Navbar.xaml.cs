@@ -20,13 +20,12 @@ namespace WpfApp2
         private NotifyIcon _notifyIcon = null!;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isScanning = false;
+        private int minFilesize = 1024; // Minimum file size in bytes (1 KB)
 
         private ApplicationDbContext _context = new ApplicationDbContext();
             readonly string[] excludedPaths = new string[]
             {
                 @"C:\Windows",
-                @"C:\Program Files",
-                @"C:\Program Files (x86)",
                 @"C:\ProgramData",
                 @"C:\$Recycle.Bin",
                 @"C:\Recovery",
@@ -135,7 +134,7 @@ namespace WpfApp2
         private async void NavScanButton_Click(object sender, RoutedEventArgs e)
         {
             var spinner = GetScanSpinner();
-            var result = await scanMessage("Scanning Files will take long time. Are you sure you want to scan?");
+            var result = await scanMessage("Scanning files might take some time. Would you like to continue?\r\n\r\n");
 
             if (result)
             {
@@ -232,7 +231,11 @@ namespace WpfApp2
                         try
                         {
                             FileInfo fi = new FileInfo(file);
-                            exeFiles.Add((file, fi));
+                            if (fi.Length >minFilesize)
+                            {
+                                exeFiles.Add((file, fi));
+                            }
+                            
                         }
                         catch { }
                     });
@@ -278,6 +281,7 @@ namespace WpfApp2
                         CreatedAt = info.CreationTime
                     };
 
+                    
                     _context.AllExes.Add(exes);
                 }
                 catch(Exception e)

@@ -31,7 +31,6 @@
 		<!-- These versions match what you said you have installed -->
 		<PackageReference Include="ControlzEx" Version="4.4.0" />
 		<PackageReference Include="FontAwesome.Sharp" Version="6.6.0" />
-		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9" />
 		<PackageReference Include="GroqSharp" Version="1.1.2" />
 		<PackageReference Include="HandyControl" Version="3.5.1" />
 		<PackageReference Include="MahApps.Metro" Version="2.4.5" />
@@ -52,9 +51,5 @@
 		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Notifications.Wpf" Version="0.1.1" />
-		<PackageReference Include="ToastNotifications" Version="2.5.1" />
-		<PackageReference Include="ToastNotifications.Messages" Version="2.5.1" />
-		<Reference Include="System.Windows.Forms" Version="4.8.0" />
 	</ItemGroup>
 </Project>
