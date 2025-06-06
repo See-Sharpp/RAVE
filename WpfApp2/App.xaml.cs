@@ -52,6 +52,15 @@ namespace WpfApp2
             {
                 context.Database.Migrate();
             }
+
+            AddEnvironmentVariable();
+        }
+
+        public void AddEnvironmentVariable()
+        {
+            AddEnvironmentPath.AddNircmd();
         }
     }
+
+
 }
