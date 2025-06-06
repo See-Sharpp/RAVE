@@ -114,20 +114,7 @@ namespace WpfApp2
 
                     var entity = new LLM_Detail
                     {
-                        OriginalUserQuery = originalUserQuery,
-                        ProcessedUserQuery = processedUserQuery,
-                        PrimaryIntent = primaryIntent,
-                        SpecificAction = specificAction,
-                        FileDescription = fileDescription,
-                        FileTypeFilter = fileType,
-                        ApplicationName = appName,
-                        SearchEngineQuery = searchQuery,
-                        SystemComponentTarget = systemTarget,
-                        SystemComponentValue = systemValue,
-                        TaskDescriptionForSchedule = taskDescription,
-                        ScheduleDatetimeDescription = scheduleTime,
-                        SystemCommand = systemCommand,
-                        TimeReferences = timeRefCombined
+                        Expected_json = contentString
                     };
 
                     _context.LLM_Detail.Add(entity);
