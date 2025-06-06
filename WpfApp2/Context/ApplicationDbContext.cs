@@ -15,6 +15,8 @@ namespace WpfApp2.Context
 
         public DbSet<AllExes> AllExes { get; set; }
 
+        public DbSet<LLM_Detail> LLM_Detail { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
