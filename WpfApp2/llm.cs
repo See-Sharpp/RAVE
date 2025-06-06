@@ -114,6 +114,7 @@ namespace WpfApp2
 
                     var entity = new LLM_Detail
                     {
+
                         Expected_json = contentString
                     };
 
