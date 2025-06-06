@@ -25,8 +25,6 @@ namespace WpfApp2
             readonly string[] excludedPaths = new string[]
             {
                 @"C:\Windows",
-                @"C:\Program Files",
-                @"C:\Program Files (x86)",
                 @"C:\ProgramData",
                 @"C:\$Recycle.Bin",
                 @"C:\Recovery",
