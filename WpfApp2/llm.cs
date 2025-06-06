@@ -23,7 +23,6 @@ namespace WpfApp2
         public llm(string input)
         {
             this.userInput = input;
-            MessageBox.Show("User Input: " + input);
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
@@ -104,20 +103,16 @@ namespace WpfApp2
                     var timeReferences = entities.GetProperty("time_references");
                     string timeRefCombined = string.Join(", ", timeReferences.EnumerateArray().Select(e => e.GetString()));
 
-                    
-                    MessageBox.Show($"Original: {originalUserQuery}\nProcessed: {processedUserQuery}\nPrimary Intent: {primaryIntent}\nSpecific Action: {specificAction}");
-                    MessageBox.Show($"App: {appName}\nFile Desc: {fileDescription}\nType: {fileType}");
-                    MessageBox.Show($"Search Query: {searchQuery}\nSystem Target: {systemTarget}\nSystem Value: {systemValue}");
-                    MessageBox.Show($"Task: {taskDescription}\nSchedule Time: {scheduleTime}");
-                    MessageBox.Show($"System Cmd: {systemCommand}\nTime Refs: {timeRefCombined}");
 
-
+                    var userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
                     var entity = new LLM_Detail
                     {
+                        SignUpDetail = userId,
                         Expected_json = contentString
                     };
 
                     _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
 
                 }
                 else
