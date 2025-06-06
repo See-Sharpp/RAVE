@@ -13,6 +13,8 @@ using System.Windows.Media.Effects;
 using Microsoft.Extensions.Configuration;
 using System.Windows.Controls; // Added for Page
 using MahApps.Metro.Controls.Dialogs;
+using System.Windows.Input;
+
 
 
 
@@ -180,7 +182,8 @@ namespace WpfApp2
         private void SendCommand_Click(object sender, RoutedEventArgs e)
         {
             string command = CommandInput.Text;
-          
+            llm llm1 = new llm(command);
+
         }
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
@@ -188,6 +191,7 @@ namespace WpfApp2
             MicEffect.IsEnabled=false;
             SendEffect.IsEnabled=false;
             CommandInput.IsReadOnly=true;
+            CommandInput.Cursor = Cursors.Arrow;
         }
 
         private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
@@ -196,6 +200,8 @@ namespace WpfApp2
             MicEffect.IsEnabled = true;
             SendEffect.IsEnabled = true;
             CommandInput.IsReadOnly = false;
+            CommandInput.Cursor = Cursors.IBeam;
+
         }
 
        
