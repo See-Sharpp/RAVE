@@ -115,9 +115,6 @@ namespace WpfApp2
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
 
-                    Properties.Settings.Default.MediaCounter = 1;
-                    Properties.Settings.Default.Save();
-
                     System.Windows.MessageBox.Show(""+original_user_query + "\n" +
                         processed_user_query + "\n" +
                         primary_intent + "\n" +
