@@ -14,16 +14,16 @@ namespace WpfApp2
 {
     public class llm
     {
-        Commands command;
         private ApplicationDbContext _context = new ApplicationDbContext();
         private string userInput { get; set; }
         private string apiKey { get; set; }
         private static readonly string apiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
+
         public llm(string input)
         {
             this.userInput = input;
-            command = new Commands();
+         
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
@@ -49,8 +49,8 @@ namespace WpfApp2
                     model = "llama3-70b-8192",
                     messages = new[]
                     {
-                        new { role = "user", content = prompt }
-                    },
+                new { role = "user", content = prompt }
+            },
                     temperature = 0.2,
                     max_tokens = 1024
                 };
@@ -66,6 +66,7 @@ namespace WpfApp2
                 if (jsonResponse.RootElement.TryGetProperty("choices", out JsonElement choices) && choices.GetArrayLength() > 0)
                 {
                     string? contentString = choices[0].GetProperty("message").GetProperty("content").GetString();
+
                     if (string.IsNullOrEmpty(contentString))
                     {
                         MessageBox.Show("No content received.");
@@ -103,6 +104,37 @@ namespace WpfApp2
                                             ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                             : Array.Empty<string>();
 
+
+                    var userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString
+                    };
+
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+
+                    Properties.Settings.Default.MediaCounter = 1;
+                    Properties.Settings.Default.Save();
+
+                    System.Windows.MessageBox.Show(""+original_user_query + "\n" +
+                        processed_user_query + "\n" +
+                        primary_intent + "\n" +
+                        specific_action + "\n" +
+                        file_description + "\n" +
+                        file_type_filter + "\n" +
+                        string.Join(", ", time_references) + "\n" +
+                        string.Join(", ", sources) + "\n" +
+                        string.Join(", ", destinations) + "\n" +
+                        application_or_file + "\n" +
+                        search_query + "\n" +
+                        string.Join(", ", command_templates));
+
+                    if (primary_intent.ToLower() == "system_control")
+                    {
+                        Commands.systemCommand(command_templates[0]);
+                    }
                 }
                 else
                 {
@@ -110,5 +142,6 @@ namespace WpfApp2
                 }
             }
         }
+
     }
 }
