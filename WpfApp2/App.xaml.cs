@@ -10,6 +10,8 @@ namespace WpfApp2
 {
     public partial class App : Application
     {
+
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -21,6 +23,10 @@ namespace WpfApp2
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
+            if (!string.IsNullOrEmpty(Global.deafultScreenShotPath) && !Directory.Exists(Global.deafultScreenShotPath))
+            {
+                Directory.CreateDirectory(Global.deafultScreenShotPath);
+            }
         }
 
         public App()
@@ -60,7 +66,6 @@ namespace WpfApp2
         {
             AddEnvironmentPath.AddNircmd();
         }
+        
     }
-
-
 }
