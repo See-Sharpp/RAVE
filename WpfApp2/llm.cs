@@ -14,7 +14,7 @@ namespace WpfApp2
 {
     public class llm
     {
-
+        Commands command;
         private ApplicationDbContext _context = new ApplicationDbContext();
         private string userInput { get; set; }
         private string apiKey { get; set; }
@@ -23,7 +23,7 @@ namespace WpfApp2
         public llm(string input)
         {
             this.userInput = input;
-
+            command = new Commands();
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
@@ -113,6 +113,11 @@ namespace WpfApp2
 
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
+
+                    if (primaryIntent.ToLower() == "system_control")
+                    {
+                        command.commandPrompt(systemCommand);
+                    }
 
                 }
                 else
