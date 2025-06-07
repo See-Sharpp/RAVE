@@ -72,52 +72,36 @@ namespace WpfApp2
                         return;
                     }
 
-                    
                     var parsedJson = JsonDocument.Parse(contentString);
-
                     var root = parsedJson.RootElement;
 
-                    
-                    string originalUserQuery = root.GetProperty("original_user_query").GetString() ?? "";
-                    string processedUserQuery = root.GetProperty("processed_user_query").GetString() ?? "";
+                    var original_user_query = root.GetProperty("original_user_query").GetString();
+                    var processed_user_query = root.GetProperty("processed_user_query").GetString();
 
-                    
-                    var intent = root.GetProperty("intent_classification");
-                    string primaryIntent = intent.GetProperty("primary_intent").GetString() ?? "";
-                    string specificAction = intent.GetProperty("specific_action").GetString() ?? "";
+                    var intent_classification = root.GetProperty("intent_classification");
+                    var primary_intent = intent_classification.GetProperty("primary_intent").GetString();
+                    var specific_action = intent_classification.GetProperty("specific_action").GetString();
 
-                    
-                    var entities = root.GetProperty("extracted_entities");
+                    var extracted_entities = root.GetProperty("extracted_entities");
+                    var file_description = extracted_entities.TryGetProperty("file_description", out var fd) ? fd.GetString() : null;
+                    var file_type_filter = extracted_entities.TryGetProperty("file_type_filter", out var ft) ? ft.GetString() : null;
+                    var time_references = extracted_entities.TryGetProperty("time_references", out var tr) && tr.ValueKind == JsonValueKind.Array
+                                          ? tr.EnumerateArray().Select(e => e.GetString()).ToArray()
+                                          : Array.Empty<string>();
 
-                    string fileDescription = entities.GetProperty("file_description").GetString() ?? "null";
-                    string fileType = entities.GetProperty("file_type_filter").GetString() ?? "null";
-                    string appName = entities.GetProperty("application_name").GetString() ?? "null";
-                    string searchQuery = entities.GetProperty("search_engine_query").GetString() ?? "null";
-                    string systemTarget = entities.GetProperty("system_component_target").GetString() ?? "null";
-                    string systemValue = entities.GetProperty("system_component_value").GetString() ?? "null";
-                    string taskDescription = entities.GetProperty("task_description_for_schedule").GetString() ?? "null";
-                    string scheduleTime = entities.GetProperty("schedule_datetime_description").GetString() ?? "null";
-                    string systemCommand = entities.GetProperty("system_command").GetString() ?? "null";
+                    var entities = root.GetProperty("entities");
+                    var sources = entities.TryGetProperty("sources", out var s) && s.ValueKind == JsonValueKind.Array
+                                  ? s.EnumerateArray().Select(e => e.GetString()).ToArray()
+                                  : Array.Empty<string>();
+                    var destinations = entities.TryGetProperty("destinations", out var d) && d.ValueKind == JsonValueKind.Array
+                                       ? d.EnumerateArray().Select(e => e.GetString()).ToArray()
+                                       : Array.Empty<string>();
+                    var application_or_file = entities.TryGetProperty("application_or_file", out var af) ? af.GetString() : null;
+                    var search_query = entities.TryGetProperty("search_query", out var sq) ? sq.GetString() : null;
 
-                    
-                    var timeReferences = entities.GetProperty("time_references");
-                    string timeRefCombined = string.Join(", ", timeReferences.EnumerateArray().Select(e => e.GetString()));
-
-
-                    var userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
-                    var entity = new LLM_Detail
-                    {
-                        SignUpDetail = userId,
-                        Expected_json = contentString
-                    };
-
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
-
-                    if (primaryIntent.ToLower() == "system_control")
-                    {
-                        command.commandPrompt(systemCommand);
-                    }
+                    var command_templates = root.TryGetProperty("command_templates", out var ct) && ct.ValueKind == JsonValueKind.Array
+                                            ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
+                                            : Array.Empty<string>();
 
                 }
                 else
