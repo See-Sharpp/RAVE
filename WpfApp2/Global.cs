@@ -11,6 +11,7 @@ namespace WpfApp2
     {
         public static int? UserId { get; set; }
         public static bool SignUp = false;
+        public static string? deafultScreenShotPath = @"C:\temp\Rave Media";
 
     }
 }
