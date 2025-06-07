@@ -28,9 +28,11 @@ namespace WpfApp2
                 }
 
                 long current = Properties.Settings.Default.MediaCounter;
+                MessageBox.Show(""+current);
                 temp = Path.Combine(Global.deafultScreenShotPath, $"shot{current}.png");
                 Properties.Settings.Default.MediaCounter = current + 1;
                 Properties.Settings.Default.Save();
+                MessageBox.Show("" + Properties.Settings.Default.MediaCounter);
 
                 temp = Path.Combine(Global.deafultScreenShotPath, "shot" + Properties.Settings.Default.MediaCounter + ".png");
 
