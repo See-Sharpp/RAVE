@@ -34,8 +34,14 @@ namespace WpfApp2
             this.apiKey = api_key;
 
             prompt += " " + userInput;
-
-            Task.Run(async () => await responceJson(prompt)).Wait();
+            try
+            {
+                Task.Run(async () => await responceJson(prompt)).Wait();
+            }
+            catch(Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
         }
 
         public async Task responceJson(string prompt)
@@ -49,10 +55,10 @@ namespace WpfApp2
                     model = "llama3-70b-8192",
                     messages = new[]
                     {
-                new { role = "user", content = prompt }
-            },
-                    temperature = 0.2,
-                    max_tokens = 1024
+                        new { role = "user", content = prompt }
+                    },
+                    temperature = 0.0,
+                    max_tokens = 1024,
                 };
 
                 var json = JsonSerializer.Serialize(requestBody);
@@ -130,7 +136,19 @@ namespace WpfApp2
 
                     if (primary_intent.ToLower() == "system_control")
                     {
-                        Commands.systemCommand(command_templates[0]);
+                        if (command_templates[0] != null)
+                        {
+                            Commands.systemCommand(command_templates[0], search_query);
+                        }
+                    }
+
+                    if (primary_intent.ToLower() == "web_browse")
+                    {
+                        if(command_templates[0] != null)
+                        {
+                            MessageBox.Show(search_query);
+                            Commands.searchBrowser(command_templates[0],search_query);
+                        }
                     }
                 }
                 else
