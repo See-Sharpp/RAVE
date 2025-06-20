@@ -42,15 +42,15 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            //_wakeWordDetector = new WakeWordHelper("model/HEY_RAVE.onnx", OnWakeWordDetected);
-            //Task.Run(() => _wakeWordDetector.Start());
+            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
+            Task.Run(() => _wakeWordDetector.Start());
         }
 
         private void OnWakeWordDetected()
         {
             Dispatcher.Invoke(() =>
             {
-                System.Windows.MessageBox.Show("Hey Rave Detected!");
+                System.Windows.MessageBox.Show("Hey Jarvis Detected!");
                 // ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
             });
         }
