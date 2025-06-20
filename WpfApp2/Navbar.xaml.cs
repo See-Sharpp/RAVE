@@ -20,7 +20,7 @@ namespace WpfApp2
         private NotifyIcon _notifyIcon = null!;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isScanning = false;
-        private int minFilesize = 1024; // Minimum file size in bytes (1 KB)
+        private int minFilesize = 1024;
 
         private ApplicationDbContext _context = new ApplicationDbContext();
             readonly string[] excludedPaths = new string[]
@@ -43,14 +43,14 @@ namespace WpfApp2
                 @"C:\DumpStack.log.tmp",
                 @"C:\Documents and Settings",
                 @"C:\SysReset",               
-                @"C:\Drivers",                // OEM driver folders
-                @"C:\OEM",                    // System builder files
-                @"C:\$WINDOWS.~BT",           // Windows upgrade leftovers
-                @"C:\$WINDOWS.~WS",           // Another upgrade folder
-                @"C:\Windows.old",            // Previous OS after upgrade
-                @"C:\EFI",                    // EFI System Partition (on FAT32 partition)
-                @"C:\Boot",                   // Boot loader files
-                @"C:\RecoveryImage",          // On some OEMs like Dell
+                @"C:\Drivers",                
+                @"C:\OEM",                    
+                @"C:\$WINDOWS.~BT",           
+                @"C:\$WINDOWS.~WS",          
+                @"C:\Windows.old",            
+                @"C:\EFI",                    
+                @"C:\Boot",                   
+                @"C:\RecoveryImage",          
             };
 
 
@@ -58,7 +58,7 @@ namespace WpfApp2
         {
             InitializeComponent();
             SetupTrayIcon(); 
-            MainContentFrame.Navigate(new Dashboard()); // Set initial page
+            MainContentFrame.Navigate(new Dashboard());
            
         }
 
@@ -436,9 +436,6 @@ namespace WpfApp2
             var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(
                () => metroWindow.ShowMessageAsync("Information", message)
             );
-
-          
-            
 
         }
 
