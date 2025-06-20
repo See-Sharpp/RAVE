@@ -418,7 +418,6 @@ namespace WpfApp2
         }
 
 
-
         private async Task scanMessageConfirm(string message)
         {
             MahApps.Metro.Controls.MetroWindow metroWindow = null;
