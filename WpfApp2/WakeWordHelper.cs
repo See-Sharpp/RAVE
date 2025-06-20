@@ -1,10 +1,11 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using NAudio.Wave;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using NWaves.FeatureExtractors;
+using NWaves.FeatureExtractors.Options;
+using NWaves.Windows;
+using System.Diagnostics;
+
 
 namespace WpfApp2
 {
@@ -13,11 +14,10 @@ namespace WpfApp2
         private readonly InferenceSession session;
         private readonly Action onDetected;
         private readonly int sampleRate = 16000;
-        private readonly int frameSize = 512;
+        private readonly int frameSize = 1536;
 
         private WaveInEvent waveIn;
-
-        private const int sampleWindow = 1536; // 16x96
+        private const int sampleWindow = 16000;
         private readonly float[] rollingBuffer = new float[sampleWindow];
         private int rollingIndex = 0;
         private bool bufferFilled = false;
@@ -26,11 +26,27 @@ namespace WpfApp2
         private readonly TimeSpan detectionCooldown = TimeSpan.FromSeconds(2);
         private bool isCurrentlyActive = false;
 
+        private readonly FilterbankExtractor fbExtractor;
+
+        float max = 0f;
 
         public WakeWordHelper(string modelPath, Action onWakeWordDetected)
         {
             session = new InferenceSession(modelPath);
             onDetected = onWakeWordDetected;
+
+            var fbOptions = new FilterbankOptions
+            {
+                SamplingRate = sampleRate,
+                FeatureCount = 96,            
+                FrameDuration = 0.025,
+                HopDuration = 0.010,
+                FilterBankSize = 96,           
+                Window = WindowType.Hamming,
+                NonLinearity = NonLinearityType.LogE
+            };
+
+            fbExtractor = new FilterbankExtractor(fbOptions);
         }
 
         public void Start()
@@ -49,7 +65,6 @@ namespace WpfApp2
         {
             var newSamples = ConvertToFloat(e.Buffer, e.BytesRecorded);
 
-            // Add new samples to rolling buffer
             for (int i = 0; i < newSamples.Length; i++)
             {
                 rollingBuffer[rollingIndex] = newSamples[i];
@@ -57,40 +72,41 @@ namespace WpfApp2
                 if (rollingIndex == 0) bufferFilled = true;
             }
 
-            if (!bufferFilled) return; 
+            if (!bufferFilled) return;
 
-            // Create input audio in the right rolling order
             float[] audioInput = new float[sampleWindow];
-            int index = rollingIndex;
+            int idx = rollingIndex;
             for (int i = 0; i < sampleWindow; i++)
             {
-                audioInput[i] = rollingBuffer[index];
-                index = (index + 1) % sampleWindow;
+                audioInput[i] = rollingBuffer[idx];
+                idx = (idx + 1) % sampleWindow;
             }
 
-            // Reshape to [1, 16, 96]
-            var tensorData = new float[1 * 16 * 96];
-            for (int i = 0; i < 16; i++)
-                for (int j = 0; j < 96; j++)
-                    tensorData[i * 96 + j] = audioInput[i * 96 + j];
+            var features = fbExtractor.ComputeFrom(audioInput).ToList();
+            if (features.Count < 16) return;
+
+            var sliced = features.Take(16).ToArray();
+            var tensorData = sliced.SelectMany(f => f).ToArray(); 
 
             var tensor = new DenseTensor<float>(tensorData, new[] { 1, 16, 96 });
-            var input = NamedOnnxValue.CreateFromTensor("onnx::Flatten_0", tensor);
+            var input = NamedOnnxValue.CreateFromTensor("x.1", tensor);
 
             using var results = session.Run(new[] { input });
-            var output = results.First().AsEnumerable<float>().ToArray();
+            var rawScore = results.First().AsEnumerable<float>().First();
+            float probability = 1f / (1f + MathF.Exp(-rawScore));
+            float wakeWordProbability = 1f - probability;
 
-            float confidence = output[0];
-            //System.Windows.MessageBox.Show($"Confidence: {output[0]:F4}");
+            Debug.WriteLine($"Raw score: {rawScore}, Probability: {wakeWordProbability}");
+            max = Math.Max(max, probability);
+            Debug.WriteLine($"Max Probability: {max}");
 
-            if (confidence > 0.9f && !isCurrentlyActive)
+            if (probability > 0.69f && !isCurrentlyActive)
             {
                 var now = DateTime.UtcNow;
-                if ((now - lastDetectionTime) > detectionCooldown)
+                if (now - lastDetectionTime > detectionCooldown)
                 {
                     lastDetectionTime = now;
                     isCurrentlyActive = true;
-
                     onDetected?.Invoke();
 
                     Task.Delay(500).ContinueWith(_ =>
