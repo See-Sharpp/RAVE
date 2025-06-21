@@ -9,7 +9,7 @@ namespace WpfApp2
 {
     internal static class Global
     {
-        public static int? UserId { get; set; }
+        public static int? UserId { get; set; } = 1;
         public static bool SignUp = false;
         public static string? deafultScreenShotPath = @"C:\temp\Rave Media";
 
