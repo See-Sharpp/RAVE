@@ -38,10 +38,10 @@ namespace WpfApp2
             var fbOptions = new FilterbankOptions
             {
                 SamplingRate = sampleRate,
-                FeatureCount = 96,            
+                FeatureCount = 96,
                 FrameDuration = 0.025,
                 HopDuration = 0.010,
-                FilterBankSize = 96,           
+                FilterBankSize = 96,
                 Window = WindowType.Hamming,
                 NonLinearity = NonLinearityType.LogE
             };
@@ -83,21 +83,21 @@ namespace WpfApp2
             }
 
             var features = fbExtractor.ComputeFrom(audioInput).ToList();
-            if (features.Count < 16) return;
+            //if (features.Count < 16) return;
 
             var sliced = features.Take(16).ToArray();
-            var tensorData = sliced.SelectMany(f => f).ToArray(); 
+            var tensorData = sliced.SelectMany(f => f).ToArray();
 
-            var tensor = new DenseTensor<float>(tensorData, new[] { 1, 16, 96 });
-            var input = NamedOnnxValue.CreateFromTensor("x.1", tensor);
+            //var tensor = new DenseTensor<float>(tensorData, new[] { 1, 16, 96 });
+            //var input = NamedOnnxValue.CreateFromTensor("x.1", tensor);
 
-            using var results = session.Run(new[] { input });
-            var rawScore = results.First().AsEnumerable<float>().First();
-            float probability = 1f / (1f + MathF.Exp(-rawScore));
-            float wakeWordProbability = 1f - probability;
+            //using var results = session.Run(new[] { input });
+            //var rawScore = results.First().AsEnumerable<float>().First();
+            //float probability = 1f / (1f + MathF.Exp(-rawScore));
+            //float wakeWordProbability = 1f - probability;
 
-            Debug.WriteLine($"Raw score: {rawScore}, Probability: {wakeWordProbability}");
-            max = Math.Max(max, probability);
+            //Debug.WriteLine($"Raw score: {rawScore}, Probability: {wakeWordProbability}");
+            //max = Math.Max(max, probability);
             Debug.WriteLine($"Max Probability: {max}");
 
             if (probability > 0.69f && !isCurrentlyActive)

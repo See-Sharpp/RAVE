@@ -7,10 +7,18 @@
     <Compile Update="Dashboard.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="FloatingIcon.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="SignUp.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="FloatingIcon.xaml">
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 </Project>

@@ -29,7 +29,7 @@ namespace WpfApp2
         private static string api = null;
         private WakeWordHelper? _wakeWordDetector;
 
-        
+
         public Dashboard()
         {
             InitializeComponent();
@@ -39,6 +39,9 @@ namespace WpfApp2
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
                 .Build();
+
+            var floatingIcon = new FloatingIcon();
+            floatingIcon.Show();
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
@@ -51,7 +54,7 @@ namespace WpfApp2
             Dispatcher.Invoke(() =>
             {
                 System.Windows.MessageBox.Show("Hey Jarvis Detected!");
-                // ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
+                ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
             });
         }
         private async void ToggleVoice_Click(object sender, RoutedEventArgs e)

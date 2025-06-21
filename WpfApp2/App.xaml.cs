@@ -66,6 +66,5 @@ namespace WpfApp2
         {
             AddEnvironmentPath.AddNircmd();
         }
-        
     }
 }
