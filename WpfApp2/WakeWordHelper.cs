@@ -27,6 +27,10 @@ namespace WpfApp2
         private bool isCurrentlyActive = false;
 
         private readonly FilterbankExtractor fbExtractor;
+        private volatile bool _isPaused = false;
+
+        public void Pause() => _isPaused = true;
+        public void Resume() => _isPaused = false;
 
         float max = 0f;
 
@@ -63,6 +67,8 @@ namespace WpfApp2
 
         private void OnDataAvailable(object sender, WaveInEventArgs e)
         {
+            if(_isPaused) return;
+
             var newSamples = ConvertToFloat(e.Buffer, e.BytesRecorded);
 
             for (int i = 0; i < newSamples.Length; i++)

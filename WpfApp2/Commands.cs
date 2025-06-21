@@ -30,17 +30,14 @@ namespace WpfApp2
                     }
 
                     long current = Properties.Settings.Default.MediaCounter;
-                    MessageBox.Show("" + current);
                     temp = Path.Combine(Global.deafultScreenShotPath, $"shot{current}.png");
                     Properties.Settings.Default.MediaCounter = current + 1;
                     Properties.Settings.Default.Save();
-                    MessageBox.Show("" + Properties.Settings.Default.MediaCounter);
 
                     temp = Path.Combine(Global.deafultScreenShotPath, "shot" + Properties.Settings.Default.MediaCounter + ".png");
 
 
                     command = command + " " + '"' + temp + '"';
-                    System.Windows.MessageBox.Show(command);
                     Debug.WriteLine(command);
                 }
                 Process.Start(new ProcessStartInfo
@@ -75,7 +72,7 @@ namespace WpfApp2
 
                 string urlPath = command.Replace("{{q}}", Uri.EscapeDataString((search_query)));
                 string powershellPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe");
-                MessageBox.Show(urlPath);
+
                 int urlIndex = command.IndexOf("http");
 
                 if (urlIndex!=-1)
@@ -83,10 +80,9 @@ namespace WpfApp2
                    
                     string prefix = urlPath.Substring(0, urlIndex);
                     string url = urlPath.Substring(urlIndex);
-                    MessageBox.Show(""+url);
                     urlPath = $"{prefix}\"{url}\"";
                 }
-                MessageBox.Show(urlPath);
+
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = powershellPath,

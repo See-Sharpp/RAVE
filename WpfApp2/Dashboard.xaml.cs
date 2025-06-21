@@ -43,21 +43,40 @@ namespace WpfApp2
           
         }
 
-        private void OnWakeWordDetected()
+        private async void OnWakeWordDetected()
         {
-            Dispatcher.Invoke(() =>
+           await Dispatcher.InvokeAsync(async () =>
             {
+                _wakeWordDetector?.Pause();
                 System.Windows.MessageBox.Show("Hey Jarvis Detected!");
-                // ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
+                string? result = await HandelVoiceInput(this, new RoutedEventArgs());
+                llm l1 = new llm(result);
+                _wakeWordDetector?.Resume();
             });
         }
         private async void ToggleVoice_Click(object sender, RoutedEventArgs e)
+        {
+           string result = await HandelVoiceInput(sender, e);
+            if (result != null)
+            {
+                CommandInput.Clear();
+                CommandInput.AppendText(result);
+                SendCommand_Click(this, new RoutedEventArgs());
+            }
+            else
+            {
+                CommandInput.Clear();
+                CommandInput.AppendText("No voice input detected.");
+            }
+        }
+
+        private async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
         {
             CommandInput.Clear();
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
 
-            await Task.Delay(5000); // Simulate 3 seconds of recording
+            await Task.Delay(3000); 
 
             await StopRecording();
 
@@ -65,6 +84,7 @@ namespace WpfApp2
             CommandInput.Clear();
             CommandInput.AppendText(result);
             // System.Windows.MessageBox.Show(result);
+            return result;
         }
 
         private async Task<string> TranscribeAsync(string audioFilePath)
@@ -178,9 +198,8 @@ namespace WpfApp2
 
         private void SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            string command = CommandInput.Text;
+            string command = CommandInput.Text.Trim();
             llm llm1 = new llm(command);
-
         }
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
