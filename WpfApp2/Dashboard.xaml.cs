@@ -99,7 +99,7 @@ namespace WpfApp2
             fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
             form.Add(fileContent, "file", "temp_voice_input.wav");
             form.Add(new StringContent("whisper-large-v3-turbo"), "model");
-            form.Add(new StringContent("language"), "en");
+            form.Add(new StringContent("en"), "language");  
 
             var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
             response.EnsureSuccessStatusCode(); 
@@ -138,11 +138,47 @@ namespace WpfApp2
             }
 
             waveIn = new WaveInEvent();
-            waveIn.WaveFormat = new WaveFormat(16000, 1);
+            waveIn.WaveFormat = new WaveFormat(16000, 16, 1);
             recordingStoppedTcs = new TaskCompletionSource<bool>(); // Reset TCS for each new recording
             waveIn.DataAvailable += (s, a) =>
             {
-                writer.Write(a.Buffer, 0, a.BytesRecorded);
+                int bytesPerSample = 2; // 16-bit
+                int sampleCount = a.BytesRecorded / bytesPerSample;
+                byte[] processedBuffer = new byte[a.BytesRecorded];
+
+                const float noiseThreshold = 0.02f;
+                const float gainFactor = 3.0f;
+
+                int offset = 0;
+
+                for (int i = 0; i < sampleCount; i++)
+                {
+                    short sample = BitConverter.ToInt16(a.Buffer, i * bytesPerSample);
+                    float amplitude = Math.Abs(sample / 32768f);
+
+                    if (amplitude > noiseThreshold)
+                    {
+                        // Amplify sample
+                        float amplifiedSample = sample * gainFactor;
+
+                        // Clamp to 16-bit range
+                        if (amplifiedSample > 32767f) amplifiedSample = 32767f;
+                        if (amplifiedSample < -32768f) amplifiedSample = -32768f;
+
+                        short outSample = (short)amplifiedSample;
+
+                        processedBuffer[offset++] = (byte)(outSample & 0xFF);
+                        processedBuffer[offset++] = (byte)((outSample >> 8) & 0xFF);
+                    }
+                    else
+                    {
+                        // Silence below threshold
+                        processedBuffer[offset++] = 0;
+                        processedBuffer[offset++] = 0;
+                    }
+                }
+
+                writer.Write(processedBuffer, 0, offset);
             };
             waveIn.RecordingStopped += (s, a) =>
             {
