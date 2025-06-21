@@ -101,6 +101,15 @@ namespace WpfApp2
             };
 
             var contextMenu = new ContextMenuStrip();
+
+            contextMenu.Items.Add("Widgets", null, (s, e) =>
+            {
+                if (Global.floatingIcon != null)
+                {
+                    Global.floatingIcon.Show();
+                }
+            });
+
             contextMenu.Items.Add("Show", null, (s, e) =>
             {
                 this.Show();
@@ -119,23 +128,30 @@ namespace WpfApp2
                 _notifyIcon.Dispose(); 
                 System.Windows.Application.Current.Shutdown();
             });
+
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true; // Prevent the window from actually closing
-            this.Hide();     // Hide the window
+            e.Cancel = true; 
+            this.Hide();    
             if (_notifyIcon != null)
             {
                 _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
             }
-            if(Global.floatingIcon != null)
+            try
             {
-                Global.floatingIcon.Show();
-                
+                if (Global.floatingIcon != null)
+                {
+                    Global.floatingIcon.Show();
+                }
             }
-            
+            catch (Exception ex)
+            {
+               
+            }
+
         }
 
         private void NavHomeButton_Click(object sender, RoutedEventArgs e)

@@ -24,6 +24,9 @@ namespace WpfApp2
         private string outputFilePath = "temp_voice_input.wav";
         private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>(); 
         private static string api = null;
+        private DateTime _lastRightClickTime = DateTime.MinValue;
+        private const int DoubleClickThreshold = 300; // milliseconds
+
 
         public FloatingIcon()
         {
@@ -42,8 +45,6 @@ namespace WpfApp2
               .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
               .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
               .Build();
-
-
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
@@ -80,6 +81,19 @@ namespace WpfApp2
             }
 
             _isDragging = false;
+        }
+
+        private void Grid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var currentTime = DateTime.Now;
+            var elapsed = (currentTime - _lastRightClickTime).TotalMilliseconds;
+
+            if (elapsed <= DoubleClickThreshold)
+            {
+                Global.floatingIcon?.Hide();  // Hide on double right-click
+            }
+
+            _lastRightClickTime = currentTime;
         }
 
         private async Task OnMicClick()
