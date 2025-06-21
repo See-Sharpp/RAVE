@@ -12,6 +12,7 @@ namespace WpfApp2
         public static int? UserId { get; set; } = 1;
         public static bool SignUp = false;
         public static string? deafultScreenShotPath = @"C:\temp\Rave Media";
+        public static FloatingIcon? floatingIcon { get; set; } = new FloatingIcon();
 
     }
 }
