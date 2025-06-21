@@ -38,10 +38,10 @@ namespace WpfApp2
             var fbOptions = new FilterbankOptions
             {
                 SamplingRate = sampleRate,
-                FeatureCount = 96,            
+                FeatureCount = 96,
                 FrameDuration = 0.025,
                 HopDuration = 0.010,
-                FilterBankSize = 96,           
+                FilterBankSize = 96,
                 Window = WindowType.Hamming,
                 NonLinearity = NonLinearityType.LogE
             };
@@ -86,7 +86,7 @@ namespace WpfApp2
             if (features.Count < 16) return;
 
             var sliced = features.Take(16).ToArray();
-            var tensorData = sliced.SelectMany(f => f).ToArray(); 
+            var tensorData = sliced.SelectMany(f => f).ToArray();
 
             var tensor = new DenseTensor<float>(tensorData, new[] { 1, 16, 96 });
             var input = NamedOnnxValue.CreateFromTensor("x.1", tensor);
@@ -125,6 +125,18 @@ namespace WpfApp2
             short[] intData = new short[bytesRecorded / 2];
             Buffer.BlockCopy(buffer, 0, intData, 0, bytesRecorded);
             return intData.Select(i => i / 32768f).ToArray();
+        }
+
+        public void Stop()
+        {
+            if (waveIn != null)
+            {
+                waveIn.StopRecording();
+                waveIn.DataAvailable -= OnDataAvailable;
+                waveIn.Dispose();
+                waveIn = null;
+            }
+            session.Dispose();
         }
     }
 }
