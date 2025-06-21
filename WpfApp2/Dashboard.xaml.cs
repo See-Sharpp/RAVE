@@ -211,6 +211,7 @@ namespace WpfApp2
             CommandInput.IsReadOnly=true;
             CommandInput.Cursor = Cursors.Arrow;
             _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
+            Global._wakeWordHelper = _wakeWordDetector;
             Task.Run(() => _wakeWordDetector.Start());
         }
 

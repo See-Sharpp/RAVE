@@ -14,5 +14,7 @@ namespace WpfApp2
         public static string? deafultScreenShotPath = @"C:\temp\Rave Media";
         public static FloatingIcon? floatingIcon { get; set; } = new FloatingIcon();
 
+        public static WakeWordHelper? _wakeWordHelper { get; set; } = null;
+
     }
 }
