@@ -99,6 +99,7 @@ namespace WpfApp2
             fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
             form.Add(fileContent, "file", "temp_voice_input.wav");
             form.Add(new StringContent("whisper-large-v3-turbo"), "model");
+            form.Add(new StringContent("language"), "en");
 
             var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
             response.EnsureSuccessStatusCode(); 
