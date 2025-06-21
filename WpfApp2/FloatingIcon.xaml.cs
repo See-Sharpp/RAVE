@@ -19,7 +19,7 @@ namespace WpfApp2
             var screenWidth = SystemParameters.PrimaryScreenWidth;
 
             double right = 10;
-            double bottom = 50;
+            double bottom = 100;
 
             this.Left = screenWidth-this.Width-right;
             this.Top = screenHeight - this.Height - bottom;

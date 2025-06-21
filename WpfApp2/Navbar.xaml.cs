@@ -92,6 +92,11 @@ namespace WpfApp2
                     this.Show();
                     this.WindowState = WindowState.Normal;
                     this.Activate();
+                    if (Global.floatingIcon != null)
+                    {
+                        Global.floatingIcon.Hide();
+                    }
+
                 }
             };
 
@@ -101,6 +106,12 @@ namespace WpfApp2
                 this.Show();
                 this.WindowState = WindowState.Normal; 
                 this.Activate();
+                if (Global.floatingIcon != null)
+                {
+                    Global.floatingIcon.Hide();
+                }
+               
+
             });
             contextMenu.Items.Add("Exit", null, (s, e) =>
             {
@@ -119,6 +130,12 @@ namespace WpfApp2
             {
                 _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
             }
+            if(Global.floatingIcon != null)
+            {
+                Global.floatingIcon.Show();
+                
+            }
+            
         }
 
         private void NavHomeButton_Click(object sender, RoutedEventArgs e)

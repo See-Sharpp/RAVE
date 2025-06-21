@@ -38,8 +38,7 @@ namespace WpfApp2
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            var floatingIcon = new FloatingIcon();
-            floatingIcon.Show();
+
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
