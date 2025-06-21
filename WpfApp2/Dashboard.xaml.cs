@@ -11,7 +11,7 @@ using System.Windows;
 using Newtonsoft.Json;
 using System.Windows.Media.Effects;
 using Microsoft.Extensions.Configuration;
-using System.Windows.Controls; // Added for Page
+using System.Windows.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using System.Windows.Input;
 
@@ -23,7 +23,7 @@ namespace WpfApp2
         private WaveInEvent? waveIn;
         private WaveFileWriter? writer;
         private string outputFilePath = "temp_voice_input.wav";
-        private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>(); // Initialize to avoid null reference
+        private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>();
         private static string api = null;
         private WakeWordHelper? _wakeWordDetector;
 
@@ -78,7 +78,7 @@ namespace WpfApp2
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
 
-            await Task.Delay(3000); 
+            await Task.Delay(5000); 
 
             await StopRecording();
 
@@ -98,7 +98,7 @@ namespace WpfApp2
             var fileContent = new ByteArrayContent(File.ReadAllBytes(audioFilePath));
             fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
             form.Add(fileContent, "file", "temp_voice_input.wav");
-            form.Add(new StringContent("whisper-large-v3-turbo"), "model");
+            form.Add(new StringContent("whisper-large-v3"), "model");
             form.Add(new StringContent("en"), "language");  
 
             var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);

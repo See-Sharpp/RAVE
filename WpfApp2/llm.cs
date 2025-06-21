@@ -17,7 +17,8 @@ namespace WpfApp2
         private ApplicationDbContext _context = new ApplicationDbContext();
         private string userInput { get; set; }
         private string processedQuery { get; set; }
-        private string apiKey { get; set; }
+        private string apiKey1 { get; set; }
+        private string apiKey2 { get; set; }
         private static readonly string apiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
 
@@ -30,10 +31,12 @@ namespace WpfApp2
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            var api_key = config["Groq_Prompt_Api_Key"] ?? throw new InvalidOperationException("Api key not found");
+            var api_key1 = config["Groq_Prompt_Api_Key1"] ?? throw new InvalidOperationException("Api key not found");
+            var api_key2 = config["Groq_Prompt_Api_Key2"] ?? throw new InvalidOperationException("Api key not found");
             var prompt1 = config["prompt1"] ?? throw new InvalidOperationException("prompt not found");
             var prompt2 = config["prompt2"] ?? throw new InvalidOperationException("prompt not found");
-            this.apiKey = api_key;
+            this.apiKey1 = api_key1;
+            this.apiKey2 = api_key2;
 
  
             try
@@ -62,7 +65,7 @@ namespace WpfApp2
             {
                 using (var httpClient = new HttpClient())
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey1);
 
                     var requestBody = new
                     {
@@ -186,7 +189,7 @@ namespace WpfApp2
             {
                 using (var httpClient = new HttpClient())
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey2);
 
                     var requestBody = new
                     {
