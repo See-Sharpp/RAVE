@@ -16,8 +16,6 @@ using MahApps.Metro.Controls.Dialogs;
 using System.Windows.Input;
 
 
-
-
 namespace WpfApp2
 {
     public partial class Dashboard : Page 
@@ -42,8 +40,7 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
-            Task.Run(() => _wakeWordDetector.Start());
+          
         }
 
         private void OnWakeWordDetected()
@@ -192,6 +189,8 @@ namespace WpfApp2
             SendEffect.IsEnabled=false;
             CommandInput.IsReadOnly=true;
             CommandInput.Cursor = Cursors.Arrow;
+            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
+            Task.Run(() => _wakeWordDetector.Start());
         }
 
         private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
@@ -201,14 +200,13 @@ namespace WpfApp2
             SendEffect.IsEnabled = true;
             CommandInput.IsReadOnly = false;
             CommandInput.Cursor = Cursors.IBeam;
+            if (_wakeWordDetector != null)
+            {
+                _wakeWordDetector.Stop();
+                _wakeWordDetector = null;
+            }
 
         }
-
-       
-     
-
-      
-
-      
+ 
     }
 }
