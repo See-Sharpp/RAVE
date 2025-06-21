@@ -16,6 +16,7 @@ namespace WpfApp2
     {
         private ApplicationDbContext _context = new ApplicationDbContext();
         private string userInput { get; set; }
+        private string processedQuery { get; set; }
         private string apiKey { get; set; }
         private static readonly string apiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -30,13 +31,24 @@ namespace WpfApp2
                 .Build();
 
             var api_key = config["Groq_Prompt_Api_Key"] ?? throw new InvalidOperationException("Api key not found");
-            var prompt = config["prompt"] ?? throw new InvalidOperationException("prompt not found");
+            var prompt1 = config["prompt1"] ?? throw new InvalidOperationException("prompt not found");
+            var prompt2 = config["prompt2"] ?? throw new InvalidOperationException("prompt not found");
             this.apiKey = api_key;
 
-            prompt += " " + userInput;
+ 
             try
             {
-                Task.Run(async () => await responceJson(prompt)).Wait();
+                processedQuery = Task
+                 .Run(() => responceJson2(prompt1+ " " + userInput))
+                 .GetAwaiter()
+                 .GetResult() 
+                  ?? throw new InvalidOperationException("Failed to refine command");
+                MessageBox.Show("Refined Command: " + processedQuery);
+                var fullPrompt = prompt2+ " " + processedQuery;
+                Task.Run(() => responceJson(fullPrompt))
+                    .GetAwaiter()
+                    .GetResult();
+
             }
             catch(Exception exception)
             {
@@ -167,6 +179,58 @@ namespace WpfApp2
                 MessageBox.Show("An error occurred while processing the request. Please try again.");
             }
         }
- 
+
+        public async Task<string?> responceJson2(string prompt)
+        {
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+                    var requestBody = new
+                    {
+                        model = "llama3-70b-8192",
+                        messages = new[]
+                        {
+                        new { role = "user", content = prompt}
+                    },
+                        temperature = 0.0,
+                        max_tokens = 1024,
+                    };
+
+                    var json = JsonSerializer.Serialize(requestBody);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = await httpClient.PostAsync(apiUrl, content);
+                    string result = await response.Content.ReadAsStringAsync();
+
+                    var jsonResponse = JsonDocument.Parse(result);
+
+                    if (jsonResponse.RootElement.TryGetProperty("choices", out JsonElement choices) && choices.GetArrayLength() > 0)
+                    {
+                        string? contentString = choices[0].GetProperty("message").GetProperty("content").GetString();
+
+                        if (string.IsNullOrEmpty(contentString))
+                        {
+                            MessageBox.Show("No content received.");
+                            return null;
+                        }
+                        return contentString.Trim();
+
+
+                    }
+                    }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error: {ex.Message}");
+                MessageBox.Show("An error occurred while processing the request. Please try again.");
+                return null;
+            }
+
+            return null;
+        }
+
     }
 }
