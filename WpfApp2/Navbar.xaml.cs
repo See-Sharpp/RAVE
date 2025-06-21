@@ -124,8 +124,8 @@ namespace WpfApp2
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true; // Prevent the window from actually closing
-            this.Hide();     // Hide the window
+            e.Cancel = true;
+            this.Hide();
             if (_notifyIcon != null)
             {
                 _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
