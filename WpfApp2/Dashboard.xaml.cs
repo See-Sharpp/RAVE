@@ -16,8 +16,6 @@ using MahApps.Metro.Controls.Dialogs;
 using System.Windows.Input;
 
 
-
-
 namespace WpfApp2
 {
     public partial class Dashboard : Page 
@@ -45,25 +43,43 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
-            Task.Run(() => _wakeWordDetector.Start());
+          
         }
 
-        private void OnWakeWordDetected()
+        private async void OnWakeWordDetected()
         {
-            Dispatcher.Invoke(() =>
+           await Dispatcher.InvokeAsync(async () =>
             {
+                _wakeWordDetector?.Pause();
                 System.Windows.MessageBox.Show("Hey Jarvis Detected!");
-                ToggleVoice_Click(this, new RoutedEventArgs()); // This can now be uncommented if you want it to trigger voice input
+                string? result = await HandelVoiceInput(this, new RoutedEventArgs());
+                llm l1 = new llm(result);
+                _wakeWordDetector?.Resume();
             });
         }
         private async void ToggleVoice_Click(object sender, RoutedEventArgs e)
+        {
+           string result = await HandelVoiceInput(sender, e);
+            if (result != null)
+            {
+                CommandInput.Clear();
+                CommandInput.AppendText(result);
+                SendCommand_Click(this, new RoutedEventArgs());
+            }
+            else
+            {
+                CommandInput.Clear();
+                CommandInput.AppendText("No voice input detected.");
+            }
+        }
+
+        private async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
         {
             CommandInput.Clear();
             CommandInput.AppendText("Start Speaking ...");
             StartRecording();
 
-            await Task.Delay(5000); // Simulate 3 seconds of recording
+            await Task.Delay(3000); 
 
             await StopRecording();
 
@@ -71,6 +87,7 @@ namespace WpfApp2
             CommandInput.Clear();
             CommandInput.AppendText(result);
             // System.Windows.MessageBox.Show(result);
+            return result;
         }
 
         private async Task<string> TranscribeAsync(string audioFilePath)
@@ -184,9 +201,8 @@ namespace WpfApp2
 
         private void SendCommand_Click(object sender, RoutedEventArgs e)
         {
-            string command = CommandInput.Text;
+            string command = CommandInput.Text.Trim();
             llm llm1 = new llm(command);
-
         }
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
@@ -195,6 +211,8 @@ namespace WpfApp2
             SendEffect.IsEnabled=false;
             CommandInput.IsReadOnly=true;
             CommandInput.Cursor = Cursors.Arrow;
+            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
+            Task.Run(() => _wakeWordDetector.Start());
         }
 
         private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
@@ -204,14 +222,13 @@ namespace WpfApp2
             SendEffect.IsEnabled = true;
             CommandInput.IsReadOnly = false;
             CommandInput.Cursor = Cursors.IBeam;
+            if (_wakeWordDetector != null)
+            {
+                _wakeWordDetector.Stop();
+                _wakeWordDetector = null;
+            }
 
         }
-
-       
-     
-
-      
-
-      
+ 
     }
 }
