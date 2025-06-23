@@ -21,10 +21,10 @@ namespace WpfApp2
         private WaveFileWriter? _denoisedWriter;
         private string denoisedFilePath = "denoised_output.wav";
 
-        
+
         private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>();
 
-   
+
         private static string? api;
         private WakeWordHelper? _wakeWordDetector;
 
@@ -47,7 +47,7 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
         }
-        
+
 
         private async void OnWakeWordDetected()
         {
@@ -80,7 +80,7 @@ namespace WpfApp2
                 CommandInput.AppendText("No voice input detected.");
             }
         }
-        
+
 
         private async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
         {
@@ -88,10 +88,10 @@ namespace WpfApp2
             CommandInput.AppendText("Listening...");
             StartRecording();
 
-            
+
             await Task.Delay(5000);
 
-            
+
             await StopRecording();
 
             if (File.Exists(denoisedFilePath) && new FileInfo(denoisedFilePath).Length > 0)
@@ -113,7 +113,7 @@ namespace WpfApp2
 
         private async Task<string> TranscribeAsync(string audioFilePath)
         {
-            
+
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
 
@@ -129,7 +129,7 @@ namespace WpfApp2
             var responseJson = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
-                
+
                 MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
                 return string.Empty;
             }
@@ -140,12 +140,12 @@ namespace WpfApp2
 
         private void StartRecording()
         {
-            
+
             waveIn?.Dispose();
             _denoisedWriter?.Dispose();
             _tempDenoisedStream?.Dispose();
 
-            
+
             try
             {
                 if (File.Exists(denoisedFilePath)) File.Delete(denoisedFilePath);
@@ -157,13 +157,13 @@ namespace WpfApp2
                 return;
             }
 
-            
+
             _tempDenoisedStream = new FileStream(tempDenoisedPath, FileMode.Create, FileAccess.Write);
 
-            
+
             waveIn = new WaveInEvent
             {
-                WaveFormat = new WaveFormat(16000, 16, 1) 
+                WaveFormat = new WaveFormat(16000, 16, 1)
             };
 
             recordingStoppedTcs = new TaskCompletionSource<bool>();
@@ -171,7 +171,7 @@ namespace WpfApp2
             waveIn.DataAvailable += WaveIn_DataAvailable;
             waveIn.RecordingStopped += WaveIn_RecordingStopped;
 
-            
+
             _rnnoiseState = RNNoise.rnnoise_create();
 
             waveIn.StartRecording();
@@ -182,16 +182,16 @@ namespace WpfApp2
         {
             waveIn?.StopRecording();
 
-            
+
             if (recordingStoppedTcs != null)
             {
                 await recordingStoppedTcs.Task.ConfigureAwait(false);
             }
 
-            
+
             ProcessAndAmplifyAudio();
 
-            
+
             _tempDenoisedStream?.Dispose();
             _tempDenoisedStream = null;
 
@@ -201,7 +201,7 @@ namespace WpfApp2
                 _rnnoiseState = IntPtr.Zero;
             }
 
-            
+
             try
             {
                 if (File.Exists(tempDenoisedPath))
@@ -211,70 +211,70 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                
+
                 Console.WriteLine($"Could not delete temp file: {ex.Message}");
             }
         }
 
-        
+
         private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
             if (_tempDenoisedStream == null || e.BytesRecorded == 0) return;
 
-            
+
             _unprocessedBuffer.AddRange(e.Buffer.Take(e.BytesRecorded));
 
-            
-            const int frameSize = 160;   
+
+            const int frameSize = 160;
             const int bytesPerSample = 2;
             const int frameSizeBytes = frameSize * bytesPerSample;
 
-            
+
             float[] inputFloatSamples = new float[frameSize];
             float[] outputFloatSamples = new float[frameSize];
             byte[] processedFrameBytes = new byte[frameSizeBytes];
 
-           
+
             while (_unprocessedBuffer.Count >= frameSizeBytes)
             {
-                
+
                 byte[] frameToProcess = _unprocessedBuffer.Take(frameSizeBytes).ToArray();
 
-                
+
                 for (int i = 0; i < frameSize; i++)
                 {
                     short sample = BitConverter.ToInt16(frameToProcess, i * bytesPerSample);
-                    inputFloatSamples[i] = sample / 32768f; 
+                    inputFloatSamples[i] = sample / 32768f;
                 }
                 RNNoise.rnnoise_process_frame(_rnnoiseState, outputFloatSamples, inputFloatSamples);
 
-                
+
                 for (int i = 0; i < frameSize; i++)
                 {
-                    
+
                     short outSample = (short)(Math.Clamp(outputFloatSamples[i], -1f, 1f) * 32767);
                     byte[] sampleBytes = BitConverter.GetBytes(outSample);
                     processedFrameBytes[i * bytesPerSample] = sampleBytes[0];
                     processedFrameBytes[i * bytesPerSample + 1] = sampleBytes[1];
                 }
 
-                
+
                 _tempDenoisedStream.Write(processedFrameBytes, 0, frameSizeBytes);
 
-                
+
                 _unprocessedBuffer.RemoveRange(0, frameSizeBytes);
             }
         }
 
-        
+
         private void ProcessAndAmplifyAudio()
         {
             if (!File.Exists(tempDenoisedPath)) return;
 
-            
+
             const float gainFactor = 2.0f;
 
-            
+
             var waveFormat = new WaveFormat(16000, 16, 1);
 
             using (var rawReader = new RawSourceWaveStream(File.OpenRead(tempDenoisedPath), waveFormat))
@@ -287,7 +287,7 @@ namespace WpfApp2
                 {
                     for (int i = 0; i < read; i++)
                     {
-                        
+
                         buffer[i] = Math.Clamp(buffer[i] * gainFactor, -1.0f, 1.0f);
                     }
                     finalWriter.WriteSamples(buffer, 0, read);
@@ -297,14 +297,14 @@ namespace WpfApp2
 
         private void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
         {
-            
+
             if (_unprocessedBuffer.Count > 0 && _tempDenoisedStream != null)
             {
-                
+
                 int bytesToPad = (160 * 2) - _unprocessedBuffer.Count;
                 _unprocessedBuffer.AddRange(new byte[bytesToPad]);
 
-                
+
                 byte[] finalFrame = _unprocessedBuffer.ToArray();
                 float[] inSamples = new float[160];
                 float[] outSamples = new float[160];
@@ -325,14 +325,14 @@ namespace WpfApp2
             }
             _unprocessedBuffer.Clear();
 
-            
+
             waveIn?.Dispose();
             waveIn = null;
 
-            _tempDenoisedStream?.Flush(); 
+            _tempDenoisedStream?.Flush();
             _tempDenoisedStream?.Close();
 
-            
+
             recordingStoppedTcs?.TrySetResult(true);
 
             if (e.Exception != null)
@@ -342,8 +342,8 @@ namespace WpfApp2
             }
         }
 
-        
-        
+
+
         private void CommandInput_GotFocus(object sender, RoutedEventArgs e) { }
         private void CommandInput_LostFocus(object sender, RoutedEventArgs e) { }
         private void SendCommand_Click(object sender, RoutedEventArgs e)
@@ -351,7 +351,7 @@ namespace WpfApp2
             string command = CommandInput.Text.Trim();
             if (!string.IsNullOrEmpty(command))
             {
-                
+
             }
         }
         private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
@@ -362,7 +362,7 @@ namespace WpfApp2
             CommandInput.IsReadOnly = true;
             CommandInput.Cursor = Cursors.Arrow;
             _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
-            
+
             Task.Run(() => _wakeWordDetector.Start());
         }
 

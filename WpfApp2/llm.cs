@@ -46,7 +46,7 @@ namespace WpfApp2
                  .GetAwaiter()
                  .GetResult() 
                   ?? throw new InvalidOperationException("Failed to refine command");
-                MessageBox.Show("Refined Command: " + processedQuery);
+
                 var fullPrompt = prompt2+ " " + processedQuery;
                 Task.Run(() => responceJson(fullPrompt))
                     .GetAwaiter()
