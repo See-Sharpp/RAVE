@@ -1,13 +1,10 @@
-﻿using HandyControl.Expression.Shapes;
-using MahApps.Metro.Controls;
+﻿using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
-using Microsoft.VisualBasic.Logging;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 using WpfApp2.Context;
@@ -23,7 +20,9 @@ namespace WpfApp2
         private int minFilesize = 1024;
 
         private ApplicationDbContext _context = new ApplicationDbContext();
-            readonly string[] excludedPaths = new string[]
+        private int totalExes = 0;
+        private List<FileSystemWatcher> _watchers = new();
+        readonly string[] excludedPaths = new string[]
             {
                 @"C:\Windows",
                 @"C:\ProgramData",
@@ -57,9 +56,98 @@ namespace WpfApp2
         public Navbar()
         {
             InitializeComponent();
-            SetupTrayIcon(); 
+            SetupTrayIcon();
+            StartExeWatchers();
             MainContentFrame.Navigate(new Dashboard());
            
+        }
+
+
+        private void StartExeWatchers()
+        {
+            foreach (var drive in DriveInfo.GetDrives())
+            {
+                if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                {
+                    var watcher = new FileSystemWatcher
+                    {
+                        Path = drive.RootDirectory.FullName,
+                        Filter = "*.exe",
+                        IncludeSubdirectories = true,
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite
+                    };
+
+                    watcher.Created += OnExeCreated;
+                    watcher.Deleted += OnExeDeleted;
+                    watcher.Renamed += OnExeRenamed;
+
+                    watcher.EnableRaisingEvents = true;
+                    _watchers.Add(watcher);
+                }
+            }
+        }
+
+
+        private void OnExeCreated(object sender, FileSystemEventArgs e)
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                FileInfo info = new FileInfo(e.FullPath);
+                if (!info.Exists || info.Length < minFilesize)
+                    return;
+
+                int userId = Global.UserId ?? 0;
+                var user = _context.SignUpDetails.FirstOrDefault(u => u.Id == userId);
+                if (user == null) return;
+
+                if (_context.AllExes.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId))
+                    return;
+
+                var versionInfo = FileVersionInfo.GetVersionInfo(e.FullPath);
+                string displayName = versionInfo.FileDescription ?? info.Name;
+
+                var exes = new AllExes
+                {
+                    FilePath = e.FullPath,
+                    SignUpDetail = user,
+                    FileName = info.Name,
+                    DisplayName = displayName,
+                    FileSize = FormatFileSize(info.Length),
+                    LastWriteTime = info.LastWriteTime,
+                    LastAccessTime = info.LastAccessTime,
+                    CreatedAt = info.CreationTime
+                };
+
+                _context.AllExes.Add(exes);
+                _context.SaveChanges();
+            });
+        }
+
+        private void OnExeDeleted(object sender, FileSystemEventArgs e)
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {                       
+                int userId = Global.UserId ?? 0;
+                var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+                if (existing != null)
+                {
+                    _context.AllExes.Remove(existing);
+                    _context.SaveChanges();
+                }
+            });
+        }
+
+        private void OnExeRenamed(object sender, RenamedEventArgs e)
+        {
+            if (Path.GetExtension(e.OldFullPath)?.ToLower() == ".exe")
+            {
+                OnExeDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath)));
+            }
+
+            if (Path.GetExtension(e.FullPath)?.ToLower() == ".exe")
+            {
+                OnExeCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath)));
+            }
         }
 
         private void SetupTrayIcon()
@@ -196,7 +284,29 @@ namespace WpfApp2
 
             try
             {
-                await Task.Run(() => ParallelScanDirectoryForExe(@"C:\", token));
+                await Task.Run(() =>
+                {
+                    foreach(var driver in DriveInfo.GetDrives())
+                    {
+                        try
+                        {
+                            if(driver.IsReady && driver.DriveType== DriveType.Fixed)
+                            {
+                                ParallelScanDirectoryForExe(driver.RootDirectory.FullName, token);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                           
+                            continue;
+                        }
+                    }
+                    System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                    {
+                        await scanMessageConfirm($"Saved {totalExes} exe files to database.");
+                    });
+                }
+                );
             }
             catch (OperationCanceledException)
             {
@@ -325,7 +435,8 @@ namespace WpfApp2
 
            
             _context.SaveChanges();
-            await scanMessageConfirm($"Saved {fileList.Count} exes files to database.");
+            totalExes += fileList.Count;
+          
 
            
         }
