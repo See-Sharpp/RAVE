@@ -1,19 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.OleDb;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using System.Windows.Forms;
-using System.IO;
+using WpfApp2.Context;
 
 namespace WpfApp2
 {
     public class Commands
     {
         private string temp = null; // Changed to private instance field to fix CS0120
+        public ApplicationDbContext _context;
 
-        public Commands() { }
+        public Commands() { 
+   
+        }
+
+
+
 
         public static void systemCommand(string command, string search_query)
         {
@@ -21,7 +29,7 @@ namespace WpfApp2
             {
                 string temp = null; // Declare a local variable to avoid using the instance field in a static method
                 string nircmdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nircmd-x64", "nircmd.exe");
-                string fixedStr = "nircmd.exe setsysvolume 0";
+
                 if (command.Contains("savescreenshot"))
                 {
                     if (Global.deafultScreenShotPath == null)
@@ -54,11 +62,72 @@ namespace WpfApp2
             }
         }
 
-        public static void application_command()
+        public static void application_command(string application)
         {
 
-        }
+            string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
 
+
+            string query = $@"
+                SELECT TOP 1 System.ItemName, System.ItemPathDisplay
+                FROM SYSTEMINDEX
+                WHERE System.ItemName LIKE '%{application}%'
+            ";
+            try
+            {
+                using (OleDbConnection connection = new OleDbConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (OleDbCommand command = new OleDbCommand(query, connection))
+                    {
+                        using (OleDbDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                string name = reader["System.ItemName"].ToString();
+                                string path = reader["System.ItemPathDisplay"].ToString();
+                                System.Windows.MessageBox.Show($"Found:{path}");
+                                Debug.WriteLine(path);
+                                Process.Start("cmd.exe", $"/C start \"\" \"{path}\"");
+
+
+                            }
+                            else
+                            {
+                                SearchInDatabase(application);
+                                System.Windows.MessageBox.Show($"Application '{application}' not found in the database.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Error: " + ex.Message);
+            }
+
+
+        }
+        public static void SearchInDatabase(string application)
+        {
+            try
+            {
+                using var _context = new ApplicationDbContext();
+
+                var allExes = _context.AllExes.ToList();
+
+                foreach (var ex in allExes)
+                {
+                    string? displayName = ex.DisplayName;
+                    Debug.WriteLine(displayName);
+                }
+            }
+            catch(Exception e)
+            {
+
+            }
+        }
         public static void file_command()
         {
 

@@ -5,10 +5,14 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using WpfApp2.Context;
 using WpfApp2.Models;
+using System.Data.OleDb;
 
 namespace WpfApp2
 {
@@ -30,6 +34,8 @@ namespace WpfApp2
                 @"C:\Recovery",
                 @"C:\System Volume Information",
                 @"C:\PerfLogs",
+                @"C:\Program Files",
+                @"C:\Program Files (x86)",
                 @"C:\Users\Default",
                 @"C:\Users\Default User",
                 @"C:\Users\All Users",
@@ -52,6 +58,19 @@ namespace WpfApp2
                 @"C:\RecoveryImage",          
             };
 
+        private static readonly List<Regex> ignorePatterns = new()
+        {
+            new Regex(@"\\Microsoft Visual Studio\\", RegexOptions.IgnoreCase),
+            new Regex(@"\\Dev-Cpp\\|\\MinGW\\", RegexOptions.IgnoreCase),
+            new Regex(@"\\Windows Kits\\", RegexOptions.IgnoreCase),
+            new Regex(@"\\AppData\\Local\\", RegexOptions.IgnoreCase),
+            new Regex(@"\\Python\d*", RegexOptions.IgnoreCase),
+            new Regex(@"site-packages|venv|_testembed", RegexOptions.IgnoreCase),
+            new Regex(@"\\Adobe\\|\\Redist\\|\\Extras\\|\\Installer\\", RegexOptions.IgnoreCase),
+            new Regex(@"\\MySQL\\.*\\lib\\Python", RegexOptions.IgnoreCase),
+            new Regex(@"\\Common7\\IDE\\CommonExtensions\\Microsoft\\FSharp", RegexOptions.IgnoreCase),
+        };
+
 
         public Navbar()
         {
@@ -66,8 +85,18 @@ namespace WpfApp2
             {
                 StartExeWatchers();
             }
-                MainContentFrame.Navigate(new Dashboard());
-           
+            MainContentFrame.Navigate(new Dashboard());
+
+
+        }
+        private static bool IsIgnoredExe(string path)
+        {
+            foreach (var pattern in ignorePatterns)
+            {
+                if (pattern.IsMatch(path))
+                    return true;
+            }
+            return false;
         }
 
 
@@ -94,7 +123,6 @@ namespace WpfApp2
                 }
             }
         }
-
 
         private void OnExeCreated(object sender, FileSystemEventArgs e)
         {
@@ -372,7 +400,8 @@ namespace WpfApp2
                 {
                     foreach (var subDir in Directory.GetDirectories(currentDir))
                     {
-                        directories.Push(subDir);
+                        if (!IsExcludedPath(subDir))
+                            directories.Push(subDir);
                     }
 
                     var files = Directory.GetFiles(currentDir, "*.exe");
@@ -381,7 +410,15 @@ namespace WpfApp2
                     {
                         try
                         {
+                            if (IsExcludedPath(Path.GetDirectoryName(file)!))
+                                return;
                             FileInfo fi = new FileInfo(file);
+
+                            if (IsIgnoredExe(fi.FullName))
+                            {
+                                return;
+                            }
+
                             if (fi.Length >minFilesize)
                             {
                                 exeFiles.Add((file, fi));
@@ -408,58 +445,58 @@ namespace WpfApp2
                 return;
             }
 
-            foreach(var (path,info) in fileList)
-            {
-                try
-                {
-                
-                    if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
-                        continue;
 
-                    if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
-                        continue;
-                    var versionInfo = FileVersionInfo.GetVersionInfo(path);
-                    string displayName = versionInfo.FileDescription ?? info.Name;
-                    var exes = new AllExes
+                foreach (var (path, info) in fileList)
+                {
+                    try
                     {
-                        FilePath = path,
-                        SignUpDetail = user,
-                        FileName = info.Name,
-                        DisplayName = displayName,
-                        FileSize = FormatFileSize(info.Length),
-                        LastWriteTime = info.LastWriteTime,
-                        LastAccessTime = info.LastAccessTime,
-                        CreatedAt = info.CreationTime
-                    };
 
-                    
-                    _context.AllExes.Add(exes);
+                        if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
+                            continue;
+
+                        if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
+                            continue;
+                        var versionInfo = FileVersionInfo.GetVersionInfo(path);
+                        string displayName = versionInfo.FileDescription ?? info.Name;
+                        var exes = new AllExes
+                        {
+                            FilePath = path,
+                            SignUpDetail = user,
+                            FileName = info.Name,
+                            DisplayName = displayName,
+                            FileSize = FormatFileSize(info.Length),
+                            LastWriteTime = info.LastWriteTime,
+                            LastAccessTime = info.LastAccessTime,
+                            CreatedAt = info.CreationTime
+                        };
+
+
+                        _context.AllExes.Add(exes);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
+                    }
                 }
-                catch(Exception e)
-                {
-                    System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
-                }
-            }
 
-           
-            _context.SaveChanges();
-            totalExes += fileList.Count;
-          
 
-           
+                _context.SaveChanges();
+                totalExes += fileList.Count;
+
+
+  
         }
 
         private bool IsExcludedPath(string path)
         {
-            DirectoryInfo dir = new DirectoryInfo(path);
+            string normalized = Path.GetFullPath(path).TrimEnd('\\');
 
-            while (dir != null)
+            foreach (var ex in excludedPaths)
             {
-                if (excludedPaths.Any(ex => dir.FullName.Equals(ex, StringComparison.OrdinalIgnoreCase)))
-                {
+                string excluded = Path.GetFullPath(ex).TrimEnd('\\');
+
+                if (normalized.StartsWith(excluded, StringComparison.OrdinalIgnoreCase))
                     return true;
-                }
-                dir = dir.Parent;
             }
 
             return false;
@@ -481,6 +518,8 @@ namespace WpfApp2
         private void NavHowItWorksButton_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new HowItWorks());
+
+
         }
 
         public void RemoveTrayIcon()
@@ -634,6 +673,8 @@ namespace WpfApp2
                 }
             }
         }
+
+
 
     }
 }
