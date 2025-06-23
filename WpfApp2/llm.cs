@@ -168,6 +168,20 @@ namespace WpfApp2
                                     Commands.searchBrowser(command_templates[0], search_query);
                                 }
                             }
+
+                            if (primary_intent.ToLower() == "application_control")
+                            {
+                                if (command_templates[0] != null)
+                                {
+
+                                    if (application_or_file != null)
+                                    {
+                                        Commands.application_command(application_or_file);
+                                    }
+                                }
+                            }
+
+
                         }
                         else
                         {
