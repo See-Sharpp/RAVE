@@ -12,6 +12,7 @@ using System.Windows.Media.Effects;
 using Microsoft.Extensions.Configuration;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Diagnostics;
 
 namespace WpfApp2
 {
@@ -258,8 +259,13 @@ namespace WpfApp2
                     processedFrameBytes[i * bytesPerSample + 1] = sampleBytes[1];
                 }
 
-
-                _tempDenoisedStream.Write(processedFrameBytes, 0, frameSizeBytes);
+                try
+                {
+                    _tempDenoisedStream.Write(processedFrameBytes, 0, frameSizeBytes);
+                }
+                catch (Exception ex) { 
+                    Debug.WriteLine(StopRecording().ToString() + " " + ex.Message);
+                }
 
 
                 _unprocessedBuffer.RemoveRange(0, frameSizeBytes);
