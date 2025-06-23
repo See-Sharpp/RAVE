@@ -57,8 +57,16 @@ namespace WpfApp2
         {
             InitializeComponent();
             SetupTrayIcon();
-            StartExeWatchers();
-            MainContentFrame.Navigate(new Dashboard());
+
+            if (!Properties.Settings.Default.InitialScan)
+            {
+                InitialScan();
+            }
+            else
+            {
+                StartExeWatchers();
+            }
+                MainContentFrame.Navigate(new Dashboard());
            
         }
 
@@ -580,6 +588,51 @@ namespace WpfApp2
                () => metroWindow.ShowMessageAsync("Information", message)
             );
 
+        }
+
+        private async void InitialScan()
+        {
+
+            await scanMessageConfirm("Starting initial scan for .exe files. This may take a while depending on the number of files on your system.");
+            var spinner = GetScanSpinner();
+            if (spinner != null)
+            {
+                spinner.IsActive = true;
+                spinner.Visibility = Visibility.Visible;
+            }
+            try
+            {
+                await Task.Run(() =>
+                {
+                    foreach (var drive in DriveInfo.GetDrives())
+                    {
+                        if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                        {
+                            ParallelScanDirectoryForExe(drive.RootDirectory.FullName, CancellationToken.None);
+                        }
+                    }
+                });
+                StartExeWatchers();
+                Properties.Settings.Default.InitialScan = true;
+                Properties.Settings.Default.Save();
+                await System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                {
+                    await scanMessageConfirm($"Saved {totalExes} exe files to database.");
+                });
+
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Initial scan failed: {ex.Message}");
+            }
+            finally
+            {
+                if (spinner != null)
+                {
+                    spinner.IsActive = false;
+                    spinner.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
     }
