@@ -58,6 +58,8 @@ namespace WpfApp2
                 @"C:\RecoveryImage",          
             };
 
+        private Commands _commands = new Commands();
+
         private static readonly List<Regex> ignorePatterns = new()
         {
             new Regex(@"\\Microsoft Visual Studio\\", RegexOptions.IgnoreCase),
@@ -458,17 +460,20 @@ namespace WpfApp2
                             continue;
                         var versionInfo = FileVersionInfo.GetVersionInfo(path);
                         string displayName = versionInfo.FileDescription ?? info.Name;
+                        float[] embedding = Commands.GetEmbedding(displayName);
+                        string embeddingString = string.Join(",", embedding.Select(x => x.ToString("F4")));
                         var exes = new AllExes
-                        {
-                            FilePath = path,
-                            SignUpDetail = user,
-                            FileName = info.Name,
-                            DisplayName = displayName,
-                            FileSize = FormatFileSize(info.Length),
-                            LastWriteTime = info.LastWriteTime,
-                            LastAccessTime = info.LastAccessTime,
-                            CreatedAt = info.CreationTime
-                        };
+                            {
+                                FilePath = path,
+                                SignUpDetail = user,
+                                FileName = info.Name,
+                                DisplayName = displayName,
+                                FileSize = FormatFileSize(info.Length),
+                                LastWriteTime = info.LastWriteTime,
+                                LastAccessTime = info.LastAccessTime,
+                                CreatedAt = info.CreationTime,
+                                Embedding = embeddingString
+                          };
 
 
                         _context.AllExes.Add(exes);
