@@ -28,5 +28,7 @@ namespace WpfApp2.Models
         public DateTime LastAccessTime { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public string? Embedding { get; set; }
     }
 }
