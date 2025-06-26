@@ -57,3 +57,6 @@ nunit-*.xml
 **/obj/**/AppSetting.json
 
 .vs/ 
+
+WpfApp2/Migrations
+
