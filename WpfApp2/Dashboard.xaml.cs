@@ -16,11 +16,9 @@ namespace WpfApp2
     {
         private WaveInEvent? waveIn;
         private WaveFileWriter? _denoisedWriter;
-        private string denoisedFilePath = "denoised_output.wav";
-
+        private string denoisedFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "denoised_output.wav");
 
         private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>();
-
 
         private static string? api;
         private WakeWordHelper? _wakeWordDetector;
@@ -28,10 +26,14 @@ namespace WpfApp2
         private IntPtr _rnnoiseState = IntPtr.Zero;
         private readonly List<byte> _unprocessedBuffer = new List<byte>();
 
-
         private string tempDenoisedPath = "temp_denoised.raw";
         private FileStream? _tempDenoisedStream;
 
+        // RNNoise expects 48kHz and 480 samples per frame
+        private const int SAMPLE_RATE = 48000;
+        private const int FRAME_SIZE = 480;  // 10ms at 48kHz
+        private const int BYTES_PER_SAMPLE = 2;
+        private const int FRAME_SIZE_BYTES = FRAME_SIZE * BYTES_PER_SAMPLE;
 
         public Dashboard()
         {
@@ -45,8 +47,7 @@ namespace WpfApp2
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
         }
 
-
-        private async void OnWakeWordDetected()
+        public async void OnWakeWordDetected()
         {
             await Dispatcher.InvokeAsync(async () =>
             {
@@ -56,13 +57,12 @@ namespace WpfApp2
                 if (!string.IsNullOrEmpty(result))
                 {
                     llm l1 = new llm(result);
-
                 }
                 _wakeWordDetector?.Resume();
             });
         }
 
-        private async void ToggleVoice_Click(object sender, RoutedEventArgs e)
+        public async void ToggleVoice_Click(object sender, RoutedEventArgs e)
         {
             string result = await HandelVoiceInput(sender, e);
             if (!string.IsNullOrEmpty(result))
@@ -78,16 +78,13 @@ namespace WpfApp2
             }
         }
 
-
-        private async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
+        public async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
         {
             CommandInput.Clear();
             CommandInput.AppendText("Listening...");
             StartRecording();
 
-
             await Task.Delay(5000);
-
 
             await StopRecording();
 
@@ -108,9 +105,8 @@ namespace WpfApp2
             }
         }
 
-        private async Task<string> TranscribeAsync(string audioFilePath)
+        public async Task<string> TranscribeAsync(string audioFilePath)
         {
-
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
 
@@ -126,8 +122,6 @@ namespace WpfApp2
             var responseJson = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
-
-                MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
                 return string.Empty;
             }
 
@@ -135,13 +129,12 @@ namespace WpfApp2
             return result?.text ?? string.Empty;
         }
 
-        private void StartRecording()
+        public void StartRecording()
         {
-
+            // Cleanup existing resources
             waveIn?.Dispose();
             _denoisedWriter?.Dispose();
             _tempDenoisedStream?.Dispose();
-
 
             try
             {
@@ -150,17 +143,18 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error deleting existing file: {ex.Message}");
                 return;
             }
 
+            // Debug: Show temp file path
+            string fullTempPath = Path.GetFullPath(tempDenoisedPath);
 
             _tempDenoisedStream = new FileStream(tempDenoisedPath, FileMode.Create, FileAccess.Write);
 
-
+            // Use 48kHz for RNNoise compatibility
             waveIn = new WaveInEvent
             {
-                WaveFormat = new WaveFormat(16000, 16, 1)
+                WaveFormat = new WaveFormat(SAMPLE_RATE, 16, 1)
             };
 
             recordingStoppedTcs = new TaskCompletionSource<bool>();
@@ -168,26 +162,21 @@ namespace WpfApp2
             waveIn.DataAvailable += WaveIn_DataAvailable;
             waveIn.RecordingStopped += WaveIn_RecordingStopped;
 
-
             _rnnoiseState = RNNoise.rnnoise_create();
 
             waveIn.StartRecording();
         }
 
-
-        private async Task StopRecording()
+        public async Task StopRecording()
         {
             waveIn?.StopRecording();
-
 
             if (recordingStoppedTcs != null)
             {
                 await recordingStoppedTcs.Task.ConfigureAwait(false);
             }
 
-
             ProcessAndAmplifyAudio();
-
 
             _tempDenoisedStream?.Dispose();
             _tempDenoisedStream = null;
@@ -198,7 +187,6 @@ namespace WpfApp2
                 _rnnoiseState = IntPtr.Zero;
             }
 
-
             try
             {
                 if (File.Exists(tempDenoisedPath))
@@ -208,132 +196,160 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Could not delete temp file: {ex.Message}");
             }
         }
 
-
-        private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
+        public void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
             if (_tempDenoisedStream == null || e.BytesRecorded == 0) return;
 
-
             _unprocessedBuffer.AddRange(e.Buffer.Take(e.BytesRecorded));
 
+           
+            float[] inputFloatSamples = new float[FRAME_SIZE];
+            float[] outputFloatSamples = new float[FRAME_SIZE];
+            byte[] processedFrameBytes = new byte[FRAME_SIZE_BYTES];
 
-            const int frameSize = 160;
-            const int bytesPerSample = 2;
-            const int frameSizeBytes = frameSize * bytesPerSample;
-
-
-            float[] inputFloatSamples = new float[frameSize];
-            float[] outputFloatSamples = new float[frameSize];
-            byte[] processedFrameBytes = new byte[frameSizeBytes];
-
-
-            while (_unprocessedBuffer.Count >= frameSizeBytes)
+            while (_unprocessedBuffer.Count >= FRAME_SIZE_BYTES)
             {
+                byte[] frameToProcess = _unprocessedBuffer.Take(FRAME_SIZE_BYTES).ToArray();
 
-                byte[] frameToProcess = _unprocessedBuffer.Take(frameSizeBytes).ToArray();
-
-
-                for (int i = 0; i < frameSize; i++)
+                for (int i = 0; i < FRAME_SIZE; i++)
                 {
-                    short sample = BitConverter.ToInt16(frameToProcess, i * bytesPerSample);
+                    short sample = BitConverter.ToInt16(frameToProcess, i * BYTES_PER_SAMPLE);
                     inputFloatSamples[i] = sample / 32768f;
                 }
+
                 RNNoise.rnnoise_process_frame(_rnnoiseState, outputFloatSamples, inputFloatSamples);
 
-
-                for (int i = 0; i < frameSize; i++)
+                for (int i = 0; i < FRAME_SIZE; i++)
                 {
-
                     short outSample = (short)(Math.Clamp(outputFloatSamples[i], -1f, 1f) * 32767);
                     byte[] sampleBytes = BitConverter.GetBytes(outSample);
-                    processedFrameBytes[i * bytesPerSample] = sampleBytes[0];
-                    processedFrameBytes[i * bytesPerSample + 1] = sampleBytes[1];
+                    processedFrameBytes[i * BYTES_PER_SAMPLE] = sampleBytes[0];
+                    processedFrameBytes[i * BYTES_PER_SAMPLE + 1] = sampleBytes[1];
                 }
 
                 try
                 {
-                    _tempDenoisedStream.Write(processedFrameBytes, 0, frameSizeBytes);
+                    _tempDenoisedStream.Write(processedFrameBytes, 0, FRAME_SIZE_BYTES);
                 }
-                catch (Exception ex) { 
-                    Debug.WriteLine(StopRecording().ToString() + " " + ex.Message);
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error writing processed frame: {ex.Message}");
                 }
 
-
-                _unprocessedBuffer.RemoveRange(0, frameSizeBytes);
+                _unprocessedBuffer.RemoveRange(0, FRAME_SIZE_BYTES);
             }
         }
 
-
-        private void ProcessAndAmplifyAudio()
+        public void ProcessAndAmplifyAudio()
         {
+            // Debug: Check if temp file exists
+
             if (!File.Exists(tempDenoisedPath)) return;
 
+            const float gainFactor = 1.5f;
+            var waveFormat = new WaveFormat(SAMPLE_RATE, 16, 1);
 
-            const float gainFactor = 2.0f;
-
-
-            var waveFormat = new WaveFormat(16000, 16, 1);
-
-            using (var rawReader = new RawSourceWaveStream(File.OpenRead(tempDenoisedPath), waveFormat))
-            using (var finalWriter = new WaveFileWriter(denoisedFilePath, waveFormat))
+            try
             {
-                var sampleProvider = rawReader.ToSampleProvider();
-                float[] buffer = new float[1024];
-                int read;
-                while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    for (int i = 0; i < read; i++)
-                    {
+                // Debug: Show full paths
+                string fullTempPath = Path.GetFullPath(tempDenoisedPath);
+                string fullDenoisedPath = Path.GetFullPath(denoisedFilePath);
 
-                        buffer[i] = Math.Clamp(buffer[i] * gainFactor, -1.0f, 1.0f);
+                using (var rawReader = new RawSourceWaveStream(File.OpenRead(tempDenoisedPath), waveFormat))
+                using (var finalWriter = new WaveFileWriter(denoisedFilePath, waveFormat))
+                {
+                    var sampleProvider = rawReader.ToSampleProvider();
+                    float[] buffer = new float[1024];
+                    int read;
+                    int totalSamplesWritten = 0;
+
+                    while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        for (int i = 0; i < read; i++)
+                        {
+                            buffer[i] = Math.Clamp(buffer[i] * gainFactor, -1.0f, 1.0f);
+                        }
+                        finalWriter.WriteSamples(buffer, 0, read);
+                        totalSamplesWritten += read;
                     }
-                    finalWriter.WriteSamples(buffer, 0, read);
+
+                    // Debug: Show processing results
                 }
+
+                // Debug: Check if final file was created
+                if (File.Exists(denoisedFilePath))
+                {
+                    long fileSize = new FileInfo(denoisedFilePath).Length;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"ERROR in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
             }
         }
 
-        private void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
-        {
+    
 
+        public void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
+        {
+            // Process any remaining data with proper padding
             if (_unprocessedBuffer.Count > 0 && _tempDenoisedStream != null)
             {
-
-                int bytesToPad = (160 * 2) - _unprocessedBuffer.Count;
-                _unprocessedBuffer.AddRange(new byte[bytesToPad]);
-
-
-                byte[] finalFrame = _unprocessedBuffer.ToArray();
-                float[] inSamples = new float[160];
-                float[] outSamples = new float[160];
-                for (int i = 0; i < 160; i++)
+                // Calculate how many bytes we need to pad to reach a full frame
+                int remainingBytes = _unprocessedBuffer.Count;
+                if (remainingBytes < FRAME_SIZE_BYTES)
                 {
-                    inSamples[i] = BitConverter.ToInt16(finalFrame, i * 2) / 32768f;
+                    // Pad with zeros to complete the frame
+                    int bytesToPad = FRAME_SIZE_BYTES - remainingBytes;
+                    _unprocessedBuffer.AddRange(new byte[bytesToPad]);
                 }
+
+                // Process the final frame
+                byte[] finalFrame = _unprocessedBuffer.Take(FRAME_SIZE_BYTES).ToArray();
+                float[] inSamples = new float[FRAME_SIZE];
+                float[] outSamples = new float[FRAME_SIZE];
+
+                for (int i = 0; i < FRAME_SIZE; i++)
+                {
+                    short sample = BitConverter.ToInt16(finalFrame, i * BYTES_PER_SAMPLE);
+                    inSamples[i] = sample / 32768f;
+                }
+
                 RNNoise.rnnoise_process_frame(_rnnoiseState, outSamples, inSamples);
-                byte[] finalBytes = new byte[320];
-                for (int i = 0; i < 160; i++)
+
+                byte[] finalBytes = new byte[FRAME_SIZE_BYTES];
+                for (int i = 0; i < FRAME_SIZE; i++)
                 {
                     short outSample = (short)(Math.Clamp(outSamples[i], -1f, 1f) * 32767);
                     var sampleBytes = BitConverter.GetBytes(outSample);
-                    finalBytes[i * 2] = sampleBytes[0];
-                    finalBytes[i * 2 + 1] = sampleBytes[1];
+                    finalBytes[i * BYTES_PER_SAMPLE] = sampleBytes[0];
+                    finalBytes[i * BYTES_PER_SAMPLE + 1] = sampleBytes[1];
                 }
-                _tempDenoisedStream.Write(finalBytes, 0, finalBytes.Length);
-            }
-            _unprocessedBuffer.Clear();
 
+                try
+                {
+                    // Only write the original data length, not the padded portion
+                    int bytesToWrite = Math.Min(remainingBytes, FRAME_SIZE_BYTES);
+                    _tempDenoisedStream.Write(finalBytes, 0, bytesToWrite);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error writing final frame: {ex.Message}");
+                }
+            }
+
+            _unprocessedBuffer.Clear();
 
             waveIn?.Dispose();
             waveIn = null;
 
             _tempDenoisedStream?.Flush();
             _tempDenoisedStream?.Close();
-
 
             recordingStoppedTcs?.TrySetResult(true);
 
@@ -344,19 +360,18 @@ namespace WpfApp2
             }
         }
 
-
-
-        private void CommandInput_GotFocus(object sender, RoutedEventArgs e) { }
-        private void CommandInput_LostFocus(object sender, RoutedEventArgs e) { }
-        private void SendCommand_Click(object sender, RoutedEventArgs e)
+        public void CommandInput_GotFocus(object sender, RoutedEventArgs e) { }
+        public void CommandInput_LostFocus(object sender, RoutedEventArgs e) { }
+        public void SendCommand_Click(object sender, RoutedEventArgs e)
         {
             string command = CommandInput.Text.Trim();
             if (!string.IsNullOrEmpty(command))
             {
-
+                // Your command handling logic here
             }
         }
-        private void VoiceToggle_Checked(object sender, RoutedEventArgs e)
+
+        public void VoiceToggle_Checked(object sender, RoutedEventArgs e)
         {
             VoiceControlPanel.Effect = new BlurEffect { Radius = 3.5 };
             MicEffect.IsEnabled = false;
@@ -368,7 +383,7 @@ namespace WpfApp2
             Task.Run(() => _wakeWordDetector.Start());
         }
 
-        private void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
+        public void VoiceToggle_Unchecked(object sender, RoutedEventArgs e)
         {
             VoiceControlPanel.Effect = null;
             MicEffect.IsEnabled = true;

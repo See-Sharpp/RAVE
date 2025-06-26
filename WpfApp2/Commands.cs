@@ -1,4 +1,5 @@
-﻿using Microsoft.ML.OnnxRuntime;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
 using System.Collections.Generic;
@@ -26,11 +27,11 @@ namespace WpfApp2
         private static readonly InferenceSession _session =
             new InferenceSession(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "model", "mini-lm.onnx"));
 
+        private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
+
         public Commands() { 
    
         }
-
-
 
 
         public static void systemCommand(string command, string search_query)
@@ -76,6 +77,7 @@ namespace WpfApp2
         {
 
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
+            MessageBox.Show("Searching for " + application + " in the database.");
             string query = $@"
                 SELECT TOP 1 System.ItemName, System.ItemPathDisplay
                 FROM SYSTEMINDEX
@@ -139,19 +141,16 @@ namespace WpfApp2
         {
             try
             {
+
                 using var _context = new ApplicationDbContext();
                 char firstChar = application.Trim().ToLower().FirstOrDefault();
 
                 var allExes = _context.AllExes
-                               .Where(e => !string.IsNullOrEmpty(e.DisplayName) && !string.IsNullOrEmpty
-                               (e.FilePath) && e.DisplayName.ToLower().StartsWith(firstChar.ToString()))  
-                               .Select(e => new
-                               {
-                                   e.DisplayName,
-                                   e.FilePath,
-                                   e.Embedding
-                               })
-                               .ToList();
+                     .Where(e => e.DisplayName != null && e.FilePath != null &&
+                                 EF.Functions.Like(e.DisplayName, $"{firstChar}%"))
+                     .Select(e => new { e.DisplayName, e.FilePath, e.Embedding })
+                     .ToList();
+
 
                 if (!allExes.Any())
                 {
@@ -159,40 +158,42 @@ namespace WpfApp2
                     return;
                 }
 
-                var queryEmbedding = GetEmbedding("Sleeping Dogs");
+                var queryEmbedding = GetCachedEmbedding(application);
                 string bestPath = null;
                 string bestName = null;
                 double bestScore = -1;
 
-                foreach (var exe in allExes)
-                {
-                    
-                    string? embeddedString = exe.Embedding;
-                    if(string.IsNullOrEmpty(embeddedString))
-                    {
-                        continue; 
-                    }
-                    float[] candidateEmb = embeddedString.Split(',').Select(s => float.Parse(s)).ToArray();
-                    var sim = CosineSimilarity(queryEmbedding, candidateEmb);
+  
+          
+   
 
-                   
+                var results = allExes
+                .AsParallel()
+                .Select(exe => {
+                    float[] embedding;
+                    if (string.IsNullOrEmpty(exe.Embedding))
+                        embedding = GetEmbedding(exe.DisplayName);
+                    else
+                        embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
 
-                    if (sim > bestScore)
-                    {
-                        bestScore = sim;
-                        bestName = exe.DisplayName;
-                        bestPath = exe.FilePath;
-                    }
-                }
+                    double sim = CosineSimilarity(queryEmbedding, embedding);
 
-                if (bestPath != null)
+                    return new { exe.DisplayName, exe.FilePath, sim };
+                })
+                .OrderByDescending(x => x.sim)
+                .FirstOrDefault();
+
+                Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
+
+
+                if (results?.FilePath!=null && results.sim>0.87f )
                 {
                     //MessageBox.Show(
-                    //    $"Best match: {bestName}\n" +
-                    //    $"Path: {bestPath}\n" +
-                    //    $"Similarity: {bestScore:F4}"
+                    //    $"Best match: {results.DisplayName}\n" +
+                    //    $"Path: {results.FilePath}\n" +
+                    //    $"Similarity: {results.sim:F4}"
                     //);
-                    Process.Start("cmd.exe", $"/C start \"\" \"{bestPath}\"");
+                    Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
                 else
                 {
@@ -205,6 +206,17 @@ namespace WpfApp2
             {
                 Debug.WriteLine(e.Message);
             }
+        }
+
+
+        public static float[] GetCachedEmbedding(string text)
+        {
+            if (embeddingCache.TryGetValue(text, out var cached))
+                return cached;
+
+            var embedding = GetEmbedding(text);
+            embeddingCache[text] = embedding;
+            return embedding;
         }
 
         public static float[] GetEmbedding(string text, int maxLen = 128)
@@ -233,7 +245,7 @@ namespace WpfApp2
             var dims = outputTensor.Dimensions.ToArray();
             if (dims.Length == 3)
             {
-                // [1, seqLen, hiddenDim] → take first token
+                
                 int hiddenDim = dims[2];
                 return outputTensor
                     .ToArray()
