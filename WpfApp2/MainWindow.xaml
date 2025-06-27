@@ -272,6 +272,7 @@
                             FontSize="13"
                             Foreground="#B0B3B8"
                             IsChecked="True"
+                            x:Name="rememberMe"
                             VerticalAlignment="Center"/>
                         <TextBlock
                             Grid.Column="1"

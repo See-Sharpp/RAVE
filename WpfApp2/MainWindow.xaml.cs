@@ -15,11 +15,21 @@ namespace WpfApp2
         public MainWindow()
         {
             InitializeComponent();
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= MainWindow_Loaded;
+            AutoLogin();
         }
         private void Login(object sender, RoutedEventArgs e)
         {
+         
             string user = username.Text;
             string pass = password.Password;
+            bool? remember = rememberMe.IsChecked;
+
 
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
@@ -27,36 +37,49 @@ namespace WpfApp2
                 return;
             }
 
-            
-            var User = _context.SignUpDetails.FirstOrDefault(u => u.Username == user && u.Password==pass);
-            var User2 = _context.SignUpDetails.FirstOrDefault(u => u.Email == user && u.Password == pass);
+        
+            var User = _context.SignUpDetails.FirstOrDefault(u => (u.Username == user || u.Email == user));
+
+            if (User == null)
+            {
+                System.Windows.MessageBox.Show("User not found.");
+                return;
+            }
+
+
 
             if (User!=null)
             {
+                if(!PasswordHelper.VerifyPassword(pass, User.Password))
+                {
+                    System.Windows.MessageBox.Show("Invalid Password. Please try again.");
+                    return;
+                }
                 Global.UserId = User?.Id;
-           
-                Navbar dashboard = new Navbar();
+
+                if (remember == true)
+                {
+                    Properties.Settings.Default.UserId = User.Id;
+                    Properties.Settings.Default.RememberMe = true;
+                    Properties.Settings.Default.Save();
+                }
+                else
+                {
+                    Properties.Settings.Default.UserId = User.Id;
+                    Properties.Settings.Default.RememberMe = false;
+                    Properties.Settings.Default.Save();
+
+                }
+                    Navbar dashboard = new Navbar();
+                Global.logout = false;
                 dashboard.Show();
                 this.Close();
                 return;
             }
 
-            if (User2!=null)
-            {
-                Global.UserId = User2?.Id;
-             
            
-                Navbar dashboard = new Navbar();
-                dashboard.Show();
-                this.Close();
-                return;
-            }
 
-            if (_context.SignUpDetails.Any(u => u.Username == user && u.Password == pass) == false)
-            {
-                System.Windows.MessageBox.Show("Invalid Username or Password.");
-                return;
-            }
+
         }
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
@@ -69,6 +92,7 @@ namespace WpfApp2
             SignUp signUpWindow = new SignUp();
             signUpWindow.Show();
             Global.SignUp = true;
+            
             this.Close();
         }
 
@@ -80,7 +104,25 @@ namespace WpfApp2
             }
         }
 
-     
+        private void AutoLogin()
+        {
+           
+            bool userExists = _context.SignUpDetails.Any(u => u.Id == Properties.Settings.Default.UserId);
+            if (Properties.Settings.Default.RememberMe && Properties.Settings.Default.UserId != 0 && userExists)
+            {
+                Global.UserId = Properties.Settings.Default.UserId;
+                this.Hide();
+                Navbar dashboard = new Navbar();
+                dashboard.Show();
+                this.Dispatcher.BeginInvoke(
+                        (Action)(() => this.Close()),
+                        System.Windows.Threading.DispatcherPriority.Background
+                    );
+
+               
+            }
+        }
+
 
     }
 }

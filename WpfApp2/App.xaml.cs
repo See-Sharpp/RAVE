@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using WpfApp2.Context;
+using WpfApp2.Properties;
 
 namespace WpfApp2
 {
@@ -27,6 +28,14 @@ namespace WpfApp2
             {
                 Directory.CreateDirectory(Global.deafultScreenShotPath);
             }
+            if (!WpfApp2.Properties.Settings.Default.AutoRegister)
+            {
+                AutoStartHelper.EnableAutoStart(true);
+                WpfApp2.Properties.Settings.Default.AutoRegister = true;
+                WpfApp2.Properties.Settings.Default.Save();
+            }
+
+
         }
 
         public App()
@@ -60,6 +69,8 @@ namespace WpfApp2
             }
 
             AddEnvironmentVariable();
+
+           
         }
 
         public void AddEnvironmentVariable()
