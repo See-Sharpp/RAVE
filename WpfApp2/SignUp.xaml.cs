@@ -40,11 +40,24 @@ namespace WpfApp2
 
         private async void Sign_Up(object sender, RoutedEventArgs e)
         {
+
+            if (string.IsNullOrWhiteSpace(username.Text) || string.IsNullOrWhiteSpace(email.Text) || string.IsNullOrWhiteSpace(password.Password))
+            {
+                System.Windows.MessageBox.Show("Please fill in all fields.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var existingUser = _context.SignUpDetails.FirstOrDefault(u => u.Username == username.Text || u.Email == email.Text);
+            if(existingUser != null)
+            {
+                System.Windows.MessageBox.Show("Username or Email already exists. Please choose a different one.", "Signup Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             SignUpDetail signUpDetail = new SignUpDetail
             {
                 Username = username.Text,
                 Email = email.Text,
-                Password = password.Password.ToString()
+                Password = PasswordHelper.HashPassword(password.Password)
             };
 
             var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();

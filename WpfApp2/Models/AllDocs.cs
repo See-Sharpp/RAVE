@@ -22,6 +22,8 @@ namespace WpfApp2.Models
 
         public string? FilePath { get; set; }
 
+        public string? DisplayName { get; set; }
+
         public string? FileSize { get; set; }
 
         public DateTime LastWriteTime { get; set; }
@@ -29,5 +31,6 @@ namespace WpfApp2.Models
         public DateTime LastAccessTime { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public string? Embedding { get; set; }
     }
 }

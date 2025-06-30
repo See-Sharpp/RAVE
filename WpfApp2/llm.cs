@@ -61,6 +61,7 @@ namespace WpfApp2
 
         public async Task responceJson(string prompt)
         {
+            
             try
             {
                 using (var httpClient = new HttpClient())
@@ -79,7 +80,9 @@ namespace WpfApp2
                     };
 
                     var json = JsonSerializer.Serialize(requestBody);
+                    
                     var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    
 
                     var response = await httpClient.PostAsync(apiUrl, content);
                     string result = await response.Content.ReadAsStringAsync();
@@ -95,7 +98,8 @@ namespace WpfApp2
                             MessageBox.Show("No content received.");
                             return;
                         }
-
+                        MessageBox.Show("Hello");
+                        MessageBox.Show(contentString);
                         var parsedJson = JsonDocument.Parse(contentString);
                         var root = parsedJson.RootElement;
 
@@ -106,7 +110,7 @@ namespace WpfApp2
                         var primary_intent = intent_classification.GetProperty("primary_intent").GetString();
                         var specific_action = intent_classification.GetProperty("specific_action").GetString();
 
-                        var extracted_entities = root.GetProperty("extracted_entities");
+                        var extracted_entities = root.GetProperty("entities");
                         var file_description = extracted_entities.TryGetProperty("file_description", out var fd) ? fd.GetString() : null;
                         var file_type_filter = extracted_entities.TryGetProperty("file_type_filter", out var ft) ? ft.GetString() : null;
                         var time_references = extracted_entities.TryGetProperty("time_references", out var tr) && tr.ValueKind == JsonValueKind.Array
@@ -120,7 +124,8 @@ namespace WpfApp2
                         var destinations = entities.TryGetProperty("destinations", out var d) && d.ValueKind == JsonValueKind.Array
                                            ? d.EnumerateArray().Select(e => e.GetString()).ToArray()
                                            : Array.Empty<string>();
-                        var application_or_file = entities.TryGetProperty("application_or_file", out var af) ? af.GetString() : null;
+                        var application = entities.TryGetProperty("application", out var af) ? af.GetString() : null;
+                        var file = entities.TryGetProperty("file", out var f) ? f.GetString() : null;
                         var search_query = entities.TryGetProperty("search_query", out var sq) ? sq.GetString() : null;
 
                         var command_templates = root.TryGetProperty("command_templates", out var ct) && ct.ValueKind == JsonValueKind.Array
@@ -164,7 +169,6 @@ namespace WpfApp2
                             {
                                 if (command_templates[0] != null)
                                 {
-                                    
                                     Commands.searchBrowser(command_templates[0], search_query);
                                 }
                             }
@@ -174,13 +178,23 @@ namespace WpfApp2
                                 if (command_templates[0] != null)
                                 {
 
-                                    if (application_or_file != null)
+                                    if (application != null)
                                     {
-                                        Commands.application_command(application_or_file);
+                                        Commands.application_command(application);
                                     }
                                 }
                             }
 
+                            if (primary_intent.ToLower() == "file_operation")
+                            {
+                                if (command_templates[0] != null)
+                                {
+                                    if (file != null)
+                                    {
+                                        
+                                    }
+                                }
+                            }
 
                         }
                         else

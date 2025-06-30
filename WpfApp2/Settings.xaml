@@ -9,6 +9,28 @@
       Title="Settings">
 
     <Page.Resources>
+        <Style x:Key="CountdownTextStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="72"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#6366F1"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="RecordingDialogStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ModernCard" TargetType="Border">
             <Setter Property="Background" Value="#1E1E1E"/>
             <Setter Property="CornerRadius" Value="16"/>
@@ -92,7 +114,6 @@
                                     </BeginStoryboard>
                                 </Trigger.ExitActions>
                             </Trigger>
-
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="SwitchKnob" Property="Effect">
                                     <Setter.Value>
@@ -100,7 +121,6 @@
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
-
                             <Trigger Property="IsPressed" Value="True">
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
@@ -132,19 +152,19 @@
         <Style x:Key="ModernSlider" TargetType="Slider">
             <Setter Property="Background" Value="#3F3F46"/>
             <Setter Property="Foreground" Value="#6366F1"/>
-            <Setter Property="Height" Value="6"/>
+            <Setter Property="Height" Value="20"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Slider">
                         <Grid>
                             <Border Background="{TemplateBinding Background}"
-                                    CornerRadius="3"
-                                    Height="6"/>
+                                    CornerRadius="10"
+                                    Height="20"/>
                             <Track x:Name="PART_Track">
                                 <Track.DecreaseRepeatButton>
                                     <RepeatButton Background="#6366F1" 
                                                   BorderThickness="0"
-                                                  Height="6">
+                                                  Height="20">
                                         <RepeatButton.Template>
                                             <ControlTemplate>
                                                 <Border Background="{TemplateBinding Background}"
@@ -182,12 +202,82 @@
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
         </Style>
 
+        <!-- Enhanced button styles -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="6" ShadowDepth="2" Opacity="0.25"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.9"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.02" ScaleY="1.02"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Secondary button style for equal-sized buttons -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.9"/>
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.02" ScaleY="1.02"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.98" ScaleY="0.98"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Page.Resources>
 
     <Grid Background="#0F0F0F">
         <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40">
             <StackPanel MaxWidth="800">
-
                 <!-- Header -->
                 <StackPanel Margin="0,0,0,32">
                     <TextBlock Text="Settings"
@@ -226,7 +316,6 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Wake Word Detection"
                                                FontFamily="Segoe UI"
@@ -240,7 +329,6 @@
                                                Foreground="#9CA3AF"
                                                TextWrapping="Wrap"/>
                                 </StackPanel>
-
                                 <ToggleButton x:Name="WakeWordToggle" 
                                               Grid.Column="1"
                                               Style="{StaticResource SlideToggleButtonStyle}"
@@ -257,7 +345,6 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-
                                     <StackPanel Grid.Column="0">
                                         <TextBlock Text="Voice Sensitivity"
                                                    FontFamily="Segoe UI"
@@ -270,7 +357,6 @@
                                                    FontSize="14"
                                                    Foreground="#9CA3AF"/>
                                     </StackPanel>
-
                                     <TextBlock x:Name="SensitivityValue" 
                                                Grid.Column="1"
                                                Text="50%"
@@ -280,7 +366,6 @@
                                                Foreground="#6366F1"
                                                VerticalAlignment="Center"/>
                                 </Grid>
-
                                 <Slider x:Name="SensitivitySlider"
                                         Style="{StaticResource ModernSlider}"
                                         Minimum="0" Maximum="100" Value="50"
@@ -295,7 +380,6 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Auto-Listen Mode"
                                                FontFamily="Segoe UI"
@@ -309,7 +393,6 @@
                                                Foreground="#9CA3AF"
                                                TextWrapping="Wrap"/>
                                 </StackPanel>
-
                                 <ToggleButton x:Name="AutoListenToggle" 
                                               Grid.Column="1"
                                               Style="{StaticResource SlideToggleButtonStyle}"
@@ -322,7 +405,6 @@
 
                 <Border Style="{StaticResource ModernCard}" Margin="0,0,0,24">
                     <StackPanel>
-                        
                         <Border Background="#262626"
                                 CornerRadius="16,16,0,0"
                                 Padding="24,20">
@@ -336,14 +418,12 @@
                             </StackPanel>
                         </Border>
 
-                        
                         <Border Style="{StaticResource SettingItemStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Save Command History"
                                FontFamily="Segoe UI"
@@ -356,7 +436,6 @@
                                FontSize="14"
                                Foreground="#9CA3AF"/>
                                 </StackPanel>
-
                                 <ToggleButton x:Name="SaveHistoryToggle" 
                               Grid.Column="1"
                               Style="{StaticResource SlideToggleButtonStyle}"
@@ -366,14 +445,12 @@
                             </Grid>
                         </Border>
 
-                        
                         <Border Style="{StaticResource SettingItemStyle}" BorderThickness="0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Speaker Verification"
                                FontFamily="Segoe UI"
@@ -386,17 +463,15 @@
                                FontSize="14"
                                Foreground="#9CA3AF"/>
                                 </StackPanel>
-
-                                <ToggleButton x:Name="AnalyticsToggle" 
+                                <ToggleButton x:Name="SpeakerVerificationToggle" 
                               Grid.Column="1"
                               Style="{StaticResource SlideToggleButtonStyle}"
-                              Checked="AnalyticsToggle_Checked"
-                              Unchecked="AnalyticsToggle_Unchecked"/>
+                              Checked="SpeakerVerificationToggle_Checked"
+                              Unchecked="SpeakerVerificationToggle_Unchecked"/>
                             </Grid>
                         </Border>
                     </StackPanel>
                 </Border>
-
 
                 <!-- Interface Settings Card -->
                 <Border Style="{StaticResource ModernCard}" Margin="0,0,0,24">
@@ -422,7 +497,6 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Dark Mode"
                                                FontFamily="Segoe UI"
@@ -435,7 +509,6 @@
                                                FontSize="14"
                                                Foreground="#9CA3AF"/>
                                 </StackPanel>
-
                                 <ToggleButton x:Name="DarkModeToggle" 
                                               Grid.Column="1"
                                               Style="{StaticResource SlideToggleButtonStyle}"
@@ -448,5 +521,214 @@
                 </Border>
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Recording Overlay with perfect centering -->
+        <Grid x:Name="RecordingOverlay" Background="#80000000" Visibility="Collapsed" Panel.ZIndex="1000">
+            <!-- Initial Message Panel -->
+            <Border x:Name="InitialMessagePanel" 
+                    Style="{StaticResource RecordingDialogStyle}" 
+                    Width="450" Height="320" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Visibility="Visible">
+                <StackPanel Margin="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <fa:IconImage Icon="Microphone" Width="48" Foreground="#6366F1" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Voice Verification Setup"
+                               FontFamily="Segoe UI"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="Please record a 5-second audio sample of your voice for verification. This helps us authenticate your identity."
+                               FontFamily="Segoe UI"
+                               FontSize="14"
+                               Foreground="#9CA3AF"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               LineHeight="20"
+                               Margin="0,0,0,32"/>
+                    <Button x:Name="StartRecordingButton"
+                            Content="Start Recording"
+                            Background="#6366F1"
+                            Foreground="White"
+                            FontFamily="Segoe UI"
+                            FontSize="14"
+                            FontWeight="Medium"
+                            Padding="32,14"
+                            BorderThickness="0"
+                            Click="StartRecordingButton_Click"
+                            HorizontalAlignment="Center"
+                            Style="{StaticResource PrimaryButtonStyle}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Compact Countdown Panel - PERFECTLY CENTERED -->
+            <Border x:Name="CountdownPanel" 
+                    Style="{StaticResource RecordingDialogStyle}" 
+                    Width="280" Height="200" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Get Ready..."
+                               FontFamily="Segoe UI"
+                               FontSize="18"
+                               FontWeight="Medium"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,20,0,0"/>
+
+                    <Viewbox Grid.Row="1" 
+                             HorizontalAlignment="Center" 
+                             VerticalAlignment="Center"
+                             Margin="20">
+                        <TextBlock x:Name="CountdownText"
+                                   Style="{StaticResource CountdownTextStyle}"/>
+                    </Viewbox>
+                </Grid>
+            </Border>
+
+            <!-- Recording Panel -->
+            <Border x:Name="RecordingPanel" 
+                    Style="{StaticResource RecordingDialogStyle}" 
+                    Width="450" Height="280" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <StackPanel Margin="32" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+                        <Ellipse Width="12" Height="12" Fill="#EF4444" Margin="0,0,8,0">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" 
+                                                           From="1" To="0.3" Duration="0:0:1" 
+                                                           AutoReverse="True"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <TextBlock Text="Recording..."
+                                   FontFamily="Segoe UI"
+                                   FontSize="18"
+                                   FontWeight="Medium"
+                                   Foreground="#EF4444"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Audio Level Visualizer -->
+                    <Border Background="#2A2A2A" 
+                            CornerRadius="12" 
+                            Height="80" 
+                            Width="350"
+                            Margin="0,0,0,20"
+                            HorizontalAlignment="Center">
+                        <Canvas x:Name="AudioVisualizerCanvas" 
+                                Width="320" 
+                                Height="60"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                    </Border>
+
+                    <Border Background="#262626" 
+                            CornerRadius="8" 
+                            Padding="16,8" 
+                            HorizontalAlignment="Center">
+                        <TextBlock x:Name="RecordingTimeText"
+                                   Text="00:05"
+                                   FontFamily="Segoe UI"
+                                   FontSize="16"
+                                   FontWeight="Medium"
+                                   Foreground="#6366F1"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Playback Panel with PERFECTLY SIZED BUTTONS -->
+            <Border x:Name="PlaybackPanel" 
+                    Style="{StaticResource RecordingDialogStyle}" 
+                    Width="480" Height="360" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+                <StackPanel Margin="40" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <fa:IconImage Icon="CheckCircle" Width="48" Foreground="#22C55E" Margin="0,0,0,16" HorizontalAlignment="Center"/>
+
+                    <TextBlock Text="Recording Complete!"
+                               FontFamily="Segoe UI"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Review your recording and choose an action below"
+                               FontFamily="Segoe UI"
+                               FontSize="14"
+                               Foreground="#9CA3AF"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,0,0,32"/>
+
+                    <!-- Primary Action Button -->
+                    <Button x:Name="AcceptButton"
+                            Content="✓ Accept &amp; Save"
+                            Click="AcceptRecording"
+                            HorizontalAlignment="Center"
+                            FontFamily="Segoe UI"
+                            FontSize="15"
+                            FontWeight="SemiBold"
+                            Padding="40,16"
+                            Background="#22C55E"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Margin="0,0,0,20"
+                            Style="{StaticResource PrimaryButtonStyle}"/>
+
+                    <!-- Secondary Actions - EXACTLY SAME SIZE -->
+                    <UniformGrid Columns="2" HorizontalAlignment="Center" Width="320">
+                        <Button x:Name="PlayButton"
+                                Content="▶ Play Recording"
+                                Click="PlayRecordedAudio"
+                                FontFamily="Segoe UI"
+                                FontSize="13"
+                                FontWeight="Medium"
+                                Padding="20,12"
+                                Background="#6366F1"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource SecondaryButtonStyle}"/>
+
+                        <Button x:Name="RecordAgainButton"
+                                Content="🔄 Record Again"
+                                Click="RestartRecording"
+                                FontFamily="Segoe UI"
+                                FontSize="13"
+                                FontWeight="Medium"
+                                Padding="20,12"
+                                Background="#6B7280"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Margin="8,0,0,0"
+                                Style="{StaticResource SecondaryButtonStyle}"/>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

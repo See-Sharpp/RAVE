@@ -14,9 +14,10 @@ using WpfApp2.Context;
 using WpfApp2.Models;
 using System.Data.OleDb;
 
+
 namespace WpfApp2
 {
-    public partial class Navbar : MetroWindow 
+    public partial class Navbar : MetroWindow
     {
         private NotifyIcon _notifyIcon = null!;
         private CancellationTokenSource? _cancellationTokenSource;
@@ -25,6 +26,7 @@ namespace WpfApp2
 
         private ApplicationDbContext _context = new ApplicationDbContext();
         private int totalExes = 0;
+        private int totalDocs = 0;
         private List<FileSystemWatcher> _watchers = new();
         readonly string[] excludedPaths = new string[]
             {
@@ -47,15 +49,15 @@ namespace WpfApp2
                 @"C:\Boot",
                 @"C:\DumpStack.log.tmp",
                 @"C:\Documents and Settings",
-                @"C:\SysReset",               
-                @"C:\Drivers",                
-                @"C:\OEM",                    
-                @"C:\$WINDOWS.~BT",           
-                @"C:\$WINDOWS.~WS",          
-                @"C:\Windows.old",            
-                @"C:\EFI",                    
-                @"C:\Boot",                   
-                @"C:\RecoveryImage",          
+                @"C:\SysReset",
+                @"C:\Drivers",
+                @"C:\OEM",
+                @"C:\$WINDOWS.~BT",
+                @"C:\$WINDOWS.~WS",
+                @"C:\Windows.old",
+                @"C:\EFI",
+                @"C:\Boot",
+                @"C:\RecoveryImage",
             };
 
         private Commands _commands = new Commands();
@@ -88,6 +90,8 @@ namespace WpfApp2
                 StartExeWatchers();
             }
             MainContentFrame.Navigate(new Dashboard());
+
+
 
 
         }
@@ -128,7 +132,7 @@ namespace WpfApp2
 
         private void OnExeCreated(object sender, FileSystemEventArgs e)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 FileInfo info = new FileInfo(e.FullPath);
                 if (!info.Exists || info.Length < minFilesize)
@@ -158,13 +162,14 @@ namespace WpfApp2
 
                 _context.AllExes.Add(exes);
                 _context.SaveChanges();
-            });
+            }));
         }
+
 
         private void OnExeDeleted(object sender, FileSystemEventArgs e)
         {
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
-            {                       
+            {
                 int userId = Global.UserId ?? 0;
                 var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
                 if (existing != null)
@@ -177,15 +182,17 @@ namespace WpfApp2
 
         private void OnExeRenamed(object sender, RenamedEventArgs e)
         {
-            if (Path.GetExtension(e.OldFullPath)?.ToLower() == ".exe")
-            {
-                OnExeDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath)));
-            }
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
+                if (Path.GetExtension(e.OldFullPath)?.ToLower() == ".exe")
+                {
+                    OnExeDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath)));
+                }
 
-            if (Path.GetExtension(e.FullPath)?.ToLower() == ".exe")
-            {
-                OnExeCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath)));
-            }
+                if (Path.GetExtension(e.FullPath)?.ToLower() == ".exe")
+                {
+                    OnExeCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath)));
+                }
+            }));
         }
 
         private void SetupTrayIcon()
@@ -268,7 +275,7 @@ namespace WpfApp2
             }
             try
             {
-                if (Global.floatingIcon != null)
+                if (Global.floatingIcon != null && !Global.logout)
                 {
                     Global.floatingIcon.Show();
                 }
@@ -330,7 +337,7 @@ namespace WpfApp2
                         {
                             if(driver.IsReady && driver.DriveType== DriveType.Fixed)
                             {
-                                ParallelScanDirectoryForExe(driver.RootDirectory.FullName, token);
+                                ParallelScanDirectoryForFiles(driver.RootDirectory.FullName, token);
                             }
                         }
                         catch (Exception ex)
@@ -341,7 +348,7 @@ namespace WpfApp2
                     }
                     System.Windows.Application.Current.Dispatcher.Invoke(async () =>
                     {
-                        await scanMessageConfirm($"Saved {totalExes} exe files to database.");
+                        await scanMessageConfirm($"Saved {totalExes} exe files and {totalDocs} docs to database.");
                     });
                 }
                 );
@@ -384,10 +391,15 @@ namespace WpfApp2
             return null;
         }
 
-        private void ParallelScanDirectoryForExe(string rootPath, CancellationToken token)
+        private void ParallelScanDirectoryForFiles(string rootPath, CancellationToken token)
         {
             var exeFiles = new ConcurrentBag<(string path, FileInfo info)>();
+
+            var docFiles = new ConcurrentBag<(string path, FileInfo info)>();
+
             var directories = new Stack<string>();
+
+            var extensions = new[] { ".exe", ".pdf", ".docx", ".pptx" };
             directories.Push(rootPath);
 
             while (directories.Count > 0)
@@ -395,6 +407,7 @@ namespace WpfApp2
                 token.ThrowIfCancellationRequested();
 
                 var currentDir = directories.Pop();
+
                 if (IsExcludedPath(currentDir))
                     continue;
 
@@ -406,7 +419,7 @@ namespace WpfApp2
                             directories.Push(subDir);
                     }
 
-                    var files = Directory.GetFiles(currentDir, "*.exe");
+                    var files = Directory.GetFiles(currentDir).Where(f => extensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase)).ToArray();
 
                     Parallel.ForEach(files, new ParallelOptions { CancellationToken = token }, file =>
                     {
@@ -416,16 +429,21 @@ namespace WpfApp2
                                 return;
                             FileInfo fi = new FileInfo(file);
 
-                            if (IsIgnoredExe(fi.FullName))
-                            {
-                                return;
-                            }
+                            if (IsIgnoredExe(fi.FullName)) return;
 
-                            if (fi.Length >minFilesize)
+                            if (fi.Length < minFilesize) return;
+
+                            var ext = Path.GetExtension(file).ToLower();
+
+                            if(ext == ".exe")
                             {
                                 exeFiles.Add((file, fi));
                             }
-                            
+                            else
+                            {
+                                docFiles.Add((file, fi));
+                            }
+
                         }
                         catch { }
                     });
@@ -434,6 +452,7 @@ namespace WpfApp2
             }
 
             SaveToDatabase(exeFiles.ToList());
+            SaveToDatabase(docFiles.ToList());
         }
 
         private async void SaveToDatabase(List<(string path, FileInfo info)> fileList)
@@ -447,6 +466,10 @@ namespace WpfApp2
                 return;
             }
 
+            var (firstPath, _) = fileList[0];
+
+            if (Path.GetExtension(firstPath) == ".exe")
+            {
 
                 foreach (var (path, info) in fileList)
                 {
@@ -458,22 +481,23 @@ namespace WpfApp2
 
                         if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
                             continue;
+
                         var versionInfo = FileVersionInfo.GetVersionInfo(path);
                         string displayName = versionInfo.FileDescription ?? info.Name;
                         float[] embedding = Commands.GetEmbedding(displayName);
                         string embeddingString = string.Join(",", embedding.Select(x => x.ToString("F4")));
                         var exes = new AllExes
-                            {
-                                FilePath = path,
-                                SignUpDetail = user,
-                                FileName = info.Name,
-                                DisplayName = displayName,
-                                FileSize = FormatFileSize(info.Length),
-                                LastWriteTime = info.LastWriteTime,
-                                LastAccessTime = info.LastAccessTime,
-                                CreatedAt = info.CreationTime,
-                                Embedding = embeddingString
-                          };
+                        {
+                            FilePath = path,
+                            SignUpDetail = user,
+                            FileName = info.Name,
+                            DisplayName = displayName,
+                            FileSize = FormatFileSize(info.Length),
+                            LastWriteTime = info.LastWriteTime,
+                            LastAccessTime = info.LastAccessTime,
+                            CreatedAt = info.CreationTime,
+                            Embedding = embeddingString
+                        };
 
 
                         _context.AllExes.Add(exes);
@@ -487,7 +511,49 @@ namespace WpfApp2
 
                 _context.SaveChanges();
                 totalExes += fileList.Count;
+            }
+            else
+            {
+                foreach (var (path, info) in fileList)
+                {
+                    try
+                    {
 
+                        if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
+                            continue;
+
+                        if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
+                            continue;
+
+                        var versionInfo = FileVersionInfo.GetVersionInfo(path);
+                        string displayName = versionInfo.FileDescription ?? info.Name;
+                        float[] embedding = Commands.GetEmbedding(displayName);
+                        string embeddingString = string.Join(",", embedding.Select(x => x.ToString("F4")));
+
+                        var docs = new AllDocs
+                        {
+                            FilePath = path,
+                            SignUpDetail = user,
+                            FileName = info.Name,
+                            DisplayName = displayName,
+                            FileSize = FormatFileSize(info.Length),
+                            LastWriteTime = info.LastWriteTime,
+                            LastAccessTime = info.LastAccessTime,
+                            CreatedAt = info.CreationTime,
+                            Embedding = embeddingString
+                        };
+
+
+                        _context.AllDocs.Add(docs);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
+                    }
+                }
+                _context.SaveChanges();
+                totalDocs += fileList.Count;
+            }
 
   
         }
@@ -520,6 +586,10 @@ namespace WpfApp2
             return $"{len:0.##} {sizes[order]}";
         }
 
+        private void NavSettings_Click(object sender,RoutedEventArgs e)
+        {
+            MainContentFrame.Navigate(new Settings());
+        }
         private void NavHowItWorksButton_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new HowItWorks());
@@ -531,6 +601,7 @@ namespace WpfApp2
         {
             if (_notifyIcon != null)
             {
+              
                 _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
                 _notifyIcon = null!;
@@ -558,14 +629,27 @@ namespace WpfApp2
             if (metroWindow != null)
             {
                 var result = await metroWindow.ShowMessageAsync("Confirm", message, MessageDialogStyle.AffirmativeAndNegative,settings);
-
+                
                 if (result == MessageDialogResult.Affirmative)
                 {
                     Global.UserId = null;
-                    MainWindow mainWindow = new MainWindow();
-                    mainWindow.Show();
+                    Global.logout = true;
+                    Properties.Settings.Default.RememberMe = false;
+                    Properties.Settings.Default.UserId = 0;
+                    Properties.Settings.Default.Save();
+
                     RemoveTrayIcon();
-                    this.Close();
+                 
+                    await System.Windows.Application.Current.Dispatcher.BeginInvoke(
+                                new Action(() =>
+                                {
+                                    var mainWindow = new MainWindow();
+                                    mainWindow.Show();
+                                    this.Close();
+
+                                }),
+                                System.Windows.Threading.DispatcherPriority.ApplicationIdle
+                   );
                 }
                 else
                 {
@@ -652,7 +736,7 @@ namespace WpfApp2
                     {
                         if (drive.IsReady && drive.DriveType == DriveType.Fixed)
                         {
-                            ParallelScanDirectoryForExe(drive.RootDirectory.FullName, CancellationToken.None);
+                            ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
                         }
                     }
                 });

@@ -287,22 +287,6 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="1" Margin="0,8,0,0" Padding="0,8">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <TextBlock Text="Wake Word Detection :" 
-                               FontFamily="Segoe UI" 
-                               FontSize="16" 
-                               FontWeight="Bold"         
-                               Foreground="White" 
-                               VerticalAlignment="Center" 
-                               Margin="0,0,16,0"/>
-                    <ToggleButton x:Name="VoiceToggle" 
-                                  Style="{StaticResource SlideToggleButtonStyle}"
-                                  Checked="VoiceToggle_Checked"
-                                  Unchecked="VoiceToggle_Unchecked"/>
-                </StackPanel>
-            </Border>
-
             <Grid Grid.Row="2" Margin="0,16,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

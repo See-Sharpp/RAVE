@@ -16,5 +16,7 @@ namespace WpfApp2
 
         public static WakeWordHelper? _wakeWordHelper { get; set; } = null;
 
+        public static bool logout = false;
+
     }
 }

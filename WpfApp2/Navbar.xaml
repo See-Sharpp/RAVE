@@ -268,12 +268,21 @@
                             Click="NavScanButton_Click"
                             Style="{StaticResource ScanButton}"/>
 
+                    <Button x:Name="NavSettings" Click="NavSettings_Click"
+                        Style="{StaticResource NavButton}" Content="Settings">
+                        <Button.Tag>
+                            <fa:IconImage Icon="Cog" Width="18" Foreground="White"/>
+                        </Button.Tag>
+                    </Button>
+
                     <Button x:Name="NavHowItWorksButton" Click="NavHowItWorksButton_Click"
                             Style="{StaticResource NavButton}" Content="How it works">
                         <Button.Tag>
                             <fa:IconImage Icon="QuestionCircle" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
+                    
+                    
                 </StackPanel>
 
                 <Border Grid.Row="2" Padding="16,16,16,32">
