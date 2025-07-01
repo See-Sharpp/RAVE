@@ -70,7 +70,9 @@ namespace WpfApp2
                     Properties.Settings.Default.Save();
 
                 }
-                    Navbar dashboard = new Navbar();
+                Navbar dashboard = new Navbar();
+                Properties.Settings.Default.VerificationPass = User.Password;
+                System.Windows.MessageBox.Show(User.Password);
                 Global.logout = false;
                 dashboard.Show();
                 this.Close();

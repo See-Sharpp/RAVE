@@ -269,11 +269,28 @@ namespace WpfApp2
             }
         }
         
-        private void SpeakerVerificationToggle_Unchecked(object sender, RoutedEventArgs e)
+        private async void SpeakerVerificationToggle_Unchecked(object sender, RoutedEventArgs e)
         {
+           
             if (Properties.Settings.Default.Speaker_Verification)
             {
-                Properties.Settings.Default.Speaker_Verification = false;
+               
+                await Task.Delay(100);
+                var dialog = new SpeakerVerificationPass();
+                bool? result = dialog.ShowDialog(); 
+
+                if(result == true)
+                {
+
+                    Properties.Settings.Default.Speaker_Verification = false;
+                    Properties.Settings.Default.Save();
+                    SpeakerVerificationToggle.IsChecked = false;
+                }
+                else
+                {
+                    SpeakerVerificationToggle.IsChecked = true;
+                }
+                await Task.Delay(200);
             }
         }
 
@@ -374,11 +391,11 @@ namespace WpfApp2
         private Brush GetBarBrush(float level)
         {
             
-            if (level < 0.2f)
+            if (level < 0.1f)
             {
                 return new SolidColorBrush(Color.FromRgb(99, 102, 241)); 
             }
-            else if (level < 0.4f)
+            else if (level < 0.3f)
             {
                 return new SolidColorBrush(Color.FromRgb(34, 197, 94)); 
             }
