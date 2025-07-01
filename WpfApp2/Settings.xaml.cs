@@ -1,12 +1,18 @@
-﻿using System.Windows;
+﻿using ControlzEx.Standard;
+using Microsoft.Extensions.Configuration;
+using NAudio.Wave;
+using Newtonsoft.Json;
+using System.Diagnostics;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using NAudio.Wave;
-using System.IO;
-using System.Diagnostics;
-using System.Windows.Threading;
+using System.Windows.Media.Effects;
 using System.Windows.Shapes;
-using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace WpfApp2
 {
@@ -18,7 +24,7 @@ namespace WpfApp2
         private int countdownValue = 5;
         private int recordingTimeLeft = 5;
 
-        Dashboard d1;
+
 
         private WaveInEvent? waveIn;
         private WaveFileWriter? _denoisedWriter;
@@ -38,6 +44,9 @@ namespace WpfApp2
         private const int MAX_BARS = 50;
         private readonly object audioLevelLock = new object();
 
+    
+        private static string? api;
+
         public Settings()
         {
             InitializeComponent();
@@ -46,14 +55,25 @@ namespace WpfApp2
             DarkModeToggle.IsChecked = Properties.Settings.Default.Dark_Mode;
             SaveHistoryToggle.IsChecked = Properties.Settings.Default.History;
 
-            d1 = new Dashboard();
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
+
+         
         }
+
+        
 
         private void WakeWordToggle_Checked(object sender, RoutedEventArgs e)
         {
             if (!Properties.Settings.Default.WakeWord)
             {
-                d1.VoiceToggle_Checked();
+                WakeWordManager.WakeWordDetected += OnWakeWordDetected;
+                WakeWordManager.Start();
+
                 Properties.Settings.Default.WakeWord = true;
                 Properties.Settings.Default.Save();
             }
@@ -63,11 +83,82 @@ namespace WpfApp2
         {
             if (Properties.Settings.Default.WakeWord)
             {
-                d1.VoiceToggle_Unchecked();
+                WakeWordManager.WakeWordDetected -= OnWakeWordDetected;
+                WakeWordManager.Stop();
+
                 Properties.Settings.Default.WakeWord = false;
                 Properties.Settings.Default.Save();
             }
         }
+
+        public async void OnWakeWordDetected()
+        {
+            await Dispatcher.InvokeAsync(async () =>
+            {
+             
+                System.Windows.MessageBox.Show("Hey Jarvis Detected!");
+                string? result = await HandelVoiceInput(this, new RoutedEventArgs());
+                if (!string.IsNullOrEmpty(result))
+                {
+                    llm l1 = new llm(result);
+
+                }
+                
+            });
+        }
+
+        public async Task<string> HandelVoiceInput(object sender, RoutedEventArgs e)
+        {
+           
+            StartRecording();
+
+
+            await Task.Delay(5000);
+
+
+            await StopRecording();
+
+            if (File.Exists(denoisedFilePath) && new FileInfo(denoisedFilePath).Length > 0)
+            {
+             
+                string result = await TranscribeAsync(denoisedFilePath);
+            
+                return result;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public async Task<string> TranscribeAsync(string audioFilePath)
+        {
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
+
+            using var form = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(audioFilePath));
+            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+            form.Add(fileContent, "file", System.IO.Path.GetFileName(audioFilePath));
+            form.Add(new StringContent("whisper-large-v3"), "model");
+            form.Add(new StringContent("en"), "language");
+
+            var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+
+                MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                return string.Empty;
+            }
+
+            dynamic result = JsonConvert.DeserializeObject(responseJson);
+            return result?.text ?? string.Empty;
+        }
+       
+
 
         private void AutoListenToggle_Checked(object sender, RoutedEventArgs e)
         {

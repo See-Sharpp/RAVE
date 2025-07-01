@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Diagnostics;
+using System.Windows.Navigation;
 
 namespace WpfApp2
 {
@@ -23,7 +24,7 @@ namespace WpfApp2
 
 
         private static string? api;
-        private WakeWordHelper? _wakeWordDetector;
+
 
         private IntPtr _rnnoiseState = IntPtr.Zero;
         private readonly List<byte> _unprocessedBuffer = new List<byte>();
@@ -50,21 +51,7 @@ namespace WpfApp2
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
         }
 
-        public async void OnWakeWordDetected()
-        {
-            await Dispatcher.InvokeAsync(async () =>
-            {
-                _wakeWordDetector?.Pause();
-                System.Windows.MessageBox.Show("Hey Jarvis Detected!");
-                string? result = await HandelVoiceInput(this, new RoutedEventArgs());
-                if (!string.IsNullOrEmpty(result))
-                {
-                    llm l1 = new llm(result);
 
-                }
-                _wakeWordDetector?.Resume();
-            });
-        }
 
         public async void ToggleVoice_Click(object sender, RoutedEventArgs e)
         {
@@ -224,7 +211,7 @@ namespace WpfApp2
 
             _unprocessedBuffer.AddRange(e.Buffer.Take(e.BytesRecorded));
 
-           
+
             float[] inputFloatSamples = new float[FRAME_SIZE];
             float[] outputFloatSamples = new float[FRAME_SIZE];
             byte[] processedFrameBytes = new byte[FRAME_SIZE_BYTES];
@@ -313,7 +300,6 @@ namespace WpfApp2
             }
         }
 
-    
 
         public void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
         {
@@ -390,7 +376,8 @@ namespace WpfApp2
             string command = CommandInput.Text.Trim();
             if (!string.IsNullOrEmpty(command))
             {
-                
+                llm l1 = new llm(command);
+                CommandInput.Clear();
             }
         }
 
@@ -401,9 +388,7 @@ namespace WpfApp2
             SendEffect.IsEnabled = false;
             CommandInput.IsReadOnly = true;
             CommandInput.Cursor = Cursors.Arrow;
-            _wakeWordDetector = new WakeWordHelper("model/hey_jarvis_v0.1.onnx", OnWakeWordDetected);
 
-            Task.Run(() => _wakeWordDetector.Start());
         }
 
         public void VoiceToggle_Unchecked()
@@ -413,10 +398,18 @@ namespace WpfApp2
             SendEffect.IsEnabled = true;
             CommandInput.IsReadOnly = false;
             CommandInput.Cursor = Cursors.IBeam;
-            if (_wakeWordDetector != null)
+
+        }
+
+        private void onLoad(object sender, RoutedEventArgs e)
+        {
+            if (Properties.Settings.Default.WakeWord == true)
             {
-                _wakeWordDetector.Stop();
-                _wakeWordDetector = null;
+                VoiceToggle_Checked();
+            }
+            else
+            {
+                VoiceToggle_Unchecked();
             }
         }
     }

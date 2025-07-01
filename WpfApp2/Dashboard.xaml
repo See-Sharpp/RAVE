@@ -6,6 +6,7 @@
       xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
       xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
       mc:Ignorable="d"
+      Loaded="onLoad"
       
       d:DesignHeight="700" d:DesignWidth="900"
       Title="VoiceSync Dashboard">

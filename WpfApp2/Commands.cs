@@ -33,9 +33,6 @@ namespace WpfApp2
    
         }
 
-
-
-
         public static void systemCommand(string command, string search_query)
         {
             try
@@ -79,7 +76,7 @@ namespace WpfApp2
         {
 
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
-            MessageBox.Show("Searching for " + application + " in the database.");
+          // MessageBox.Show("Searching for " + application + " in the database.");
             string query = $@"
                 SELECT TOP 1 System.ItemName, System.ItemPathDisplay
                 FROM SYSTEMINDEX
@@ -303,10 +300,24 @@ namespace WpfApp2
                 MessageBox.Show(command);
                 MessageBox.Show(search_query);
                 //string url = "https://www.google.com/search?q=" + Uri.EscapeDataString(search_query);
+                string powershellPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe");
+
+                if (search_query == null)
+                {
+
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = powershellPath,
+                        Arguments = $"-NoProfile -Command {command}",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    return;
+                }
 
                 string urlPath = command.Replace("{{q}}", Uri.EscapeDataString((search_query)));
                 MessageBox.Show(urlPath);
-                string powershellPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe");
+
 
                 int urlIndex = command.IndexOf("http");
 
