@@ -21,7 +21,7 @@ namespace WpfApp2
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             this.Loaded -= MainWindow_Loaded;
-            AutoLogin();
+            //AutoLogin();
         }
         private void Login(object sender, RoutedEventArgs e)
         {

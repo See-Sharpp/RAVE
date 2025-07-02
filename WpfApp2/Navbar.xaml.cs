@@ -28,6 +28,8 @@ namespace WpfApp2
         private int totalExes = 0;
         private int totalDocs = 0;
         private List<FileSystemWatcher> _watchers = new();
+        private readonly string[] allowedExtensions = new[] { ".exe", ".pptx", ".docx", ".pdf", ".txt" };
+
         readonly string[] excludedPaths = new string[]
             {
                 @"C:\Windows",
@@ -115,14 +117,14 @@ namespace WpfApp2
                     var watcher = new FileSystemWatcher
                     {
                         Path = drive.RootDirectory.FullName,
-                        Filter = "*.exe",
+                        Filter = "*.*",
                         IncludeSubdirectories = true,
                         NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite
                     };
 
-                    watcher.Created += OnExeCreated;
-                    watcher.Deleted += OnExeDeleted;
-                    watcher.Renamed += OnExeRenamed;
+                    watcher.Created += OnFileCreated;
+                    watcher.Deleted += OnFileDeleted;
+                    watcher.Renamed += OnFileRenamed;
 
                     watcher.EnableRaisingEvents = true;
                     _watchers.Add(watcher);
@@ -130,10 +132,12 @@ namespace WpfApp2
             }
         }
 
-        private void OnExeCreated(object sender, FileSystemEventArgs e)
+        private void OnFileCreated(object sender, FileSystemEventArgs e)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
+                string ext = Path.GetExtension(e.FullPath)?.ToLower();
+                if (!allowedExtensions.Contains(ext)) return;
                 FileInfo info = new FileInfo(e.FullPath);
                 if (!info.Exists || info.Length < minFilesize)
                     return;
@@ -147,50 +151,104 @@ namespace WpfApp2
 
                 var versionInfo = FileVersionInfo.GetVersionInfo(e.FullPath);
                 string displayName = versionInfo.FileDescription ?? info.Name;
-
-                var exes = new AllExes
+                bool alreadyExists = ext == ".exe"
+                                            ? _context.AllExes.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId)
+                                            : _context.AllDocs.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+                if (alreadyExists)
+                    return;
+                if (ext == ".exe")
                 {
-                    FilePath = e.FullPath,
-                    SignUpDetail = user,
-                    FileName = info.Name,
-                    DisplayName = displayName,
-                    FileSize = FormatFileSize(info.Length),
-                    LastWriteTime = info.LastWriteTime,
-                    LastAccessTime = info.LastAccessTime,
-                    CreatedAt = info.CreationTime
-                };
+                    float[] newEmbedding = Commands.GetEmbedding(info.Name);
+                    string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
+                    var exes = new AllExes
+                    {
+                        FilePath = e.FullPath,
+                        SignUpDetail = user,
+                        FileName = info.Name,
+                        DisplayName = displayName,
+                        FileSize = FormatFileSize(info.Length),
+                        LastWriteTime = info.LastWriteTime,
+                        LastAccessTime = info.LastAccessTime,
+                        CreatedAt = info.CreationTime,
+                        Embedding = embeddingString
+                    };
 
-                _context.AllExes.Add(exes);
-                _context.SaveChanges();
+                    _context.AllExes.Add(exes);
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    float[] newEmbedding = Commands.GetEmbedding(info.Name);
+                    string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
+                    var docs = new AllDocs
+                    {
+                        FilePath = e.FullPath,
+                        SignUpDetail = user,
+                        FileName = info.Name,
+                        DisplayName = displayName,
+                        FileSize = FormatFileSize(info.Length),
+                        LastWriteTime = info.LastWriteTime,
+                        LastAccessTime = info.LastAccessTime,
+                        CreatedAt = info.CreationTime,
+                        Embedding = embeddingString
+                    };
+                    _context.AllDocs.Add(docs);
+                    _context.SaveChanges();
+                }
             }));
         }
 
 
-        private void OnExeDeleted(object sender, FileSystemEventArgs e)
+        private void OnFileDeleted(object sender, FileSystemEventArgs e)
         {
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
+                string ext = Path.GetExtension(e.FullPath)?.ToLower();
+                if (!allowedExtensions.Contains(ext)) return;
                 int userId = Global.UserId ?? 0;
-                var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
-                if (existing != null)
+                bool removedAnything = false;
+                if (ext == ".exe")
                 {
-                    _context.AllExes.Remove(existing);
+                    var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+
+                    if (existing != null)
+                    {
+                        _context.AllExes.Remove(existing);
+                        removedAnything = true;
+                    }
+                }
+                else
+                {
+                    var existing = _context.AllDocs.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+
+                    if (existing != null)
+                    {
+                        _context.AllDocs.Remove(existing);
+                       removedAnything = true;
+                    }
+                }
+                if (removedAnything)
+                {
                     _context.SaveChanges();
                 }
             });
         }
 
-        private void OnExeRenamed(object sender, RenamedEventArgs e)
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
         {
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() => {
-                if (Path.GetExtension(e.OldFullPath)?.ToLower() == ".exe")
+
+
+                string oldExt = Path.GetExtension(e.OldFullPath)?.ToLower();
+                string newExt = Path.GetExtension(e.FullPath)?.ToLower();
+                if (allowedExtensions.Contains(oldExt))
                 {
-                    OnExeDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath)));
+                    OnFileDeleted(sender, new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath)!, Path.GetFileName(e.OldFullPath)));
                 }
 
-                if (Path.GetExtension(e.FullPath)?.ToLower() == ".exe")
+                if (allowedExtensions.Contains(newExt))
                 {
-                    OnExeCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath)));
+                    OnFileCreated(sender, new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath)!, Path.GetFileName(e.FullPath)));
                 }
             }));
         }
@@ -399,7 +457,7 @@ namespace WpfApp2
 
             var directories = new Stack<string>();
 
-            var extensions = new[] { ".exe", ".pdf", ".docx", ".pptx" };
+            var extensions = new[] { ".exe", ".pdf", ".docx", ".pptx",".txt" };
             directories.Push(rootPath);
 
             while (directories.Count > 0)

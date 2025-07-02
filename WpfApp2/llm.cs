@@ -191,7 +191,7 @@ namespace WpfApp2
                                 {
                                     if (file != null)
                                     {
-                                        
+                                        Commands.file_command(file);
                                     }
                                 }
                             }
