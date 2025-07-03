@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Xml.Linq;
 using WpfApp2.Context;
 using WpfApp2.Models;
 
@@ -95,10 +96,11 @@ namespace WpfApp2
 
                         if (string.IsNullOrEmpty(contentString))
                         {
+                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"No Voice Was Detected\"0 100");
                             MessageBox.Show("No content received.");
                             return;
                         }
-                        MessageBox.Show("Hello");
+                        
                         MessageBox.Show(contentString);
                         var parsedJson = JsonDocument.Parse(contentString);
                         var root = parsedJson.RootElement;
@@ -143,18 +145,6 @@ namespace WpfApp2
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
 
-                        //System.Windows.MessageBox.Show("" + original_user_query + "\n" +
-                        //    processed_user_query + "\n" +
-                        //    primary_intent + "\n" +
-                        //    specific_action + "\n" +
-                        //    file_description + "\n" +
-                        //    file_type_filter + "\n" +
-                        //    string.Join(", ", time_references) + "\n" +
-                        //    string.Join(", ", sources) + "\n" +
-                        //    string.Join(", ", destinations) + "\n" +
-                        //    application_or_file + "\n" +
-                        //    search_query + "\n" +
-                        //    string.Join(", ", command_templates));
                         if (primary_intent != null)
                         {
                             if (primary_intent.ToLower() == "system_control")
@@ -191,7 +181,7 @@ namespace WpfApp2
                                 {
                                     if (file != null)
                                     {
-                                        
+                                        Commands.file_command(file);
                                     }
                                 }
                             }
@@ -199,6 +189,7 @@ namespace WpfApp2
                         }
                         else
                         {
+                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" 0 100");
                             MessageBox.Show("No valid response or unexpected format.");
                         }
                     }
@@ -207,6 +198,7 @@ namespace WpfApp2
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error: {ex.Message}");
+                Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" 0 100");
                 MessageBox.Show("An error occurred while processing the request. Please try again.");
             }
         }

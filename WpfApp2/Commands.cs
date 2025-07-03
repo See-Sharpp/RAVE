@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Shapes;
 using WpfApp2.Context;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using WpfApp2.Models;
 
 
 namespace WpfApp2
@@ -280,8 +280,85 @@ namespace WpfApp2
             return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
         }
 
-        public static void file_command()
+        public static void file_command(string fileName)
         {
+            MessageBox.Show(fileName);
+           
+            string[] arr = fileName.Trim().Split(" ");
+            string fileType = arr[arr.Length - 1];
+            MessageBox.Show(fileType);
+
+            if(fileType == "PDF")
+            {
+                SearchForDocsInDatabase(fileName);
+            }
+            else if(fileType == "PPT")
+            {
+
+            }
+            else
+            {
+
+            }          
+        }
+
+        public static void SearchForDocsInDatabase(string filename)
+        {
+            try
+            {
+                using var _context = new ApplicationDbContext();
+                float[] queryEmbedding = GetEmbedding(filename);
+
+                var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
+                if (!allDocs.Any())
+                {
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again.\" 0 100 ");
+                    return;
+                }
+                
+                var results = allDocs
+                .AsParallel()
+                .Select(exe =>
+                {
+                    float[] embedding;
+                    if (string.IsNullOrEmpty(exe.Embedding))
+                        embedding = GetEmbedding(exe.DisplayName);
+                    else
+                        embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
+
+                    double sim = CosineSimilarity(queryEmbedding, embedding);
+
+                    return new { exe.DisplayName, exe.FilePath, sim };
+                })
+                .OrderByDescending(x => x.sim)
+                .FirstOrDefault();
+
+                Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
+
+                MessageBox.Show(""+results.sim);
+
+                if (results?.FilePath != null && results.sim > 0.80f)
+                {
+                    MessageBox.Show(
+                        $"Best match: {results.DisplayName}\n" +
+                        $"Path: {results.FilePath}\n" +
+                        $"Similarity: {results.sim:F4}"
+                    );
+                    Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
+                }
+                else
+                {
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\" 0 100 ");
+                    MessageBox.Show("No matching application found.");
+                }
+
+
+                
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
 
         }
 
