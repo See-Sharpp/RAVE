@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GroqSharp.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Shapes;
 using WpfApp2.Context;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace WpfApp2
@@ -19,7 +21,6 @@ namespace WpfApp2
 
     public class Commands
     {
-        private string temp = null; 
         public ApplicationDbContext _context;
         private static readonly tokenizer _tokenizer =
             new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
@@ -37,7 +38,7 @@ namespace WpfApp2
         {
             try
             {
-                string temp = null; // Declare a local variable to avoid using the instance field in a static method
+                string temp = null; 
                 string nircmdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nircmd-x64", "nircmd.exe");
 
                 if (command.Contains("savescreenshot"))
@@ -73,10 +74,10 @@ namespace WpfApp2
         }
 
         public static void application_command(string application)
-        {
-
+        { 
+            string com= $"nircmd.exe speak text \"Opening {application}\' 0 100";
+            Process.Start("cmd.exe", "/c " + com);
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
-          // MessageBox.Show("Searching for " + application + " in the database.");
             string query = $@"
                 SELECT TOP 1 System.ItemName, System.ItemPathDisplay
                 FROM SYSTEMINDEX
@@ -136,6 +137,7 @@ namespace WpfApp2
 
 
         }
+
         public static void SearchInDatabase(string application)
         {
             try
@@ -153,7 +155,7 @@ namespace WpfApp2
 
                 if (!allExes.Any())
                 {
-                    MessageBox.Show("No applications found in database.");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\" 0 100 ");
                     return;
                 }
 
@@ -172,8 +174,6 @@ namespace WpfApp2
                     }
                     float[] candidateEmb = embeddedString.Split(',').Select(s => float.Parse(s)).ToArray();
                     var sim = CosineSimilarity(queryEmbedding, candidateEmb);
-
-
 
                     var results = allExes
                     .AsParallel()
@@ -196,17 +196,12 @@ namespace WpfApp2
 
 
                     if (results?.FilePath != null && results.sim > 0.87f)
-                    {
-                        //MessageBox.Show(
-                        //    $"Best match: {results.DisplayName}\n" +
-                        //    $"Path: {results.FilePath}\n" +
-                        //    $"Similarity: {results.sim:F4}"
-                        //);
+                    { 
                         Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                     }
                     else
                     {
-                        MessageBox.Show("No matching application found.");
+                        Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\" 0 100 ");
                     }
 
 
@@ -217,7 +212,6 @@ namespace WpfApp2
                 Debug.WriteLine(e.Message);
             }
         }
-
 
         public static float[] GetCachedEmbedding(string text)
         {
@@ -264,8 +258,7 @@ namespace WpfApp2
                     .ToArray();
             }
             else if (dims.Length == 2)
-            {
-                // [1, hiddenDim]
+            { 
                 return outputTensor.ToArray();
             }
             else

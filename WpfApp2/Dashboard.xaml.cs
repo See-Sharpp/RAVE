@@ -15,6 +15,7 @@ namespace WpfApp2
 {
     public partial class Dashboard : Page
     {
+        private Verification v;
         private WaveInEvent? waveIn;
         private WaveFileWriter? _denoisedWriter;
         private string denoisedFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "denoised_output.wav");
@@ -62,10 +63,10 @@ namespace WpfApp2
                 CommandInput.AppendText(result);
                 SendCommand_Click(this, new RoutedEventArgs());
             }
-            else
+            else if(string.IsNullOrEmpty(result))
             {
                 CommandInput.Clear();
-                CommandInput.AppendText("No voice input detected.");
+                CommandInput.AppendText("No voice input detected");
             }
         }
 
@@ -86,8 +87,11 @@ namespace WpfApp2
                 CommandInput.Clear();
                 CommandInput.AppendText("Transcribing...");
                 string result = await TranscribeAsync(denoisedFilePath);
-                CommandInput.Clear();
-                CommandInput.AppendText(result);
+                if (result != "error")
+                {
+                    CommandInput.Clear();
+                    CommandInput.AppendText(result);
+                }
                 return result;
             }
             else
@@ -100,29 +104,33 @@ namespace WpfApp2
 
         public async Task<string> TranscribeAsync(string audioFilePath)
         {
-
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
-
-            using var form = new MultipartFormDataContent();
-            var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(audioFilePath));
-            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
-            form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
-            form.Add(new StringContent("whisper-large-v3"), "model");
-            form.Add(new StringContent("en"), "language");
-
-            var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
-
-            var responseJson = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
+            if (v.verify())
             {
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
 
-                MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
-                return string.Empty;
+                using var form = new MultipartFormDataContent();
+                var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(audioFilePath));
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+                form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
+                form.Add(new StringContent("whisper-large-v3"), "model");
+                form.Add(new StringContent("en"), "language");
+
+                var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
+
+                var responseJson = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+
+                    MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                    return string.Empty;
+                }
+
+                dynamic result = JsonConvert.DeserializeObject(responseJson);
+                return result?.text ?? string.Empty;
             }
-
-            dynamic result = JsonConvert.DeserializeObject(responseJson);
-            return result?.text ?? string.Empty;
+            CommandInput.AppendText("Your Voice Did Not Match the authorized voice, Try Again");
+            return "error";
         }
 
         public void StartRecording()
@@ -378,6 +386,19 @@ namespace WpfApp2
             {
                 llm l1 = new llm(command);
                 CommandInput.Clear();
+            }
+        }   
+
+        private void SendCommand_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                string command = CommandInput.Text.Trim();
+                if (!string.IsNullOrEmpty(command))
+                {
+                    llm l1 = new llm(command);
+                    CommandInput.Clear();
+                }
             }
         }
 

@@ -30,6 +30,7 @@ namespace WpfApp2
         private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>();
         private DateTime _lastRightClickTime = DateTime.MinValue;
         private const int DoubleClickThreshold = 300;
+        private Verification v;
 
         public FloatingIcon()
         {
@@ -114,7 +115,14 @@ namespace WpfApp2
             var result = await HandelVoiceInput();
             CompositionTarget.Rendering -= handler;
             RecordingArc.Visibility = Visibility.Collapsed;
-            _ = new llm(result);
+            if (string.IsNullOrEmpty(result))
+            {
+                _ = new llm(result);
+            }
+            else
+            {
+                MessageBox.Show("Your Voice Did Not Match the authorized voice, Try Again");
+            }
         }
 
         public async Task<string> HandelVoiceInput()
@@ -129,19 +137,23 @@ namespace WpfApp2
 
         public async Task<string> TranscribeAsync(string path)
         {
-            using var http = new HttpClient();
-            http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
-            using var form = new MultipartFormDataContent();
-            var file = new ByteArrayContent(await File.ReadAllBytesAsync(path).ConfigureAwait(false));
-            file.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
-            form.Add(file, "file", Path.GetFileName(path));
-            form.Add(new StringContent("whisper-large-v3"), "model");
-            form.Add(new StringContent("en"), "language");
-            var resp = await http.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form).ConfigureAwait(false);
-            var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return string.Empty;
-            dynamic obj = JsonConvert.DeserializeObject(json);
-            return obj?.text ?? string.Empty;
+            if (v.verify())
+            {
+                using var http = new HttpClient();
+                http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
+                using var form = new MultipartFormDataContent();
+                var file = new ByteArrayContent(await File.ReadAllBytesAsync(path).ConfigureAwait(false));
+                file.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+                form.Add(file, "file", Path.GetFileName(path));
+                form.Add(new StringContent("whisper-large-v3"), "model");
+                form.Add(new StringContent("en"), "language");
+                var resp = await http.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form).ConfigureAwait(false);
+                var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (!resp.IsSuccessStatusCode) return string.Empty;
+                dynamic obj = JsonConvert.DeserializeObject(json);
+                return obj?.text ?? string.Empty;
+            }
+            return string.Empty;
         }
 
         public void StartRecording()

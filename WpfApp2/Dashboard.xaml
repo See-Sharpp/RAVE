@@ -383,7 +383,8 @@
                                  Padding="16,12"
                                  mah:TextBoxHelper.Watermark="Type your command or click the microphone..."
                                  GotFocus="CommandInput_GotFocus"
-                                 LostFocus="CommandInput_LostFocus"/>
+                                 LostFocus="CommandInput_LostFocus"
+                                 KeyDown="SendCommand_KeyDown"/>
                         </Border>
 
                         <Button x:Name="SendEffect" 

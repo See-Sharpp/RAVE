@@ -178,26 +178,5 @@ namespace WpfApp2
             DialogCard.RenderTransform.BeginAnimation(ScaleTransform.ScaleXProperty, scaleOut);
             DialogCard.RenderTransform.BeginAnimation(ScaleTransform.ScaleYProperty, scaleOut);
         }
-
-        
-        public static bool? ShowPasswordDialog(string password = "admin123")
-        {
-            var dialog = new SpeakerVerificationPass(password);
-            return dialog.ShowDialog();
-        }
-
-        public static (bool? result, string enteredPassword) ShowPasswordDialogWithResult(string password = "admin123")
-        {
-            var dialog = new SpeakerVerificationPass(password);
-            var result = dialog.ShowDialog();
-            return (result, dialog.EnteredPassword);
-        }
-
-        public static bool? ShowPasswordDialogOverWindow(Window owner, string password = "admin123")
-        {
-            var dialog = new SpeakerVerificationPass(password);
-            dialog.Owner = owner;
-            return dialog.ShowDialog();
-        }
     }
 }
