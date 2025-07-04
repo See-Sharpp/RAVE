@@ -75,8 +75,8 @@ namespace WpfApp2
 
         public static void application_command(string application)
         { 
-            string com= $"nircmd.exe speak text \"Opening {application}\' 0 100";
-            Process.Start("cmd.exe", "/c " + com);
+            string com= $"nircmd.exe speak text \"Opening {application}\'";
+            
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
             string query = $@"
                 SELECT TOP 1 System.ItemName, System.ItemPathDisplay
@@ -98,7 +98,7 @@ namespace WpfApp2
                             {
                                 string name = reader["System.ItemName"].ToString();
                                 string path = reader["System.ItemPathDisplay"].ToString();
-
+                                Process.Start("cmd.exe", "/c " + com);
                                 var process = new Process();
                                 process.StartInfo.FileName = "cmd.exe";
                                 process.StartInfo.Arguments = $"/C start \"\" \"{path}\"";
@@ -142,6 +142,7 @@ namespace WpfApp2
         {
             try
             {
+                string com = $"nircmd.exe speak text \"Opening {application}\'";
 
                 using var _context = new ApplicationDbContext();
                 char firstChar = application.Trim().ToLower().FirstOrDefault();
@@ -155,7 +156,7 @@ namespace WpfApp2
 
                 if (!allExes.Any())
                 {
-                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\" 0 100 ");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\"");
                     return;
                 }
 
@@ -164,48 +165,36 @@ namespace WpfApp2
                 string bestName = null;
                 double bestScore = -1;
 
-                foreach (var exe in allExes)
+              
+                var results = allExes
+                .AsParallel()
+                .Select(exe =>
                 {
-
-                    string? embeddedString = exe.Embedding;
-                    if (string.IsNullOrEmpty(embeddedString))
-                    {
-                        continue;
-                    }
-                    float[] candidateEmb = embeddedString.Split(',').Select(s => float.Parse(s)).ToArray();
-                    var sim = CosineSimilarity(queryEmbedding, candidateEmb);
-
-                    var results = allExes
-                    .AsParallel()
-                    .Select(exe =>
-                    {
-                        float[] embedding;
-                        if (string.IsNullOrEmpty(exe.Embedding))
-                            embedding = GetEmbedding(exe.DisplayName);
-                        else
-                            embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
-
-                        double sim = CosineSimilarity(queryEmbedding, embedding);
-
-                        return new { exe.DisplayName, exe.FilePath, sim };
-                    })
-                    .OrderByDescending(x => x.sim)
-                    .FirstOrDefault();
-
-                    Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
-
-
-                    if (results?.FilePath != null && results.sim > 0.87f)
-                    { 
-                        Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
-                    }
+                    float[] embedding;
+                    if (string.IsNullOrEmpty(exe.Embedding))
+                        embedding = GetEmbedding(exe.DisplayName);
                     else
-                    {
-                        Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\" 0 100 ");
-                    }
+                        embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
 
+                    double sim = CosineSimilarity(queryEmbedding, embedding);
 
+                    return new { exe.DisplayName, exe.FilePath, sim };
+                })
+                .OrderByDescending(x => x.sim)
+                .FirstOrDefault();
+
+                Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
+
+                if (results?.FilePath != null && results.sim > 0.87f)
+                {
+                    Process.Start("cmd.exe", "/c " + com);
+                    Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
+                else
+                {
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\"");
+                }
+                
             }
             catch (Exception e)
             {
@@ -267,7 +256,7 @@ namespace WpfApp2
             }
         }
 
-        private static double CosineSimilarity(float[] a, float[] b)
+        public static double CosineSimilarity(float[] a, float[] b)
         {
             double dot = 0, magA = 0, magB = 0;
             for (int i = 0; i < a.Length; i++)
@@ -312,7 +301,7 @@ namespace WpfApp2
                 var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
                 if (!allDocs.Any())
                 {
-                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again.\" 0 100 ");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again.\" ");
                     return;
                 }
                 
@@ -348,7 +337,7 @@ namespace WpfApp2
                 }
                 else
                 {
-                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\" 0 100 ");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\"s ");
                     MessageBox.Show("No matching application found.");
                 }
 

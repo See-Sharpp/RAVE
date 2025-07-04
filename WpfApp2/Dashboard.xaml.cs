@@ -15,7 +15,6 @@ namespace WpfApp2
 {
     public partial class Dashboard : Page
     {
-        private Verification v;
         private WaveInEvent? waveIn;
         private WaveFileWriter? _denoisedWriter;
         private string denoisedFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "denoised_output.wav");
@@ -104,7 +103,37 @@ namespace WpfApp2
 
         public async Task<string> TranscribeAsync(string audioFilePath)
         {
-            if (v.verify())
+            if (Properties.Settings.Default.Speaker_Verification)
+            {
+                if (Verification.verify())
+                {
+                    using var httpClient = new HttpClient();
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
+
+                    using var form = new MultipartFormDataContent();
+                    var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(audioFilePath));
+                    fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+                    form.Add(fileContent, "file", Path.GetFileName(audioFilePath));
+                    form.Add(new StringContent("whisper-large-v3"), "model");
+                    form.Add(new StringContent("en"), "language");
+
+                    var response = await httpClient.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
+
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                    {
+
+                        MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                        return string.Empty;
+                    }
+
+                    dynamic result = JsonConvert.DeserializeObject(responseJson);
+                    return result?.text ?? string.Empty;
+                }
+                CommandInput.AppendText("Your Voice Did Not Match the authorized voice, Try Again");
+                return "error";
+            }
+            else
             {
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
@@ -129,8 +158,6 @@ namespace WpfApp2
                 dynamic result = JsonConvert.DeserializeObject(responseJson);
                 return result?.text ?? string.Empty;
             }
-            CommandInput.AppendText("Your Voice Did Not Match the authorized voice, Try Again");
-            return "error";
         }
 
         public void StartRecording()
