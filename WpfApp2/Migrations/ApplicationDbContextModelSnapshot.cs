@@ -54,13 +54,17 @@ namespace WpfApp2.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("FilePath", "UserId")
+                        .IsUnique();
+
                     b.ToTable("AllDocs");
                 });
 
             modelBuilder.Entity("WpfApp2.Models.AllExes", b =>
                 {
-                    b.Property<string>("FilePath")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -72,6 +76,10 @@ namespace WpfApp2.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FileName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FileSize")
@@ -86,9 +94,12 @@ namespace WpfApp2.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("FilePath");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("FilePath", "UserId")
+                        .IsUnique();
 
                     b.ToTable("AllExes");
                 });

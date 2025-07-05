@@ -272,23 +272,20 @@ namespace WpfApp2
         public static void file_command(string fileName)
         {
             MessageBox.Show(fileName);
+            string[] supportedTypes = { "pdf", "txt", "ppt", "docx" };
            
-            string[] arr = fileName.Trim().Split(" ");
-            string fileType = arr[arr.Length - 1];
+
+
+            string[] arr = fileName.Trim().Split(".");
+            string fileType = arr[arr.Length - 1].ToLower();
             MessageBox.Show(fileType);
-
-            if(fileType == "PDF")
-            {
-                SearchForDocsInDatabase(fileName);
-            }
-            else if(fileType == "PPT")
-            {
-
-            }
-            else
-            {
-
-            }          
+            //if (!supportedTypes.Contains(fileType))
+            //{
+            //    MessageBox.Show("Unsupported file type.");
+            //    return;
+            //}
+            MessageBox.Show("in " + fileType);
+            SearchForDocsInDatabase(fileName);
         }
 
         public static void SearchForDocsInDatabase(string filename)

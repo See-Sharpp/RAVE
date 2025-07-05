@@ -51,6 +51,7 @@ namespace WpfApp2
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
         }
 
+       
 
 
         public async void ToggleVoice_Click(object sender, RoutedEventArgs e)

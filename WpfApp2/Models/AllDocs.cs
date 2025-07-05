@@ -14,6 +14,9 @@ namespace WpfApp2.Models
         public int Id { get; set; }
 
 
+        [Required]
+        public int UserId { get; set; }
+
         [ForeignKey("UserId")]
 
         public SignUpDetail SignUpDetail { get; set; } = null!;

@@ -96,7 +96,7 @@ namespace WpfApp2
 
                         if (string.IsNullOrEmpty(contentString))
                         {
-                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"No Voice Was Detected\"0 100");
+                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"No Voice Was Detected\"");
                             MessageBox.Show("No content received.");
                             return;
                         }
@@ -189,7 +189,7 @@ namespace WpfApp2
                         }
                         else
                         {
-                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" 0 100");
+                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" ");
                             MessageBox.Show("No valid response or unexpected format.");
                         }
                     }
@@ -198,7 +198,7 @@ namespace WpfApp2
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error: {ex.Message}");
-                Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" 0 100");
+                Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \"");
                 MessageBox.Show("An error occurred while processing the request. Please try again.");
             }
         }

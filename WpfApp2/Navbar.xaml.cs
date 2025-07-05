@@ -5,15 +5,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using WpfApp2.Context;
 using WpfApp2.Models;
-using System.Data.OleDb;
-
 
 namespace WpfApp2
 {
@@ -24,11 +21,16 @@ namespace WpfApp2
         private bool _isScanning = false;
         private int minFilesize = 1024;
 
-        private ApplicationDbContext _context = new ApplicationDbContext();
+
         private int totalExes = 0;
         private int totalDocs = 0;
         private List<FileSystemWatcher> _watchers = new();
         private readonly string[] allowedExtensions = new[] { ".exe", ".pptx", ".docx", ".pdf", ".txt" };
+        bool callFromDailyScan = false;
+        private System.Threading.Timer dailyScanTimer;
+        private bool _isDailyScanRunning = false;
+        string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs/last_scan.txt");
+        
 
         readonly string[] excludedPaths = new string[]
             {
@@ -82,6 +84,7 @@ namespace WpfApp2
         {
             InitializeComponent();
             SetupTrayIcon();
+            Directory.CreateDirectory("logs");
 
             if (!Properties.Settings.Default.InitialScan)
             {
@@ -93,10 +96,56 @@ namespace WpfApp2
             }
             MainContentFrame.Navigate(new Dashboard());
 
-
+            this.Loaded += Dashboard_Loaded;
 
 
         }
+        private void Dashboard_Loaded(object sender, RoutedEventArgs e)
+        {
+            CheckDailyScan();
+            StartDailyScanTimer();
+        }
+
+        private void CheckDailyScan()
+        {
+           
+            DateTime lastScan = File.Exists(filePath)
+                               ? DateTime.Parse(File.ReadAllText(filePath))
+                               : DateTime.MinValue;
+
+            if ((DateTime.Now - lastScan).TotalHours >= 24)
+            {
+                RunDailyScan();
+                File.WriteAllText(filePath, DateTime.Now.ToString("O"));
+            }
+        }
+        private void RunDailyScan()
+        {
+            callFromDailyScan = true;
+            InitialScan();
+            DatabaseCleanUp(Global.UserId ?? 0);
+        }
+        private void StartDailyScanTimer()
+        {
+            dailyScanTimer = new System.Threading.Timer(async _ =>
+            {
+            if (_isDailyScanRunning)
+                return;
+                try
+                {
+                    _isDailyScanRunning = true;
+                    await Dispatcher.InvokeAsync(() => RunDailyScan());
+                    File.WriteAllText("last_scan.txt", DateTime.Now.ToString("O"));
+                }
+                finally
+                {
+                    _isDailyScanRunning = false;
+                }
+            }, null, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
+        
+        }
+
+
         private static bool IsIgnoredExe(string path)
         {
             foreach (var pattern in ignorePatterns)
@@ -137,63 +186,72 @@ namespace WpfApp2
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 string ext = Path.GetExtension(e.FullPath)?.ToLower();
+
                 if (!allowedExtensions.Contains(ext)) return;
+
                 FileInfo info = new FileInfo(e.FullPath);
+
                 if (!info.Exists || info.Length < minFilesize)
                     return;
 
                 int userId = Global.UserId ?? 0;
+
+                using ApplicationDbContext _context = new ApplicationDbContext();
+
                 var user = _context.SignUpDetails.FirstOrDefault(u => u.Id == userId);
                 if (user == null) return;
 
-                if (_context.AllExes.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId))
-                    return;
-
-                var versionInfo = FileVersionInfo.GetVersionInfo(e.FullPath);
-                string displayName = versionInfo.FileDescription ?? info.Name;
-                bool alreadyExists = ext == ".exe"
-                                            ? _context.AllExes.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId)
-                                            : _context.AllDocs.Any(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
-                if (alreadyExists)
-                    return;
-                if (ext == ".exe")
+                try
                 {
-                    float[] newEmbedding = Commands.GetEmbedding(info.Name);
-                    string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
-                    var exes = new AllExes
-                    {
-                        FilePath = e.FullPath,
-                        SignUpDetail = user,
-                        FileName = info.Name,
-                        DisplayName = displayName,
-                        FileSize = FormatFileSize(info.Length),
-                        LastWriteTime = info.LastWriteTime,
-                        LastAccessTime = info.LastAccessTime,
-                        CreatedAt = info.CreationTime,
-                        Embedding = embeddingString
-                    };
 
-                    _context.AllExes.Add(exes);
-                    _context.SaveChanges();
+                    var versionInfo = FileVersionInfo.GetVersionInfo(e.FullPath);
+                    string displayName = versionInfo.FileDescription ?? info.Name;
+                   
+                    if (ext == ".exe")
+                    {
+                        float[] newEmbedding = Commands.GetEmbedding(info.Name);
+                        string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
+                        var exes = new AllExes
+                        {
+                            FilePath = e.FullPath,
+                            UserId = userId,
+                            SignUpDetail = user,
+                            FileName = info.Name,
+                            DisplayName = displayName,
+                            FileSize = FormatFileSize(info.Length),
+                            LastWriteTime = info.LastWriteTime,
+                            LastAccessTime = info.LastAccessTime,
+                            CreatedAt = info.CreationTime,
+                            Embedding = embeddingString
+                        };
+
+                        _context.AllExes.Add(exes);
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        float[] newEmbedding = Commands.GetEmbedding(info.Name);
+                        string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
+                        var docs = new AllDocs
+                        {
+                            FilePath = e.FullPath,
+                            UserId = userId,
+                            SignUpDetail = user,
+                            FileName = info.Name,
+                            DisplayName = displayName,
+                            FileSize = FormatFileSize(info.Length),
+                            LastWriteTime = info.LastWriteTime,
+                            LastAccessTime = info.LastAccessTime,
+                            CreatedAt = info.CreationTime,
+                            Embedding = embeddingString
+                        };
+                        _context.AllDocs.Add(docs);
+                        _context.SaveChanges();
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    float[] newEmbedding = Commands.GetEmbedding(info.Name);
-                    string embeddingString = string.Join(",", newEmbedding.Select(x => x.ToString("F4")));
-                    var docs = new AllDocs
-                    {
-                        FilePath = e.FullPath,
-                        SignUpDetail = user,
-                        FileName = info.Name,
-                        DisplayName = displayName,
-                        FileSize = FormatFileSize(info.Length),
-                        LastWriteTime = info.LastWriteTime,
-                        LastAccessTime = info.LastAccessTime,
-                        CreatedAt = info.CreationTime,
-                        Embedding = embeddingString
-                    };
-                    _context.AllDocs.Add(docs);
-                    _context.SaveChanges();
+                    Debug.WriteLine(ex.Message);
                 }
             }));
         }
@@ -206,6 +264,7 @@ namespace WpfApp2
                 string ext = Path.GetExtension(e.FullPath)?.ToLower();
                 if (!allowedExtensions.Contains(ext)) return;
                 int userId = Global.UserId ?? 0;
+                using ApplicationDbContext _context = new ApplicationDbContext();
                 bool removedAnything = false;
                 if (ext == ".exe")
                 {
@@ -407,6 +466,8 @@ namespace WpfApp2
                     System.Windows.Application.Current.Dispatcher.Invoke(async () =>
                     {
                         await scanMessageConfirm($"Saved {totalExes} exe files and {totalDocs} docs to database.");
+                        totalDocs = 0;
+                        totalExes = 0;
                     });
                 }
                 );
@@ -483,6 +544,7 @@ namespace WpfApp2
                     {
                         try
                         {
+
                             if (IsExcludedPath(Path.GetDirectoryName(file)!))
                                 return;
                             FileInfo fi = new FileInfo(file);
@@ -516,6 +578,7 @@ namespace WpfApp2
         private async void SaveToDatabase(List<(string path, FileInfo info)> fileList)
         {
             int userId = Global.UserId ?? 0;
+            using ApplicationDbContext _context = new ApplicationDbContext();
             var user = _context.SignUpDetails.FirstOrDefault(u => u.Id == userId);
 
             if (user == null)
@@ -534,9 +597,7 @@ namespace WpfApp2
                     try
                     {
 
-                        if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
-                            continue;
-
+                      
                         if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
                             continue;
 
@@ -547,6 +608,7 @@ namespace WpfApp2
                         var exes = new AllExes
                         {
                             FilePath = path,
+                            UserId= userId,
                             SignUpDetail = user,
                             FileName = info.Name,
                             DisplayName = displayName,
@@ -577,10 +639,7 @@ namespace WpfApp2
                     try
                     {
 
-                        if (_context.ChangeTracker.Entries<AllExes>().Any(e => e.Entity.FilePath == path))
-                            continue;
-
-                        if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
+                        if (_context.AllDocs.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
                             continue;
 
                         var versionInfo = FileVersionInfo.GetVersionInfo(path);
@@ -591,6 +650,7 @@ namespace WpfApp2
                         var docs = new AllDocs
                         {
                             FilePath = path,
+                            UserId = userId,
                             SignUpDetail = user,
                             FileName = info.Name,
                             DisplayName = displayName,
@@ -606,16 +666,49 @@ namespace WpfApp2
                     }
                     catch (Exception e)
                     {
-                        System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
+                      Debug.WriteLine(e.Message);
                     }
                 }
                 _context.SaveChanges();
                 totalDocs += fileList.Count;
+                DatabaseCleanUp(userId);
             }
 
-  
+
         }
 
+        private void DatabaseCleanUp(int userId)
+        {
+            using ApplicationDbContext _context = new ApplicationDbContext();
+
+           var allExes= _context.AllExes.Where(exes => exes.UserId == userId).ToList();
+            try
+            {
+                foreach (var exes in allExes)
+                {
+                    if (!File.Exists(exes.FilePath))
+                    {
+                        _context.Remove(exes);
+                    }
+                }
+
+                var allDocs = _context.AllDocs.Where(exes => exes.UserId == userId).ToList();
+
+                foreach (var docs in allDocs)
+                {
+                    if (!File.Exists(docs.FilePath))
+                    {
+                        _context.Remove(docs);
+                    }
+                }
+
+                _context.SaveChanges();
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
+        }
         private bool IsExcludedPath(string path)
         {
             string normalized = Path.GetFullPath(path).TrimEnd('\\');
@@ -778,8 +871,10 @@ namespace WpfApp2
 
         private async void InitialScan()
         {
-
-            await scanMessageConfirm("Starting initial scan for .exe files. This may take a while depending on the number of files on your system.");
+            if (!callFromDailyScan)
+            {
+                await scanMessageConfirm("Starting initial scan for .exe files. This may take a while depending on the number of files on your system.");
+            }
             var spinner = GetScanSpinner();
             if (spinner != null)
             {
@@ -801,10 +896,13 @@ namespace WpfApp2
                 StartExeWatchers();
                 Properties.Settings.Default.InitialScan = true;
                 Properties.Settings.Default.Save();
-                await System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                if (!callFromDailyScan)
                 {
-                    await scanMessageConfirm($"Saved {totalExes} exe files to database.");
-                });
+                    await System.Windows.Application.Current.Dispatcher.Invoke(async () =>
+                    {
+                        await scanMessageConfirm($"Saved {totalExes} exe and {totalDocs} files to database.");
+                    });
+                }
 
             }
             catch (Exception ex)
@@ -817,11 +915,11 @@ namespace WpfApp2
                 {
                     spinner.IsActive = false;
                     spinner.Visibility = Visibility.Collapsed;
+                    callFromDailyScan = false;
+                    File.WriteAllText(filePath, DateTime.Now.ToString("O"));
                 }
             }
         }
-
-
 
     }
 }

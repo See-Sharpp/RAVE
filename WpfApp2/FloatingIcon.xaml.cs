@@ -84,7 +84,7 @@ namespace WpfApp2
 
         private async Task OnMicClick()
         {
-            const double durationSeconds = 4;
+            const double durationSeconds = 5;
             const double radius = 36;
             var center = new Point(40, 40);
             Global._wakeWordHelper?.Stop();

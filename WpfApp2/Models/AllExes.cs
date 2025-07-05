@@ -11,9 +11,13 @@ namespace WpfApp2.Models
 {
     public class AllExes
     {
-
         [Key]
-        public string? FilePath { get; set; }
+        public int Id { get; set; }
+        [Required]
+        public string? FilePath { get; set; } = null!;
+
+        [Required]
+        public int UserId { get; set; }
 
         [ForeignKey("UserId")]
         public SignUpDetail SignUpDetail { get; set; } = null!;

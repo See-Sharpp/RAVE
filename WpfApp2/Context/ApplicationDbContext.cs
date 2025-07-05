@@ -28,10 +28,16 @@ namespace WpfApp2.Context
                 optionsBuilder.UseSqlite($"Data Source={dbPath}");
             }
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<AllExes>()
+                       .HasIndex(e => new { e.FilePath, e.UserId })
+                       .IsUnique();
+
+            modelBuilder.Entity<AllDocs>()
+                       .HasIndex(e => new { e.FilePath, e.UserId })
+                       .IsUnique();
         }
     }
 }
