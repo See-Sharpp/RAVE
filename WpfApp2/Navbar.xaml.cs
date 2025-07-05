@@ -108,7 +108,6 @@ namespace WpfApp2
 
         private void CheckDailyScan()
         {
-           
             DateTime lastScan = File.Exists(filePath)
                                ? DateTime.Parse(File.ReadAllText(filePath))
                                : DateTime.MinValue;
@@ -141,7 +140,7 @@ namespace WpfApp2
                 {
                     _isDailyScanRunning = false;
                 }
-            }, null, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
+            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1));
         
         }
 
