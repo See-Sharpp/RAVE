@@ -92,11 +92,12 @@ namespace WpfApp2
             }
             else
             {
+                this.Loaded += Dashboard_Loaded;
                 StartExeWatchers();
             }
             MainContentFrame.Navigate(new Dashboard());
 
-            this.Loaded += Dashboard_Loaded;
+         
 
 
         }
@@ -140,8 +141,7 @@ namespace WpfApp2
                 {
                     _isDailyScanRunning = false;
                 }
-            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1));
-        
+            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1)); 
         }
 
 
@@ -258,38 +258,46 @@ namespace WpfApp2
 
         private void OnFileDeleted(object sender, FileSystemEventArgs e)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                string ext = Path.GetExtension(e.FullPath)?.ToLower();
-                if (!allowedExtensions.Contains(ext)) return;
-                int userId = Global.UserId ?? 0;
-                using ApplicationDbContext _context = new ApplicationDbContext();
-                bool removedAnything = false;
-                if (ext == ".exe")
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
-
-                    if (existing != null)
+                    string ext = Path.GetExtension(e.FullPath)?.ToLower();
+                    if (!allowedExtensions.Contains(ext)) return;
+                    int userId = Global.UserId ?? 0;
+                    using ApplicationDbContext _context = new ApplicationDbContext();
+                    bool removedAnything = false;
+                    if (ext == ".exe")
                     {
-                        _context.AllExes.Remove(existing);
-                        removedAnything = true;
-                    }
-                }
-                else
-                {
-                    var existing = _context.AllDocs.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+                        var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
 
-                    if (existing != null)
-                    {
-                        _context.AllDocs.Remove(existing);
-                       removedAnything = true;
+                        if (existing != null)
+                        {
+                            _context.AllExes.Remove(existing);
+                            removedAnything = true;
+                        }
                     }
-                }
-                if (removedAnything)
-                {
-                    _context.SaveChanges();
-                }
-            });
+                    else
+                    {
+                        var existing = _context.AllDocs.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+
+                        if (existing != null)
+                        {
+                            _context.AllDocs.Remove(existing);
+                            removedAnything = true;
+                        }
+                    }
+                    if (removedAnything)
+                    {
+                        _context.SaveChanges();
+                    }
+                });
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
         }
 
         private void OnFileRenamed(object sender, RenamedEventArgs e)
@@ -623,7 +631,7 @@ namespace WpfApp2
                     }
                     catch (Exception e)
                     {
-                        System.Windows.MessageBox.Show($"Failed to process {path}: {e.Message}");
+                        Debug.WriteLine(e.Message);
                     }
                 }
 
@@ -879,6 +887,7 @@ namespace WpfApp2
             {
                 spinner.IsActive = true;
                 spinner.Visibility = Visibility.Visible;
+                NavScanButton.IsEnabled = false;
             }
             try
             {
@@ -915,6 +924,7 @@ namespace WpfApp2
                     spinner.IsActive = false;
                     spinner.Visibility = Visibility.Collapsed;
                     callFromDailyScan = false;
+                    NavScanButton.IsEnabled = true;
                     File.WriteAllText(filePath, DateTime.Now.ToString("O"));
                 }
             }

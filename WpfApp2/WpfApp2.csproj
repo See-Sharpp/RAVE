@@ -9,12 +9,7 @@
 		<NoWarn>$(NoWarn);CS*;IDE*;CA*</NoWarn>
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Remove="Assest\**" />
-	  <EmbeddedResource Remove="Assest\**" />
-	  <None Remove="Assest\**" />
-	  <Page Remove="Assest\**" />
-	</ItemGroup>
+	
 	<ItemGroup>
 	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE.ico">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -23,6 +18,17 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	    <Generator></Generator>
 	  </Content>
+		<Content Include="model\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="nircmd-x64\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		
+		<Content Include="Assets\**\*.*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		
 	</ItemGroup>
 	<ItemGroup>
 	  <None Include="bin\Debug\net8.0-windows\model\HEY_RAVE.onnx" />
@@ -75,4 +81,15 @@
 	    <LastGenOutput>Settings.Designer.cs</LastGenOutput>
 	  </None>
 	</ItemGroup>
+
+	<Target Name="CopyBinOutputAfterPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<BinFiles Include="$(ProjectDir)bin\Debug\net8.0-windows\**\*.*" />
+		</ItemGroup>
+		<Copy
+		  SourceFiles="@(BinFiles)"
+		  DestinationFiles="@(BinFiles->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+		  SkipUnchangedFiles="true" />
+	</Target>
+
 </Project>
