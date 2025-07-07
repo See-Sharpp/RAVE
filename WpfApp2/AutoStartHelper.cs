@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using IWshRuntimeLibrary;
+using Microsoft.Win32;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -7,9 +8,9 @@ namespace WpfApp2
 {
     internal class AutoStartHelper
     {
+        static string  exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WpfApp2.exe");
         public static void EnableAutoStart(bool enable,string appName = "RAVE")
-        {
-            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WpfApp2.exe");
+        { 
             MessageBox.Show(exePath);
             RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
 
@@ -28,6 +29,30 @@ namespace WpfApp2
         {
             using var value = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", false);
             return value?.GetValue(appName) is not null;
+        }
+
+        public static void CreateDesktopShortcut()
+        {
+            string desktopPath=Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string shortcutPath = Path.Combine(desktopPath, "RAVE.lnk");
+
+            if (!System.IO.File.Exists(shortcutPath))
+            {
+                try
+                {
+                    WshShell shell = new WshShell();
+                    IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutPath);
+
+                    shortcut.TargetPath = exePath;
+                    shortcut.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    shortcut.Description = "RAVE Shortcut";
+                    shortcut.IconLocation = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
+                    shortcut.Save();
+                    
+                }
+                catch { }
+
+            }
         }
     }
 }

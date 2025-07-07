@@ -142,5 +142,17 @@ namespace WpfApp2.Properties {
                 this["VerificationPass"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShortcutCreated {
+            get {
+                return ((bool)(this["ShortcutCreated"]));
+            }
+            set {
+                this["ShortcutCreated"] = value;
+            }
+        }
     }
 }
