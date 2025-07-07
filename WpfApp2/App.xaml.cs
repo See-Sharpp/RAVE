@@ -16,6 +16,7 @@ namespace WpfApp2
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            
 
             var culture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = culture;
@@ -34,6 +35,8 @@ namespace WpfApp2
                 WpfApp2.Properties.Settings.Default.AutoRegister = true;
                 WpfApp2.Properties.Settings.Default.Save();
             }
+
+           
 
 
         }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.Win32;
+using System.IO;
 using System.Reflection;
+using System.Windows;
 
 namespace WpfApp2
 {
@@ -7,7 +9,8 @@ namespace WpfApp2
     {
         public static void EnableAutoStart(bool enable,string appName = "RAVE")
         {
-            string exePath = Assembly.GetExecutingAssembly().Location;
+            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WpfApp2.exe");
+            MessageBox.Show(exePath);
             RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
 
             if (enable)

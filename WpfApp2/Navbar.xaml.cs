@@ -88,7 +88,7 @@ namespace WpfApp2
 
             if (!Properties.Settings.Default.InitialScan)
             {
-                InitialScan();
+               this.Loaded += async (s, e) => await InitialScan();
             }
             else
             {
@@ -485,7 +485,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}");
+                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}"+"bhlehhhh");
             }
             finally
             {
@@ -876,7 +876,7 @@ namespace WpfApp2
 
         }
 
-        private async void InitialScan()
+        private async Task InitialScan()
         {
             if (!callFromDailyScan)
             {
@@ -893,12 +893,20 @@ namespace WpfApp2
             {
                 await Task.Run(() =>
                 {
-                    foreach (var drive in DriveInfo.GetDrives())
+                    try
                     {
-                        if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                        foreach (var drive in DriveInfo.GetDrives())
                         {
-                            ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
+                            if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                            {
+                                ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show(ex.Message);
+                        throw;
                     }
                 });
                 StartExeWatchers();
