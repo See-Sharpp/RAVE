@@ -35,9 +35,10 @@ namespace WpfApp2
         {
             string desktopPath=Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string shortcutPath = Path.Combine(desktopPath, "RAVE.lnk");
-
+            MessageBox.Show("in AutoHelper");
             if (!System.IO.File.Exists(shortcutPath))
             {
+                MessageBox.Show("creating icon");
                 try
                 {
                     WshShell shell = new WshShell();
