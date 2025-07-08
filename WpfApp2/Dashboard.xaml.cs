@@ -43,6 +43,8 @@ namespace WpfApp2
         {
             InitializeComponent();
 
+
+
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)

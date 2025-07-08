@@ -39,6 +39,7 @@ namespace WpfApp2
                 WpfApp2.Properties.Settings.Default.ShortcutCreated = true;
                 WpfApp2.Properties.Settings.Default.Save();
             }
+            Global.autoOpen = true;
 
            
 

@@ -18,5 +18,7 @@ namespace WpfApp2
 
         public static bool logout = false;
 
+        public static bool autoOpen =false;
+
     }
 }
