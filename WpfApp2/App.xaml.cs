@@ -5,7 +5,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using WpfApp2.Context;
-using IWshRuntimeLibrary; 
+using IWshRuntimeLibrary;
+using System.Diagnostics;
 
 
 
@@ -13,12 +14,30 @@ namespace WpfApp2
 {
     public partial class App : Application
     {
+        public Mutex _mutex;
 
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            try
+            {
+               
+                const string name = "RAVE_INSTANCE";
 
+                bool createdNew;
+                _mutex = new Mutex(true, name, out createdNew);
+
+                if (!createdNew)
+                {
+                    Shutdown();
+                    return;
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
 
             var culture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = culture;
