@@ -34,7 +34,7 @@ namespace WpfApp2
                 WpfApp2.Properties.Settings.Default.AutoRegister = true;
                 WpfApp2.Properties.Settings.Default.Save();
             }
-
+            WpfApp2.Properties.Settings.Default.Is_First = false;
 
         }
 
@@ -67,7 +67,6 @@ namespace WpfApp2
             {
                 context.Database.Migrate();
             }
-
             AddEnvironmentVariable();
 
            

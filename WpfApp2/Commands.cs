@@ -2,16 +2,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
-using System;
-using System.Collections.Generic;
 using System.Data.OleDb;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Shapes;
 using WpfApp2.Context;
 using WpfApp2.Models;
 
@@ -21,20 +14,23 @@ namespace WpfApp2
 
     public class Commands
     {
-        public ApplicationDbContext _context;
+        public static ApplicationDbContext _context;
+        public static SignUpDetail userId;
         private static readonly tokenizer _tokenizer =
             new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
+
 
         private static readonly InferenceSession _session =
             new InferenceSession(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "model", "mini-lm.onnx"));
 
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
 
-        public Commands() { 
-   
+        public Commands() {
+            _context = new ApplicationDbContext();
+            userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         }
 
-        public static void systemCommand(string command, string search_query)
+        public static void systemCommand(string command, string search_query,string contentString,string content)
         {
             try
             {
@@ -62,19 +58,69 @@ namespace WpfApp2
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = nircmdPath,
-                    Arguments = command,
+                    Arguments = contentString,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Success",
+                        CommandTime = DateTime.Now,
+                        CommandType = "system_control"
+                    };
+
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+
+                    if (Global.system_control.Count >= 30)
+                    {
+                        Global.system_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.system_control.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
             }
             catch (Exception exception)
             {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "system_control"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.system_control.Count >= 30)
+                    {
+                        Global.system_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.system_control.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
                 Debug.WriteLine(exception);
             }
         }
 
-        public static void application_command(string application)
-        { 
+        public static void application_command(string application,string contentString,string content)
+        {
             string com= $"nircmd.exe speak text \"Opening {application}\'";
             
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
@@ -117,14 +163,40 @@ namespace WpfApp2
 
                                 if (exitCode != 0)
                                 {
-                                    SearchInDatabase(application);
+                                    SearchInDatabase(application,contentString,content);
+                                }
+                                else
+                                {
+                                    if (Properties.Settings.Default.History)
+                                    {
+                                        var entity = new LLM_Detail
+                                        {
+                                            SignUpDetail = userId,
+                                            Expected_json = contentString,
+                                            user_command = content,
+                                            Status = "Success",
+                                            CommandTime = DateTime.Now,
+                                            CommandType = "application_control"
+                                        };
+                                        _context.LLM_Detail.Add(entity);
+                                        _context.SaveChanges();
+                                        if (Global.application_control.Count >= 30)
+                                        {
+                                            Global.application_control.Dequeue();
+                                        }
+                                        if (Global.total_commands.Count >= 30)
+                                        {
+                                            Global.total_commands.Dequeue();
+                                        }
+                                        Global.application_control.Enqueue(entity);
+                                        Global.total_commands.Enqueue(entity);
+                                    }
                                 }
 
                             }
                             else
                             {
-                                SearchInDatabase(application);
-                                //System.Windows.MessageBox.Show($"Application '{application}' not found in the database.");
+                                SearchInDatabase(application,contentString,content);
                             }
                         }
                     }
@@ -132,13 +204,37 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "application_control"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.application_control.Count >= 30)
+                    {
+                        Global.application_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.application_control.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
                 Debug.WriteLine(ex.Message);
             }
 
 
         }
 
-        public static void SearchInDatabase(string application)
+        public static void SearchInDatabase(string application,string contentString,string content)
         {
             try
             {
@@ -156,6 +252,30 @@ namespace WpfApp2
 
                 if (!allExes.Any())
                 {
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "application_control"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.application_control.Count >= 30)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.application_control.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
                     Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\"");
                     return;
                 }
@@ -187,17 +307,89 @@ namespace WpfApp2
 
                 if (results?.FilePath != null && results.sim > 0.87f)
                 {
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Success",
+                            CommandTime = DateTime.Now,
+                            CommandType = "application_control"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.application_control.Count >= 30)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.application_control.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
                     Process.Start("cmd.exe", "/c " + com);
                     Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
                 else
                 {
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "application_control"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.application_control.Count >= 30)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.application_control.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
                     Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\"");
                 }
                 
             }
             catch (Exception e)
             {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "application_control"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.application_control.Count >= 30)
+                    {
+                        Global.application_control.Dequeue(); 
+                    }
+                    Global.application_control.Enqueue(entity);
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.total_commands.Enqueue(entity);
+                }
                 Debug.WriteLine(e.Message);
             }
         }
@@ -269,26 +461,50 @@ namespace WpfApp2
             return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
         }
 
-        public static void file_command(string fileName)
+        public static void file_command(string fileName,string contentString,string content)
         {
-            MessageBox.Show(fileName);
-            string[] supportedTypes = { "pdf", "txt", "ppt", "docx" };
-           
+            try
+            {
+                MessageBox.Show(fileName);
+                string[] supportedTypes = { "pdf", "txt", "ppt", "docx" };
+                string[] arr = fileName.Trim().Split(".");
+                string fileType = arr[arr.Length - 1].ToLower();
+                MessageBox.Show(fileType);
 
-
-            string[] arr = fileName.Trim().Split(".");
-            string fileType = arr[arr.Length - 1].ToLower();
-            MessageBox.Show(fileType);
-            //if (!supportedTypes.Contains(fileType))
-            //{
-            //    MessageBox.Show("Unsupported file type.");
-            //    return;
-            //}
-            MessageBox.Show("in " + fileType);
-            SearchForDocsInDatabase(fileName);
+                MessageBox.Show("in " + fileType);
+                SearchForDocsInDatabase(fileName,contentString,content);
+            }
+            catch(Exception e)
+            {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "file_operation"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.file_operation.Count >= 30)
+                    {
+                        Global.file_operation.Dequeue();
+                    }
+                    Global.file_operation.Enqueue(entity);
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.total_commands.Enqueue(entity);
+                }
+                Debug.WriteLine(e.Message);
+            }
         }
 
-        public static void SearchForDocsInDatabase(string filename)
+        public static void SearchForDocsInDatabase(string filename,string contentString,string content)
         {
             try
             {
@@ -298,6 +514,30 @@ namespace WpfApp2
                 var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
                 if (!allDocs.Any())
                 {
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.file_operation.Count >= 30)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.total_commands.Enqueue(entity);
+                    }
                     Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again.\" ");
                     return;
                 }
@@ -330,11 +570,59 @@ namespace WpfApp2
                         $"Path: {results.FilePath}\n" +
                         $"Similarity: {results.sim:F4}"
                     );
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Success",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.file_operation.Count >= 30)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
                     Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
                 else
                 {
                     Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\"s ");
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        _context.LLM_Detail.Add(entity);
+                        _context.SaveChanges();
+                        if (Global.file_operation.Count >= 30)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
                     MessageBox.Show("No matching application found.");
                 }
 
@@ -343,12 +631,36 @@ namespace WpfApp2
             }
             catch(Exception ex)
             {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "file_operation"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.file_operation.Count >= 30)
+                    {
+                        Global.file_operation.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.file_operation.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
                 Debug.WriteLine(ex.Message);
             }
 
         }
 
-        public static void searchBrowser(string command,string search_query)
+        public static void searchBrowser(string command,string search_query,string contentString,string content)
         {
             try
             {
@@ -368,6 +680,30 @@ namespace WpfApp2
                         UseShellExecute = false,
                         CreateNoWindow = true
                     });
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity1 = new LLM_Detail
+                        {
+                            SignUpDetail = userId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Success",
+                            CommandTime = DateTime.Now,
+                            CommandType = "web_browse"
+                        };
+                        _context.LLM_Detail.Add(entity1);
+                        _context.SaveChanges();
+                        if (Global.web_browse.Count >= 30)
+                        {
+                            Global.web_browse.Dequeue();
+                        }
+                        Global.web_browse.Enqueue(entity1);
+                        if (Global.total_commands.Count >= 30)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.total_commands.Enqueue(entity1);
+                    }
                     return;
                 }
 
@@ -392,9 +728,57 @@ namespace WpfApp2
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Success",
+                        CommandTime = DateTime.Now,
+                        CommandType = "web_browse"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.web_browse.Count >= 30)
+                    {
+                        Global.web_browse.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.web_browse.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
             }
             catch (Exception exception)
             {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        SignUpDetail = userId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "web_browse"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.web_browse.Count >= 30)
+                    {
+                        Global.web_browse.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 30)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.web_browse.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
                 Debug.WriteLine(exception);
             }
         }

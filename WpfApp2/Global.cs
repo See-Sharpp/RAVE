@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
+﻿using WpfApp2.Models;
 
 namespace WpfApp2
 {
@@ -17,6 +12,15 @@ namespace WpfApp2
         public static WakeWordHelper? _wakeWordHelper { get; set; } = null;
 
         public static bool logout = false;
+        public static Queue<LLM_Detail> web_browse=new Queue<LLM_Detail>();
+
+        public static Queue<LLM_Detail> file_operation = new Queue<LLM_Detail>();
+
+        public static Queue<LLM_Detail> application_control = new Queue<LLM_Detail>();
+
+        public static Queue<LLM_Detail> system_control = new Queue<LLM_Detail>();
+
+        public static Queue<LLM_Detail> total_commands = new Queue<LLM_Detail>();
 
     }
 }

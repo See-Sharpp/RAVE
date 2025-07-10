@@ -1,14 +1,282 @@
 ﻿<Page x:Class="WpfApp2.History"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:WpfApp2"
-      mc:Ignorable="d" 
+      mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="History">
+      Title="History"
+      Background="#121212">
+
+    <Page.Resources>
+        <Style x:Key="ModernButtonStyle" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                CornerRadius="12" 
+                                BorderThickness="1"
+                                BorderBrush="#3A3A5C"
+                                Background="{TemplateBinding Background}"
+                                Padding="16">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" 
+                                                  BlurRadius="8" 
+                                                  ShadowDepth="4" 
+                                                  Opacity="0.3"/>
+                            </Border.Effect>
+
+                            <StackPanel HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"
+                                       Orientation="Vertical">
+                                <TextBlock x:Name="icon" 
+                                          Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                          FontSize="28"
+                                          HorizontalAlignment="Center"
+                                          Margin="0,0,0,8"
+                                          Foreground="#E0E6ED"/>
+                                <TextBlock x:Name="title"
+                                          Text="{TemplateBinding Content}"
+                                          FontSize="14"
+                                          FontWeight="SemiBold"
+                                          HorizontalAlignment="Center"
+                                          TextWrapping="Wrap"
+                                          TextAlignment="Center"
+                                          Foreground="White"
+                                          LineHeight="18"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#3730A3" Offset="0"/>
+                                            <GradientStop Color="#5B21B6" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        </Style>
+
+        <Style x:Key="SystemControlStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#059669" Offset="0"/>
+                        <GradientStop Color="#10B981" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#047857" Offset="0"/>
+                                <GradientStop Color="#059669" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#10B981"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+
+        <Style x:Key="WebBrowseStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#1E3A8A" Offset="0"/>
+                        <GradientStop Color="#3B82F6" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#1D4ED8" Offset="0"/>
+                                <GradientStop Color="#60A5FA" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#3B82F6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+
+        <Style x:Key="ApplicationControlStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#581C87" Offset="0"/>
+                        <GradientStop Color="#8B5CF6" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#6D28D9" Offset="0"/>
+                                <GradientStop Color="#A78BFA" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#8B5CF6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FileOperationStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#B91C1C" Offset="0"/>
+                        <GradientStop Color="#F97316" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#DC2626" Offset="0"/>
+                                <GradientStop Color="#FB923C" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="BorderBrush" Value="#F97316"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Page.Resources>
 
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Section -->
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Icon Header -->
+            <Border Width="64" Height="64" 
+                    CornerRadius="32" 
+                    Margin="0,0,0,24"
+                    HorizontalAlignment="Center">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#4F46E5" Offset="0"/>
+                        <GradientStop Color="#7C3AED" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect Color="#4F46E5" BlurRadius="16" ShadowDepth="0" Opacity="0.4"/>
+                </Border.Effect>
+                <TextBlock Text="⚙" 
+                          FontSize="28" 
+                          Foreground="White" 
+                          HorizontalAlignment="Center" 
+                          VerticalAlignment="Center"/>
+            </Border>
+
+            <!-- Main Heading -->
+            <TextBlock Text="Select Command History"
+                       FontSize="32"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,8"
+                       Foreground="White"/>
+
+            <!-- Subtitle -->
+            <TextBlock Text="Choose from the available command categories to view your execution history"
+                       FontSize="14"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,40"
+                       Foreground="#9CA3AF"
+                       TextAlignment="Center"
+                       MaxWidth="500"
+                       TextWrapping="Wrap"/>
+
+            <!-- Button Grid -->
+            <Grid HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- System Control Button -->
+                <Button Grid.Row="0" Grid.Column="0"
+                        Content="System Control"
+                        Tag="⚙️"
+                        Width="200" Height="120"
+                        Margin="12"
+                        Cursor="Hand"
+                        Style="{StaticResource SystemControlStyle}"
+                        Click="SystemControl_Click"/>
+
+                <!-- Web Browse Button -->
+                <Button Grid.Row="0" Grid.Column="1"
+                        Content="Web Browse"
+                        Tag="🌐"
+                        Width="200" Height="120"
+                        Margin="12"
+                        Cursor="Hand"
+                        Style="{StaticResource WebBrowseStyle}"
+                        Click="WebBrowse_Click"/>
+
+                <!-- Application Control Button -->
+                <Button Grid.Row="1" Grid.Column="0"
+                        Content="Application Control"
+                        Tag="🖥️"
+                        Width="200" Height="120"
+                        Margin="12"
+                        Cursor="Hand"
+                        Style="{StaticResource ApplicationControlStyle}"
+                        Click="ApplicationControl_Click"/>
+
+                <!-- File Operation Button -->
+                <Button Grid.Row="1" Grid.Column="1"
+                        Content="File Operation"
+                        Tag="📁"
+                        Width="200" Height="120"
+                        Margin="12"
+                        Cursor="Hand"
+                        Style="{StaticResource FileOperationStyle}"
+                        Click="FileOperation_Click"/>
+            </Grid>
+
+            <!-- Footer Text -->
+            <TextBlock Text="Click on any option to view the corresponding command history"
+                       FontSize="12"
+                       HorizontalAlignment="Center"
+                       Margin="0,32,0,0"
+                       Foreground="#6B7280"
+                       TextAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </Page>

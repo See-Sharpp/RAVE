@@ -9,7 +9,8 @@ using Microsoft.Extensions.Configuration;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Diagnostics;
-using System.Windows.Navigation;
+using WpfApp2.Context;
+using WpfApp2.Models;
 
 namespace WpfApp2
 {
@@ -25,6 +26,7 @@ namespace WpfApp2
 
         private static string? api;
 
+        private ApplicationDbContext _context;
 
         private IntPtr _rnnoiseState = IntPtr.Zero;
         private readonly List<byte> _unprocessedBuffer = new List<byte>();
@@ -33,9 +35,8 @@ namespace WpfApp2
         private string tempDenoisedPath = "temp_denoised.raw";
         private FileStream? _tempDenoisedStream;
 
-        // RNNoise expects 48kHz and 480 samples per frame
         private const int SAMPLE_RATE = 48000;
-        private const int FRAME_SIZE = 480;  // 10ms at 48kHz
+        private const int FRAME_SIZE = 480;
         private const int BYTES_PER_SAMPLE = 2;
         private const int FRAME_SIZE_BYTES = FRAME_SIZE * BYTES_PER_SAMPLE;
 
@@ -43,12 +44,27 @@ namespace WpfApp2
         {
             InitializeComponent();
 
+
+
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
                 .Build();
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
+            _context = new ApplicationDbContext();
+
+            if (!WpfApp2.Properties.Settings.Default.Is_First)
+            {
+                Global.web_browse = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "web_browse").OrderByDescending(x => x.CommandTime).Take(30));
+                Global.file_operation = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "file_operation").OrderByDescending(x => x.CommandTime).Take(30));
+                Global.application_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "application_control").OrderByDescending(x => x.CommandTime).Take(30));
+                Global.system_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "system_control").OrderByDescending(x => x.CommandTime).Take(30));
+                Global.total_commands = new Queue<LLM_Detail>(_context.LLM_Detail.OrderByDescending(x => x.CommandTime).Take(30));
+
+                WpfApp2.Properties.Settings.Default.Is_First = true;
+                Properties.Settings.Default.Save();
+            }
         }
 
        

@@ -110,11 +110,23 @@ namespace WpfApp2.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("CommandTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommandType")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Expected_json")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("user_command")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

@@ -134,24 +134,13 @@ namespace WpfApp2
                                                 ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                                 : Array.Empty<string>();
 
-
-                        var userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
-                        var entity = new LLM_Detail
-                        {
-                            SignUpDetail = userId,
-                            Expected_json = contentString
-                        };
-
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
-
                         if (primary_intent != null)
                         {
                             if (primary_intent.ToLower() == "system_control")
                             {
                                 if (command_templates[0] != null)
                                 {
-                                    Commands.systemCommand(command_templates[0], search_query);
+                                    Commands.systemCommand(command_templates[0], search_query,contentString,original_user_query);
                                 }
                             }
 
@@ -159,7 +148,7 @@ namespace WpfApp2
                             {
                                 if (command_templates[0] != null)
                                 {
-                                    Commands.searchBrowser(command_templates[0], search_query);
+                                    Commands.searchBrowser(command_templates[0], search_query,contentString,original_user_query);
                                 }
                             }
 
@@ -170,7 +159,7 @@ namespace WpfApp2
 
                                     if (application != null)
                                     {
-                                        Commands.application_command(application);
+                                        Commands.application_command(application,contentString,original_user_query);
                                     }
                                 }
                             }
@@ -181,7 +170,7 @@ namespace WpfApp2
                                 {
                                     if (file != null)
                                     {
-                                        Commands.file_command(file);
+                                        Commands.file_command(file,contentString,original_user_query);
                                     }
                                 }
                             }
