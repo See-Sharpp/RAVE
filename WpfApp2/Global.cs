@@ -22,5 +22,7 @@ namespace WpfApp2
 
         public static Queue<LLM_Detail> total_commands = new Queue<LLM_Detail>();
 
+        public static bool autoOpen =false;
+
     }
 }

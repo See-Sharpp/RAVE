@@ -5,17 +5,38 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using WpfApp2.Context;
-using WpfApp2.Properties;
+using System.Diagnostics;
+
+
 
 namespace WpfApp2
 {
     public partial class App : Application
     {
+        public Mutex _mutex;
 
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            try
+            {
+               
+                const string name = "RAVE_INSTANCE";
+
+                bool createdNew;
+                _mutex = new Mutex(true, name, out createdNew);
+
+                if (!createdNew)
+                {
+                    Shutdown();
+                    return;
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
 
             var culture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = culture;
@@ -28,29 +49,37 @@ namespace WpfApp2
             {
                 Directory.CreateDirectory(Global.deafultScreenShotPath);
             }
-            if (!WpfApp2.Properties.Settings.Default.AutoRegister)
+            MessageBox.Show("in app.xaml.cs");
+            if (!WpfApp2.Properties.Settings.Default.AutoRegister || !WpfApp2.Properties.Settings.Default.ShortcutCreated)
             {
                 AutoStartHelper.EnableAutoStart(true);
+                AutoStartHelper.CreateDesktopShortcut();
                 WpfApp2.Properties.Settings.Default.AutoRegister = true;
+                WpfApp2.Properties.Settings.Default.ShortcutCreated = true;
                 WpfApp2.Properties.Settings.Default.Save();
             }
+            Global.autoOpen = true;
+
             WpfApp2.Properties.Settings.Default.Is_First = false;
+            WpfApp2.Properties.Settings.Default.Save();
+           
+
 
         }
 
         public App()
         {
-            // Catch unhandled exceptions in non-UI threads (e.g., Vosk callbacks)
+            
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                File.AppendAllText("fatal.log", $"[Domain] {DateTime.Now} - {e.ExceptionObject}\n");
+                System.IO.File.AppendAllText("fatal.log", $"[Domain] {DateTime.Now} - {e.ExceptionObject}\n");
                 MessageBox.Show("Fatal error:\n" + e.ExceptionObject.ToString(), "Unhandled Domain Exception");
             };
 
             // Catch unhandled exceptions on the UI thread
             DispatcherUnhandledException += (s, e) =>
             {
-                File.AppendAllText("fatal.log", $"[Dispatcher] {DateTime.Now} - {e.Exception}\n");
+                System.IO.File.AppendAllText("fatal.log", $"[Dispatcher] {DateTime.Now} - {e.Exception}\n");
                 MessageBox.Show("UI error:\n" + e.Exception.Message, "Unhandled UI Exception");
                 e.Handled = true; // Prevent app from crashing
             };
@@ -58,7 +87,7 @@ namespace WpfApp2
             // Catch unobserved exceptions from Tasks
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
-                File.AppendAllText("fatal.log", $"[Task] {DateTime.Now} - {e.Exception}\n");
+                System.IO.File.AppendAllText("fatal.log", $"[Task] {DateTime.Now} - {e.Exception}\n");
                 MessageBox.Show("Task error:\n" + e.Exception.Message, "Unobserved Task Exception");
                 e.SetObserved();
             };

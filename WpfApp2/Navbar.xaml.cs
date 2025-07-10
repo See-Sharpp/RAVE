@@ -86,9 +86,20 @@ namespace WpfApp2
             SetupTrayIcon();
             Directory.CreateDirectory("logs");
 
+            //if (AutoStartHelper.IsAutoStartEnabled() && Global.autoOpen && Properties.Settings.Default.RememberMe)
+            //{
+            //    Global.autoOpen = true;
+            //    this.Loaded += (s, e) =>
+            //    {
+            //        this.Close();
+            //    };
+                
+            //}
+            //Global.autoOpen = false; 
+
             if (!Properties.Settings.Default.InitialScan)
             {
-                InitialScan();
+               this.Loaded += async (s, e) => await InitialScan();
             }
             else
             {
@@ -269,7 +280,7 @@ namespace WpfApp2
                     bool removedAnything = false;
                     if (ext == ".exe")
                     {
-                        var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+                        var existing = _context.AllExes.FirstOrDefault(x => x.FilePath == e.FullPath && x.UserId == userId);
 
                         if (existing != null)
                         {
@@ -279,7 +290,7 @@ namespace WpfApp2
                     }
                     else
                     {
-                        var existing = _context.AllDocs.FirstOrDefault(x => x.FilePath == e.FullPath && x.SignUpDetail.Id == userId);
+                        var existing = _context.AllDocs.FirstOrDefault(x => x.FilePath == e.FullPath && x.UserId == userId);
 
                         if (existing != null)
                         {
@@ -324,13 +335,13 @@ namespace WpfApp2
           string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
 
 
-            // Check if the icon file exists
+        
             if (!File.Exists(iconPath))
             {
-                // Handle the case where the icon is not found.
+                
                 System.Windows.MessageBox.Show($"Warning: RAVE2.ico not found at {iconPath}. Tray icon might not display correctly.",
                                                "Icon Missing", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                _notifyIcon = new NotifyIcon { Visible = true, Text = "RAVE" }; // Create with default icon
+                _notifyIcon = new NotifyIcon { Visible = true, Text = "RAVE" }; 
             }
             else
             {
@@ -391,22 +402,46 @@ namespace WpfApp2
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true;
-            this.Hide();
-            if (_notifyIcon != null)
-            {
-                _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
-            }
             try
             {
-                if (Global.floatingIcon != null && !Global.logout)
+                //e.Cancel = true;
+                //this.Hide();
+                //this.ShowInTaskbar = false;
+                //this.WindowState = WindowState.Minimized;
+                //Task.Run(async () =>
+                //{
+                //    await Task.Delay(300);
+                //    await Dispatcher.InvokeAsync(() =>
+                //    {
+                //        this.Hide();
+                //        _notifyIcon?.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
+                //        if (Global.floatingIcon != null && !Global.logout)
+                //        {
+                //            Global.floatingIcon.Show();
+                //        }
+                //    });
+                //});
+                e.Cancel = true;
+                this.Hide();
+                if (_notifyIcon != null)
                 {
-                    Global.floatingIcon.Show();
+                    _notifyIcon.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
+                }
+                try
+                {
+                    if (Global.floatingIcon != null && !Global.logout)
+                    {
+                        Global.floatingIcon.Show();
+                    }
+                }
+                catch (Exception ex)
+                {
+
                 }
             }
             catch (Exception ex)
             {
-               
+                Debug.WriteLine(ex.Message);
             }
 
         }
@@ -485,7 +520,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}");
+                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}"+"bhlehhhh");
             }
             finally
             {
@@ -876,7 +911,7 @@ namespace WpfApp2
 
         }
 
-        private async void InitialScan()
+        private async Task InitialScan()
         {
             if (!callFromDailyScan)
             {
@@ -893,12 +928,20 @@ namespace WpfApp2
             {
                 await Task.Run(() =>
                 {
-                    foreach (var drive in DriveInfo.GetDrives())
+                    try
                     {
-                        if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                        foreach (var drive in DriveInfo.GetDrives())
                         {
-                            ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
+                            if (drive.IsReady && drive.DriveType == DriveType.Fixed)
+                            {
+                                ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show(ex.Message);
+                        throw;
                     }
                 });
                 StartExeWatchers();
