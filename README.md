@@ -1,141 +1,140 @@
-# RAVE
+# RAVE: A Modern Voice-Enabled Desktop Assistant
 
-
-A modern, voice-enabled desktop assistant built with .NET 8 and WPF. WPFApp2 empowers users to launch applications, manage files, browse websites, and execute system-level commands using natural language input — all through a polished, modern UI.
-
----
-
-## 🚀 Features
-
-- **Modern UI** built with **MahApps.Metro** and **HandyControl**
-- **Voice Command Support** using:
-  - Whisper API for speech recognition
-  - Groq API for command synthesis (LLM)
-  - RNNoise CNN for real-time noise suppression
-  - NAudio for audio capture and processing
-- **Speaker verification** & **wake word detection** for secure command execution
-- **File and Application Management**
-  - Launch apps, search and open documents, browse websites via voice
-- **Automated File Tracking**
-  - Real-time file system monitoring via `FileSystemWatcher`
-  - Supports `.exe`, `.pdf`, `.docx`, `.pptx`, `.txt` extensions
-- **Command History Module**
-  - Execution log with timestamps and status (success/failure)
-- **System Tray Integration** for lightweight background operation
-- Context-aware interaction via integrated prompt engineering
+RAVE is a sophisticated, voice-activated desktop assistant engineered with .NET 8 and WPF. It empowers you to seamlessly launch applications, open files, browse the web, and execute system-level commands using natural language. All interactions are handled through a polished and modern user interface.
 
 ---
 
-## Engineered Capabilities
+## 🚀 Key Features
 
-> Designed for intelligent, secure, and responsive interaction.
-
-- **Natural Language Control**: Converts voice to actions via Whisper + LLM
-- **Noise Suppression**: Real-time audio cleanup using RNNoise (ONNX)
-- **Voice Amplification**: Boosts low-volume audio for better transcription
-- **Authentication Layer**: Only processes commands from verified speakers
-- **File Indexing Engine**: Maintains up-to-date file metadata for quick access
-
----
-
-## Tech Stack
-
-**Languages & Frameworks**:  
-C#, .NET 8, WPF, Python (supporting scripts)
-
-**Libraries & APIs**:  
-- MahApps.Metro  
-- HandyControl  
-- EntityFrameworkCore.Sqlite  
-- Whisper API  
-- Groq LLM API  
-- RNNoise (ONNX)  
-- NAudio  
-- Microsoft.ML  
-- Newtonsoft.Json  
-- NWaves  
-- FontAwesome.Sharp  
-- OleDB
+-   **Modern UI**: A sleek and intuitive interface built with **MahApps.Metro**.
+-   **Advanced Voice Commands**:
+    -   **Whisper API** for highly accurate speech-to-text.
+    -   **Groq API** for intelligent command synthesis using a cutting-edge LLM.
+    -   **RNNoise CNN** for real-time noise suppression, ensuring clarity.
+    -   **NAudio** for robust audio capture and processing.
+-   **Secure Interaction**: Features **speaker verification** and **wake word detection** to ensure commands are executed only by authorized users.
+-   **Comprehensive File and Application Management**:
+    -   Launch applications, search for documents, and open websites with simple voice commands.
+-   **Automated File Tracking**:
+    -   Utilizes `FileSystemWatcher` for real-time monitoring of your file system.
+    -   Supports popular file extensions including `.exe`, `.pdf`, `.docx`, `.pptx`, and `.txt`.
+-   **Command History Module**:
+    -   Maintains a detailed log of all executed commands with timestamps and their success or failure status.
+-   **System Tray Integration**: Operates discreetly in the background for minimal intrusion along with `FloatingIcon`.
+-   **Context-Aware Interactions**: Leverages integrated prompt engineering for more intuitive and relevant responses.
 
 ---
 
-## Project Structure
+## 🛠️ Engineered Capabilities
 
-WpfApp2/
-├── Models/ # Entity and data models
-├── Context/ # EF Core DbContext
-├── Assets/ # Icons and resources
-├── model/ # ONNX models for ML features
-├── Views/ # WPF views and UI components
-└── AppSetting.json # API keys, config, and prompts
+> RAVE is designed for intelligent, secure, and responsive user interaction.
+
+-   **Natural Language Control**: Translates spoken language into actionable commands via the Whisper and Groq APIs.
+-   **Crystal-Clear Audio**: Employs RNNoise (ONNX) for real-time audio cleanup and voice amplification to enhance transcription accuracy.
+-   **Robust Authentication**: An integrated security layer that processes commands only from verified speakers.
+-   **Efficient File Indexing**: Maintains an up-to-date index of file metadata for swift and accurate access.
 
 ---
 
-## Getting Started
+## 💻 Tech Stack
+
+-   **Languages & Frameworks**: C#, .NET 8, WPF, Python (for supporting scripts)
+-   **Libraries & APIs**:
+    -   MahApps.Metro
+    -   EntityFrameworkCore.Sqlite
+    -   Whisper API
+    -   Groq LLM API
+    -   RNNoise (ONNX)
+    -   NAudio
+    -   Microsoft.ML
+    -   Newtonsoft.Json
+    -   NWaves
+    -   FontAwesome.Sharp
+    -   OleDB
+
+---
+
+## 📂 Project Structure
+
+```
+    WpfApp2/
+    ├── Models/             # Entity and data models
+    ├── Context/            # EF Core DbContext
+    ├── Assets/             # Icons and other resources
+    ├── model/              # ONNX models for machine learning features
+    ├── Views/              # WPF views and UI components
+    └── AppSetting.json     # Configuration for API keys and prompts
+```
+
+---
+
+## 🏁 Getting Started
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
-- [Visual Studio 2022 or later](https://visualstudio.microsoft.com/)  
-  (with **Desktop development with WPF** workload)
-
----
+-   [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download)
+-   [Visual Studio 2022 or later](https://visualstudio.microsoft.com/) (with the **Desktop development with WPF** workload installed)
 
 ### Setup Instructions
 
-1. **Clone the Repository**
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/See-Sharpp/RAVE.git
+    cd WpfApp2
+    ```
 
-   ```bash
-   git clone https://github.com/yourusername/WpfApp2.git
-   cd WpfApp2
-Restore NuGet Packages
+2.  **Restore NuGet Packages**
+    -   Open the solution in Visual Studio.
+    -   Build the project (`Ctrl+Shift+B`) to automatically restore all necessary dependencies.
 
-Open the solution in Visual Studio.
+3.  **Configure API Keys**
+    -   Open the `AppSetting.json` file and add your API keys and custom prompts:
+        ```json
+        {
+          "Groq_Api_Key": "your-groq-api-key-here",
+          "Groq_Prompt_Api_Key1": "your-groq-api-key1(for prompt1)-here",
+          "Groq_Prompt_Api_Key2": "your-groq-api-key1(for prompt2)-here"
+        }
+        ```
 
-Build the project (Ctrl+Shift+B) to restore dependencies.
+4.  **Run the Application**
+    -   **From Visual Studio**: Press `F5` to start debugging.
+    -   **Via CLI**:
+        ```bash
+        dotnet run --project WpfApp2
+        ```
 
-Configure API Keys
+---
 
-Add your Whisper, Groq, and custom prompts in AppSetting.json:
+##  Usage
 
-{
-  "GroqAPIKey": "your-key-here",
-  "WhisperEndpoint": "https://api.whisper.com/...",
-  "WakeWord": "assistant"
-}
-Run the Application
+### Voice Commands
 
-From Visual Studio: Press F5
+-   Launch the application and use the microphone icon or a designated hotkey to activate voice commands.
+-   Speak naturally, for example:
+    -   *"Open Chrome"*
+    -   *"Search for AI research papers on Google"*
+    -   *"Open Spotify"*
+    -   *"Open Resume.pdf"* 
+    -   *"Shutdown the PC"
+    -   *"Reduce Brightness by 10%"* 
 
-Or via CLI:
 
-   ```bash
-   dotnet run --project WpfApp2
-   ```
-Usage
-Voice Commands
-Launch the app and use the mic icon or hotkey.
+### File Scanning
 
-Say commands like:
+-   RAVE performs an automatic scan on its first launch and subsequently on a daily basis or as set by the user to keep its index current.
+-   It indexes `.exe`, `.pdf`, `.docx`, `.pptx`, and `.txt` files to facilitate faster access through voice commands.
+-   It also uses `FileWatcher` to keep a track of files or application being modified, added or removed while the app is running.
 
-"Open Chrome"
+### Command History
 
-"Search for AI papers on Google"
+-   The command history is accessible from the main dashboard and history section.
+-   You can review all previous commands, their outcomes, and the timestamps of when they were executed.
 
-"Delete duplicate files from Downloads"
+---
 
-File Scanning
-Automatic scanning on first launch and daily thereafter.
+## 🤝 Contributing
 
-Indexes .exe, .pdf, .docx, .pptx, .txt for faster voice access.
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-Command History
-Accessible via the dashboard.
-
-View previous commands, results, and timestamps.
-
-🤝 Contributing
-Pull requests are welcome! For major changes, please open an issue first to discuss your ideas.
-
-📄 License
-This project is licensed under the MIT License.
+---
