@@ -14,11 +14,17 @@ namespace WpfApp2
     public partial class App : Application
     {
         public Mutex _mutex;
+        static string exePath2 = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
 
-
+       
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            //MessageBox.Show(exePath2);
+            //WpfApp2.Properties.Settings.Default.AutoRegister = false;
+            //WpfApp2.Properties.Settings.Default.ShortcutCreated = false;
+            //WpfApp2.Properties.Settings.Default.Save();
+
             try
             {
                
