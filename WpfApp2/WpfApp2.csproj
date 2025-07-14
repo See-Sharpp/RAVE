@@ -10,7 +10,7 @@
 		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 	</PropertyGroup>
 	
-	<ItemGroup>
+<!--	<ItemGroup>
 	  <Content Include="bin\Debug\net8.0-windows\Assets\RAVE2.ico">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	    <Generator></Generator>
@@ -26,9 +26,8 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		
-	</ItemGroup>
-
-<!--	<ItemGroup>
+	</ItemGroup> -->
+<ItemGroup>
 		
 		<COMReference Include="IWshRuntimeLibrary">
 		  <WrapperTool>tlbimp</WrapperTool>
@@ -39,7 +38,7 @@
 		  <Isolated>false</Isolated>
 		  <EmbedInteropTypes>true</EmbedInteropTypes>
 		</COMReference>
-	</ItemGroup> -->
+	</ItemGroup> 
 
 	<ItemGroup>
 	  <None Include="bin\Debug\net8.0-windows\model\HEY_RAVE.onnx" />
