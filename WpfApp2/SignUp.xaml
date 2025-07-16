@@ -276,6 +276,7 @@
                                     FontSize="15"
                                     Foreground="White"
                                     VerticalContentAlignment="Center"
+                                    PasswordChanged="password_PasswordChanged"
                                     mah:TextBoxHelper.Watermark="Enter your password"
                                     Style="{DynamicResource MahApps.Styles.PasswordBox}"/>
                                 <TextBox
@@ -288,6 +289,7 @@
                                     Foreground="White"
                                     Visibility="Hidden"
                                     VerticalContentAlignment="Center"
+                                    TextChanged="passwordText_TextChanged"
                                     mah:TextBoxHelper.Watermark="Enter your password"
                                     />
                                 <fa:IconImage

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using WpfApp2.Context;
 
@@ -70,9 +71,11 @@ namespace WpfApp2
             string user = username.Text;
             bool? remember = rememberMe.IsChecked;
 
+         
 
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
+
                 System.Windows.MessageBox.Show("Username and Password cannot be empty.");
                 return;
             }
@@ -143,7 +146,18 @@ namespace WpfApp2
             {
                 System.Windows.Application.Current.Shutdown();
             }
+
         }
+        private void password_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            pass = password.Password;
+        }
+
+        private void passwordText_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            pass = passwordText.Text;
+        }
+
 
         private void AutoLogin()
         {
@@ -156,6 +170,8 @@ namespace WpfApp2
 
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
+                dashboard.Show();
+                this.Hide();         // Instantly hides current window
 
                 this.Dispatcher.BeginInvoke(() =>
                 {

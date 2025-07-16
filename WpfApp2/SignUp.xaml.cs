@@ -80,23 +80,8 @@ namespace WpfApp2
         private async void Sign_Up(object sender, RoutedEventArgs e)
         {
 
-            if (string.IsNullOrWhiteSpace(password.Password))
-            {
-                if (string.IsNullOrWhiteSpace(passwordText.Text))
-                {
-                    System.Windows.MessageBox.Show("Please fill in all fields.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                else
-                {
-                    pass = passwordText.Text;
-                }
-            }
-            else
-            {
-                pass = password.Password;
-            }
-            if (string.IsNullOrWhiteSpace(username.Text) || string.IsNullOrWhiteSpace(email.Text))
+            
+            if (string.IsNullOrWhiteSpace(username.Text) || string.IsNullOrWhiteSpace(email.Text)|| string.IsNullOrEmpty(pass))
             {
                 System.Windows.MessageBox.Show("Please fill in all fields.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -149,6 +134,15 @@ namespace WpfApp2
                 System.Windows.Application.Current.Shutdown();
             }
         }
+        private void passwordText_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            pass = passwordText.Text;
+        }
+        private void password_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            pass = password.Password;
+        }
+
 
     }
 }
