@@ -77,11 +77,11 @@ namespace WpfApp2
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
 
-                    if (Global.system_control.Count >= 30)
+                    if (Global.system_control.Count >= 20)
                     {
                         Global.system_control.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -104,11 +104,11 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.system_control.Count >= 30)
+                    if (Global.system_control.Count >= 20)
                     {
                         Global.system_control.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -180,11 +180,11 @@ namespace WpfApp2
                                         };
                                         _context.LLM_Detail.Add(entity);
                                         _context.SaveChanges();
-                                        if (Global.application_control.Count >= 30)
+                                        if (Global.application_control.Count >= 20)
                                         {
                                             Global.application_control.Dequeue();
                                         }
-                                        if (Global.total_commands.Count >= 30)
+                                        if (Global.total_commands.Count >= 20)
                                         {
                                             Global.total_commands.Dequeue();
                                         }
@@ -217,11 +217,11 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.application_control.Count >= 30)
+                    if (Global.application_control.Count >= 20)
                     {
                         Global.application_control.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -265,11 +265,11 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.application_control.Count >= 30)
+                        if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
                         }
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -320,11 +320,11 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.application_control.Count >= 30)
+                        if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
                         }
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -349,11 +349,11 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.application_control.Count >= 30)
+                        if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
                         }
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -379,12 +379,12 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.application_control.Count >= 30)
+                    if (Global.application_control.Count >= 20)
                     {
                         Global.application_control.Dequeue(); 
                     }
                     Global.application_control.Enqueue(entity);
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -489,12 +489,12 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.file_operation.Count >= 30)
+                    if (Global.file_operation.Count >= 20)
                     {
                         Global.file_operation.Dequeue();
                     }
                     Global.file_operation.Enqueue(entity);
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -527,12 +527,12 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.file_operation.Count >= 30)
+                        if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
                         }
                         Global.file_operation.Enqueue(entity);
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -583,11 +583,11 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.file_operation.Count >= 30)
+                        if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
                         }
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -612,11 +612,11 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity);
                         _context.SaveChanges();
-                        if (Global.file_operation.Count >= 30)
+                        if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
                         }
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -644,11 +644,11 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.file_operation.Count >= 30)
+                    if (Global.file_operation.Count >= 20)
                     {
                         Global.file_operation.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -693,12 +693,12 @@ namespace WpfApp2
                         };
                         _context.LLM_Detail.Add(entity1);
                         _context.SaveChanges();
-                        if (Global.web_browse.Count >= 30)
+                        if (Global.web_browse.Count >= 20)
                         {
                             Global.web_browse.Dequeue();
                         }
                         Global.web_browse.Enqueue(entity1);
-                        if (Global.total_commands.Count >= 30)
+                        if (Global.total_commands.Count >= 20)
                         {
                             Global.total_commands.Dequeue();
                         }
@@ -741,11 +741,11 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.web_browse.Count >= 30)
+                    if (Global.web_browse.Count >= 20)
                     {
                         Global.web_browse.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }
@@ -768,11 +768,11 @@ namespace WpfApp2
                     };
                     _context.LLM_Detail.Add(entity);
                     _context.SaveChanges();
-                    if (Global.web_browse.Count >= 30)
+                    if (Global.web_browse.Count >= 20)
                     {
                         Global.web_browse.Dequeue();
                     }
-                    if (Global.total_commands.Count >= 30)
+                    if (Global.total_commands.Count >= 20)
                     {
                         Global.total_commands.Dequeue();
                     }

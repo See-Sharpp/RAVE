@@ -54,11 +54,11 @@ namespace WpfApp2
 
             if (!WpfApp2.Properties.Settings.Default.Is_First)
             {
-                Global.web_browse = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "web_browse").OrderByDescending(x => x.CommandTime).Take(30));
-                Global.file_operation = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "file_operation").OrderByDescending(x => x.CommandTime).Take(30));
-                Global.application_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "application_control").OrderByDescending(x => x.CommandTime).Take(30));
-                Global.system_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "system_control").OrderByDescending(x => x.CommandTime).Take(30));
-                Global.total_commands = new Queue<LLM_Detail>(_context.LLM_Detail.OrderByDescending(x => x.CommandTime).Take(30));
+                Global.web_browse = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "web_browse").OrderByDescending(x => x.CommandTime).Take(20));
+                Global.file_operation = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "file_operation").OrderByDescending(x => x.CommandTime).Take(20));
+                Global.application_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "application_control").OrderByDescending(x => x.CommandTime).Take(20));
+                Global.system_control = new Queue<LLM_Detail>(_context.LLM_Detail.Where(x => x.CommandType == "system_control").OrderByDescending(x => x.CommandTime).Take(20));
+                Global.total_commands = new Queue<LLM_Detail>(_context.LLM_Detail.OrderByDescending(x => x.CommandTime).Take(20));
 
                 WpfApp2.Properties.Settings.Default.Is_First = true;
                 Properties.Settings.Default.Save();
