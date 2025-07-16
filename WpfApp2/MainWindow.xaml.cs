@@ -1,6 +1,8 @@
-﻿using MahApps.Metro.Controls;
+﻿using HandyControl.Tools.Extension;
+using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
@@ -12,6 +14,7 @@ namespace WpfApp2
     {
 
         private ApplicationDbContext _context = new ApplicationDbContext();
+        string pass = "";
         public MainWindow()
         {
             InitializeComponent();
@@ -23,11 +26,48 @@ namespace WpfApp2
             this.Loaded -= MainWindow_Loaded;
             AutoLogin();
         }
+
+        private void showPassword(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pass = password.Password;
+                password.Visibility = Visibility.Hidden;
+                passwordText.Visibility = Visibility.Visible;
+                passwordText.Text = pass;
+                eyeClosed.Visibility = Visibility.Hidden;
+                eye.Visibility = Visibility.Visible;
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+        }
+
+        private void hidePassword(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pass = passwordText.Text;
+                password.Password = pass;
+                password.Visibility = Visibility.Visible;
+                passwordText.Visibility = Visibility.Hidden;
+                eyeClosed.Visibility = Visibility.Visible;
+                eye.Visibility = Visibility.Hidden;
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+        }
+
+
         private void Login(object sender, RoutedEventArgs e)
         {
          
             string user = username.Text;
-            string pass = password.Password;
             bool? remember = rememberMe.IsChecked;
 
 
@@ -45,7 +85,6 @@ namespace WpfApp2
                 System.Windows.MessageBox.Show("User not found.");
                 return;
             }
-
 
 
             if (User!=null)
@@ -108,22 +147,23 @@ namespace WpfApp2
 
         private void AutoLogin()
         {
-           
             bool userExists = _context.SignUpDetails.Any(u => u.Id == Properties.Settings.Default.UserId);
+
             if (Properties.Settings.Default.RememberMe && Properties.Settings.Default.UserId != 0 && userExists)
             {
                 Global.UserId = Properties.Settings.Default.UserId;
-                this.Hide();
+
+
                 Navbar dashboard = new Navbar();
                 dashboard.Show();
-                this.Dispatcher.BeginInvoke(
-                        (Action)(() => this.Close()),
-                        System.Windows.Threading.DispatcherPriority.Background
-                    );
 
-               
+                this.Dispatcher.BeginInvoke(() =>
+                {
+                    this.Close(); 
+                }, System.Windows.Threading.DispatcherPriority.Background);
             }
         }
+
 
 
     }

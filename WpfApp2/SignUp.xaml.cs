@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace WpfApp2
     public partial class SignUp : MetroWindow
     {
         private ApplicationDbContext _context = new ApplicationDbContext();
+        string pass = "";
         public SignUp()
         {
             InitializeComponent();
@@ -38,10 +40,63 @@ namespace WpfApp2
             this.Close();
         }
 
+        private void showPassword(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pass = password.Password;
+                password.Visibility = Visibility.Hidden;
+                passwordText.Visibility = Visibility.Visible;
+                passwordText.Text = pass;
+                eyeClosed.Visibility = Visibility.Hidden;
+                eye.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+        }
+
+        private void hidePassword(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pass = passwordText.Text;
+                password.Password = pass;
+                password.Visibility = Visibility.Visible;
+                passwordText.Visibility = Visibility.Hidden;
+                eyeClosed.Visibility = Visibility.Visible;
+                eye.Visibility = Visibility.Hidden;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+
+        }
+
         private async void Sign_Up(object sender, RoutedEventArgs e)
         {
 
-            if (string.IsNullOrWhiteSpace(username.Text) || string.IsNullOrWhiteSpace(email.Text) || string.IsNullOrWhiteSpace(password.Password))
+            if (string.IsNullOrWhiteSpace(password.Password))
+            {
+                if (string.IsNullOrWhiteSpace(passwordText.Text))
+                {
+                    System.Windows.MessageBox.Show("Please fill in all fields.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                else
+                {
+                    pass = passwordText.Text;
+                }
+            }
+            else
+            {
+                pass = password.Password;
+            }
+            if (string.IsNullOrWhiteSpace(username.Text) || string.IsNullOrWhiteSpace(email.Text))
             {
                 System.Windows.MessageBox.Show("Please fill in all fields.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -57,7 +112,7 @@ namespace WpfApp2
             {
                 Username = username.Text,
                 Email = email.Text,
-                Password = PasswordHelper.HashPassword(password.Password)
+                Password = PasswordHelper.HashPassword(pass)
             };
 
             var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
