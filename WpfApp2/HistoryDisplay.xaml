@@ -10,7 +10,8 @@
       Background="#121212">
 
     <Page.Resources>
-        <!-- Back Button Style -->
+        <local:LastItemConverter x:Key="lastItemConverter" />
+
         <Style x:Key="BackButtonStyle" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
@@ -28,15 +29,15 @@
                                                   Opacity="0.3"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="←" 
-                                          FontSize="16" 
-                                          Foreground="White" 
-                                          Margin="0,0,8,0"
-                                          VerticalAlignment="Center"/>
+                                <TextBlock Text="←"
+                                            FontSize="16"
+                                            Foreground="White"
+                                            Margin="0,0,8,0"
+                                           VerticalAlignment="Center"/>
                                 <TextBlock Text="{TemplateBinding Content}"
-                                          FontSize="14"
-                                          Foreground="White"
-                                          VerticalAlignment="Center"/>
+                                           FontSize="14"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -53,7 +54,6 @@
             </Setter>
         </Style>
 
-        <!-- History Item Style -->
         <Style x:Key="HistoryItemStyle" TargetType="Border">
             <Setter Property="Background" Value="#1F2937"/>
             <Setter Property="BorderBrush" Value="#374151"/>
@@ -69,7 +69,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Header Text Style -->
         <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -77,14 +76,12 @@
             <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
 
-        <!-- Detail Text Style -->
         <Style x:Key="DetailTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Foreground" Value="#9CA3AF"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
 
-        <!-- Status Badge Style -->
         <Style x:Key="StatusBadgeStyle" TargetType="Border">
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="8,4"/>
@@ -99,11 +96,10 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header Section -->
-        <Border Grid.Row="0" 
-                Background="#1F2937" 
-                BorderBrush="#374151" 
-                BorderThickness="0,0,0,1"
+        <Border Grid.Row="0"
+                 Background="#1F2937"
+                 BorderBrush="#374151"
+                 BorderThickness="0,0,0,1"
                 Padding="24,16">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -112,32 +108,29 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Back Button -->
                 <Button Grid.Column="0"
                         Content="Back"
                         Style="{StaticResource BackButtonStyle}"
                         Click="BackButton_Click"
                         VerticalAlignment="Center"/>
 
-                <!-- Title Section -->
-                <StackPanel Grid.Column="1" 
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center">
+                <StackPanel Grid.Column="1"
+                             HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
                     <TextBlock x:Name="CategoryTitle"
-                              Text="Command History"
-                              FontSize="24"
-                              FontWeight="Bold"
-                              Foreground="White"
-                              HorizontalAlignment="Center"/>
+                               Text="Web Browse History"
+                               FontSize="24"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center"/>
                     <TextBlock x:Name="CategorySubtitle"
-                              Text="Last 30 executed commands"
-                              FontSize="14"
-                              Foreground="#9CA3AF"
-                              HorizontalAlignment="Center"
-                              Margin="0,4,0,0"/>
+                               Text="Last 4 executed commands"
+                               FontSize="14"
+                               Foreground="#9CA3AF"
+                               HorizontalAlignment="Center"
+                               Margin="0,4,0,0"/>
                 </StackPanel>
 
-                <!-- Category Icon -->
                 <Border Grid.Column="2"
                         Width="48" Height="48"
                         CornerRadius="24"
@@ -149,22 +142,20 @@
                         </LinearGradientBrush>
                     </Border.Background>
                     <TextBlock x:Name="CategoryIcon"
-                              Text="⚙️"
-                              FontSize="20"
-                              Foreground="White"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center"/>
+                               Text="🌐"
+                                FontSize="20"
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- History List Section -->
-        <ScrollViewer Grid.Row="1" 
-                      VerticalScrollBarVisibility="Auto"
+        <ScrollViewer Grid.Row="1"
+                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Padding="24,16">
             <StackPanel x:Name="HistoryContainer">
-                <!-- Empty State -->
                 <Border x:Name="EmptyState"
                         Style="{StaticResource HistoryItemStyle}"
                         Visibility="Collapsed"
@@ -172,25 +163,24 @@
                         Padding="40">
                     <StackPanel HorizontalAlignment="Center">
                         <TextBlock Text="📋"
-                                  FontSize="48"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,16"/>
+                                   FontSize="48"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,16"/>
                         <TextBlock Text="No History Available"
-                                  FontSize="18"
-                                  FontWeight="SemiBold"
-                                  Foreground="White"
-                                  HorizontalAlignment="Center"
-                                  Margin="0,0,0,8"/>
+                                   FontSize="18"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,8"/>
                         <TextBlock Text="No commands have been executed in this category yet."
-                                  FontSize="14"
-                                  Foreground="#9CA3AF"
-                                  HorizontalAlignment="Center"
-                                  TextAlignment="Center"/>
+                                   FontSize="14"
+                                   Foreground="#9CA3AF"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
-                <!-- Sample History Items (These will be populated dynamically) -->
-                <ItemsControl x:Name="HistoryItemsControl">
+                <ItemsControl x:Name="HistoryItemsControl" AlternationCount="1000">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Style="{StaticResource HistoryItemStyle}">
@@ -200,11 +190,25 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="0" Margin="0,0,20,0" HorizontalAlignment="Center">
-                                        <Ellipse Width="12" Height="12" Fill="{Binding StatusColor}" Stroke="#4B5563" StrokeThickness="1.5" Margin="0,6,0,0"/>
-                                        <Rectangle Width="2" Fill="#374151" Margin="0,5,0,-500"/>
-                                    </StackPanel>
+                                    
+                                    <Canvas Grid.Column="0" Width="32" Margin="0,0,8,0">
+                                        
+                                        <Rectangle x:Name="TimelineLine"
+                                                   Canvas.Left="15"
+                                                   Canvas.Top="12"
+                                                   Width="2"
+                                                   Height="76"
+                                                   Fill="#374151" />
 
+                                        
+                                        <Ellipse Canvas.Left="9" Canvas.Top="6"
+                                                 Width="12" Height="12"
+                                                 Fill="{Binding StatusColor}"
+                                                 Stroke="#4B5563" 
+                                                 StrokeThickness="1.5" />
+                                    </Canvas>
+
+                                    <!-- Content Column -->
                                     <Grid Grid.Column="1">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -218,30 +222,41 @@
                                             </Grid.ColumnDefinitions>
 
                                             <TextBlock Grid.Column="0"
-                                       Text="{Binding user_command}"
-                                       Style="{StaticResource HeaderTextStyle}"
-                                       TextWrapping="Wrap"
-                                       VerticalAlignment="Center"/>
+                                                       Text="{Binding user_command}"
+                                                       Style="{StaticResource HeaderTextStyle}"
+                                                       TextWrapping="Wrap"
+                                                       VerticalAlignment="Center"/>
 
                                             <TextBlock Grid.Column="1"
-                                       Text="{Binding CommandTime, StringFormat='{}{0:g}'}"
-                                       Style="{StaticResource DetailTextStyle}"
-                                       VerticalAlignment="Top"
-                                       Margin="12,0,0,0"/>
+                                                       Text="{Binding CommandTime, StringFormat='{}{0:g}'}"
+                                                       Style="{StaticResource DetailTextStyle}"
+                                                       VerticalAlignment="Top"
+                                                       Margin="12,0,0,0"/>
                                         </Grid>
 
                                         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,0">
                                             <Border Style="{StaticResource StatusBadgeStyle}"
-                                    Background="{Binding StatusColor}">
+                                                    Background="{Binding StatusColor}">
                                                 <TextBlock Text="{Binding Status}"
-                                           FontSize="10"
-                                           FontWeight="SemiBold"
-                                           Foreground="White"/>
+                                                           FontSize="10"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="White"/>
                                             </Border>
                                         </StackPanel>
                                     </Grid>
                                 </Grid>
                             </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Value="True">
+                                    <DataTrigger.Binding>
+                                        <MultiBinding Converter="{StaticResource lastItemConverter}">
+                                            <Binding RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ContentPresenter}}"/>
+                                            <Binding Path="ItemsSource" RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}"/>
+                                        </MultiBinding>
+                                    </DataTrigger.Binding>
+                                    <Setter TargetName="TimelineLine" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                     <ItemsControl.ItemsPanel>
@@ -250,8 +265,6 @@
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
-
-
             </StackPanel>
         </ScrollViewer>
     </Grid>

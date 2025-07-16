@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
@@ -24,7 +25,9 @@ namespace WpfApp2
         private int countdownValue = 5;
         private int recordingTimeLeft = 5;
 
-
+        private bool _isDragging = false;
+        private Point _centerPoint;
+        private int _currentValue = 12;
 
         private WaveInEvent? waveIn;
         private WaveFileWriter? _denoisedWriter;
@@ -52,7 +55,7 @@ namespace WpfApp2
             InitializeComponent();
             SpeakerVerificationToggle.IsChecked = Properties.Settings.Default.Speaker_Verification;
             WakeWordToggle.IsChecked = Properties.Settings.Default.WakeWord;
-            DarkModeToggle.IsChecked = Properties.Settings.Default.Dark_Mode;
+            //DarkModeToggle.IsChecked = Properties.Settings.Default.Dark_Mode;
             SaveHistoryToggle.IsChecked = Properties.Settings.Default.History;
 
             var config = new ConfigurationBuilder()
@@ -62,7 +65,11 @@ namespace WpfApp2
 
             api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found in configuration.");
 
-         
+            Loaded += (s, e) => {
+                _centerPoint = new Point(DialCanvas.ActualWidth / 2, DialCanvas.ActualHeight / 2);
+                UpdateDialState(_currentValue);
+            };
+
         }
 
         
@@ -654,5 +661,134 @@ namespace WpfApp2
             }
         }
         public double VoiceSensitivity => SensitivitySlider?.Value ?? 50;
+
+        private void DialCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+
+            if (e.OriginalSource is Shape shape && shape.Name == "TrianglePointer")
+            {
+                _isDragging = true;
+                DialCanvas.CaptureMouse();
+            }
+        }
+
+        private void DialCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                UpdateDialFromMousePosition(e.GetPosition(DialCanvas));
+            }
+        }
+
+        private void DialCanvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_isDragging)
+            {
+                _isDragging = false;
+                DialCanvas.ReleaseMouseCapture();
+            }
+        }
+
+        private void UpdateDialFromMousePosition(Point mousePosition)
+        {
+            double deltaX = mousePosition.X - _centerPoint.X;
+            double deltaY = mousePosition.Y - _centerPoint.Y;
+
+
+            double angle = Math.Atan2(deltaY, deltaX) * 180 / Math.PI;
+            angle = (angle + 450) % 360;
+
+            int hourSlot = (int)Math.Round(angle / 30.0);
+
+
+            int newValue = (hourSlot >= 12) ? 24 : 12 + hourSlot;
+
+
+            if (newValue != _currentValue)
+            {
+                UpdateDialState(newValue);
+            }
+        }
+        private void UpdateDialState(int value)
+        {
+            _currentValue = value;
+
+
+            double displayAngle = (_currentValue - 12) * 30;
+
+
+            TriangleRotation.Angle = displayAngle;
+
+
+            TimeValue.Text = $"{_currentValue}h";
+
+
+            UpdateProgressArc();
+        }
+        private void UpdateProgressArc()
+        {
+            double sweepAngle = (_currentValue - 12) * 30.0;
+
+
+            if (sweepAngle >= 360)
+            {
+                sweepAngle = 359.99;
+            }
+
+            if (sweepAngle > 0)
+            {
+                double startAngle = -90;
+                double endAngle = startAngle + sweepAngle;
+                double radius = 189;
+
+                Point center = new Point(200, 200);
+
+                Point startPoint = new Point(
+                    center.X + radius * Math.Cos(startAngle * Math.PI / 180),
+                    center.Y + radius * Math.Sin(startAngle * Math.PI / 180)
+                );
+
+                Point endPoint = new Point(
+                    center.X + radius * Math.Cos(endAngle * Math.PI / 180),
+                    center.Y + radius * Math.Sin(endAngle * Math.PI / 180)
+                );
+
+                bool isLargeArc = sweepAngle > 180;
+                PathFigure figure = new PathFigure { StartPoint = startPoint, IsClosed = false };
+                ArcSegment arc = new ArcSegment
+                {
+                    Point = endPoint,
+                    Size = new Size(radius, radius),
+                    RotationAngle = 0,
+                    IsLargeArc = isLargeArc,
+                    SweepDirection = SweepDirection.Clockwise
+                };
+                figure.Segments.Add(arc);
+
+                PathGeometry geometry = new PathGeometry();
+                geometry.Figures.Add(figure);
+
+                ProgressArc.Data = geometry;
+            }
+            else
+            {
+                ProgressArc.Data = null;
+            }
+        }
+
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateDialState(12);
+        }
+
+        private void ApplyButton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show($"Timer set to scan every {_currentValue} hours!", "Settings Applied",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+
+            Properties.Settings.Default.Scanning_Time=_currentValue;
+            Properties.Settings.Default.Save();
+            Global.Scanning = _currentValue;
+        }
     }
 }

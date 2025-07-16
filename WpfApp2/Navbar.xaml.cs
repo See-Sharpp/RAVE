@@ -124,7 +124,7 @@ namespace WpfApp2
                                ? DateTime.Parse(File.ReadAllText(filePath))
                                : DateTime.MinValue;
 
-            if ((DateTime.Now - lastScan).TotalHours >= 24)
+            if ((DateTime.Now - lastScan).TotalHours >= Global.Scanning)
             {
                 RunDailyScan();
                 File.WriteAllText(filePath, DateTime.Now.ToString("O"));
@@ -152,7 +152,7 @@ namespace WpfApp2
                 {
                     _isDailyScanRunning = false;
                 }
-            }, null, TimeSpan.FromHours(1), TimeSpan.FromHours(1)); 
+            }, null, TimeSpan.FromHours(Global.Scanning), TimeSpan.FromHours(Global.Scanning)); 
         }
 
 

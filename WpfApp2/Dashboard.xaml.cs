@@ -44,8 +44,6 @@ namespace WpfApp2
         {
             InitializeComponent();
 
-
-
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
@@ -65,6 +63,8 @@ namespace WpfApp2
                 WpfApp2.Properties.Settings.Default.Is_First = true;
                 Properties.Settings.Default.Save();
             }
+
+            LoadHistoryData();
         }
 
        
@@ -430,6 +430,7 @@ namespace WpfApp2
             {
                 llm l1 = new llm(command);
                 CommandInput.Clear();
+                LoadHistoryData();
             }
         }   
 
@@ -442,6 +443,7 @@ namespace WpfApp2
                 {
                     llm l1 = new llm(command);
                     CommandInput.Clear();
+                    LoadHistoryData();
                 }
             }
         }
@@ -476,6 +478,12 @@ namespace WpfApp2
             {
                 VoiceToggle_Unchecked();
             }
+        }
+
+        public void LoadHistoryData()
+        {
+            var historyData = Global.total_commands;
+            CommandHistoryList.ItemsSource = new List<LLM_Detail>(historyData);
         }
     }
 }

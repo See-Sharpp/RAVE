@@ -24,5 +24,7 @@ namespace WpfApp2
 
         public static bool autoOpen =false;
 
+        public static int Scanning = 0;
+
     }
 }

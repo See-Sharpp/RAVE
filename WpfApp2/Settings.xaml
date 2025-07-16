@@ -9,6 +9,32 @@
       Title="Settings">
 
     <Page.Resources>
+
+        <Style x:Key="GlowBorder" TargetType="Border">
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#6366F1" BlurRadius="30" ShadowDepth="0" Opacity="0.8"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernCard_Dial" TargetType="Border">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="CornerRadius" Value="24"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="0" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Storyboard x:Key="PulseAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                             From="0.4" To="1.0" Duration="0:0:1.5" AutoReverse="True"/>
+        </Storyboard>
+
         <Style x:Key="CountdownTextStyle" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="72"/>
@@ -273,6 +299,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
     </Page.Resources>
 
     <Grid Background="#0F0F0F">
@@ -473,52 +500,183 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Interface Settings Card -->
-                <Border Style="{StaticResource ModernCard}" Margin="0,0,0,24">
+                
+
+                <Border Style="{StaticResource ModernCard_Dial}" Margin="0,0,0,24">
                     <StackPanel>
-                        <!-- Card Header -->
                         <Border Background="#262626"
                                 CornerRadius="16,16,0,0"
                                 Padding="24,20">
                             <StackPanel Orientation="Horizontal">
-                                <fa:IconImage Icon="Palette" Width="24" Foreground="#6366F1" Margin="0,0,12,0"/>
-                                <TextBlock Text="Interface Settings"
-                                           FontFamily="Segoe UI"
-                                           FontSize="20"
-                                           FontWeight="SemiBold"
-                                           Foreground="White"/>
+                                <fa:IconImage Icon="Clock" Width="24" Foreground="#6366F1" Margin="0,0,12,0"/>
+                                <TextBlock  Text="Scanning Time Settings"
+                                            FontFamily="Segoe UI"
+                                            FontSize="20"
+                                            FontWeight="SemiBold"
+                                            Foreground="White"/>
+                            </StackPanel>
+                        </Border>
+                        <Canvas x:Name="DialCanvas" Width="400" Height="400" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    MouseLeftButtonDown="DialCanvas_MouseLeftButtonDown"
+                                    MouseMove="DialCanvas_MouseMove"
+                                    MouseLeftButtonUp="DialCanvas_MouseLeftButtonUp" Margin="48,48,48,0">
+                            <Ellipse Width="400" Height="400" Stroke="#374151" StrokeThickness="2" Fill="Transparent"/>
+                            <Ellipse Width="360" Height="360" Canvas.Left="20" Canvas.Top="20" Stroke="#4B5563" StrokeThickness="1" Fill="Transparent"/>
+
+                            <Canvas x:Name="TickMarksCanvas" Width="400" Height="400">
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="198.5" Canvas.Top="20"/>
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="358" Canvas.Top="198.5" RenderTransformOrigin="0.5,0.5">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="90"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="198.5" Canvas.Top="345"/>
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="37" Canvas.Top="198.5" RenderTransformOrigin="0.5,0.5">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="90"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="30" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="60" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="120" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="150" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="210" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="240" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="300" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="2" Height="25" Fill="#A5B4FC" Canvas.Left="199" Canvas.Top="30">
+                                    <Rectangle.RenderTransform>
+                                        <RotateTransform Angle="330" CenterX="1" CenterY="170"/>
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                            </Canvas>
+
+                            <Path x:Name="ProgressArc" Stroke="#6366F1" StrokeThickness="8" Fill="Transparent" StrokeStartLineCap="Round" StrokeEndLineCap="Round">
+                                <Path.Effect>
+                                    <DropShadowEffect Color="#6366F1" BlurRadius="10" ShadowDepth="0" Opacity="0.6"/>
+                                </Path.Effect>
+                            </Path>
+
+                            <Border Width="200" Height="200" Canvas.Left="100" Canvas.Top="100" CornerRadius="100" Background="#262626" BorderBrush="#374151" BorderThickness="2">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="0" Opacity="0.3"/>
+                                </Border.Effect>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock x:Name="CenterLabel" Text="Scanning every:" FontFamily="Segoe UI" FontSize="16" FontWeight="Medium" Foreground="#9CA3AF" HorizontalAlignment="Center"/>
+                                    <TextBlock x:Name="TimeValue" Text="30s" FontFamily="Segoe UI" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+
+                            <Path x:Name="TrianglePointer" Fill="#6366F1" Stroke="White" StrokeThickness="1" Cursor="Hand">
+                                <Path.Data>
+                                    <PathGeometry>
+                                        <PathFigure StartPoint="203,72" IsClosed="True">
+                                            <LineSegment Point="190,102.2"/>
+                                            <ArcSegment Point="216,102.7"
+                            Size="200,200"
+        SweepDirection="Clockwise"
+        IsLargeArc="False"/>
+                                        </PathFigure>
+                                    </PathGeometry>
+                                </Path.Data>
+                                <Path.RenderTransform>
+                                    <RotateTransform x:Name="TriangleRotation" CenterX="200" CenterY="200"/>
+                                </Path.RenderTransform>
+                                <Path.Effect>
+                                    <DropShadowEffect Color="#6366F1" BlurRadius="10" ShadowDepth="0" Opacity="0.7"/>
+                                </Path.Effect>
+                            </Path>
+
+                            <TextBlock Text="15H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="347" Canvas.Top="193"/>
+                            <TextBlock Text="18H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="189" Canvas.Top="325"/>
+                            <TextBlock Text="21H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="32" Canvas.Top="193"/>
+                            <TextBlock Text="12H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="189" Canvas.Top="55"/>
+                        </Canvas>
+
+                        <Border Grid.Row="2" Background="#1E1E1E" Padding="32,24" Margin="0,32,0,0">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="Reset" Width="120" Height="40" Background="#374151" Foreground="White" BorderThickness="0" Cursor="Hand" Click="ResetButton_Click" Margin="0,0,16,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="#4B5563"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter Property="Background" Value="#6B7280"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+
+                                <Button Content="Apply Settings" Width="140" Height="40" Background="#6366F1" Foreground="White" BorderThickness="0" Cursor="Hand" Click="ApplyButton_Click">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Background" Value="#7C3AED"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter Property="Background" Value="#5B21B6"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
                             </StackPanel>
                         </Border>
 
-                        <!-- Dark Mode -->
-                        <Border Style="{StaticResource SettingItemStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Dark Mode"
-                                               FontFamily="Segoe UI"
-                                               FontSize="16"
-                                               FontWeight="Medium"
-                                               Foreground="White"
-                                               Margin="0,0,0,4"/>
-                                    <TextBlock Text="Use dark theme for better visibility in low light"
-                                               FontFamily="Segoe UI"
-                                               FontSize="14"
-                                               Foreground="#9CA3AF"/>
-                                </StackPanel>
-                                <ToggleButton x:Name="DarkModeToggle" 
-                                              Grid.Column="1"
-                                              Style="{StaticResource SlideToggleButtonStyle}"
-                                              IsChecked="True"
-                                              Checked="DarkModeToggle_Checked"
-                                              Unchecked="DarkModeToggle_Unchecked"/>
-                            </Grid>
-                        </Border>
+
                     </StackPanel>
                 </Border>
+
             </StackPanel>
         </ScrollViewer>
 

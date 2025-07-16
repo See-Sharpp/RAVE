@@ -166,5 +166,17 @@ namespace WpfApp2.Properties {
                 this["ShortcutCreated"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("12")]
+        public int Scanning_Time {
+            get {
+                return ((int)(this["Scanning_Time"]));
+            }
+            set {
+                this["Scanning_Time"] = value;
+            }
+        }
     }
 }

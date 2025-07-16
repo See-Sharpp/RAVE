@@ -281,8 +281,10 @@
                             <fa:IconImage Icon="QuestionCircle" Width="18" Foreground="White"/>
                         </Button.Tag>
                     </Button>
+
                     
-                    
+
+
                 </StackPanel>
 
                 <Border Grid.Row="2" Padding="16,16,16,32">

@@ -62,8 +62,8 @@ namespace WpfApp2
 
             WpfApp2.Properties.Settings.Default.Is_First = false;
             WpfApp2.Properties.Settings.Default.Save();
-           
 
+            Global.Scanning = WpfApp2.Properties.Settings.Default.Scanning_Time;
 
         }
 
@@ -76,15 +76,14 @@ namespace WpfApp2
                 MessageBox.Show("Fatal error:\n" + e.ExceptionObject.ToString(), "Unhandled Domain Exception");
             };
 
-            // Catch unhandled exceptions on the UI thread
             DispatcherUnhandledException += (s, e) =>
             {
                 System.IO.File.AppendAllText("fatal.log", $"[Dispatcher] {DateTime.Now} - {e.Exception}\n");
                 MessageBox.Show("UI error:\n" + e.Exception.Message, "Unhandled UI Exception");
-                e.Handled = true; // Prevent app from crashing
+                e.Handled = true;
             };
 
-            // Catch unobserved exceptions from Tasks
+            
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
                 System.IO.File.AppendAllText("fatal.log", $"[Task] {DateTime.Now} - {e.Exception}\n");
