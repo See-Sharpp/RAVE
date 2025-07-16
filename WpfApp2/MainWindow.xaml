@@ -91,27 +91,27 @@
                     LineHeight="40"/>
 
                 <TextBlock
-                    Text="Access your secure dashboard and manage your digital experience with cutting-edge technology."
+                    Text="Take full control of your PC with secure, real-time voice commands. Launch apps, open files, browse the web, and execute system actions, all through natural language."
                     FontFamily="Segoe UI"
                     FontSize="16"
                     Foreground="#B0B3B8"
                     TextWrapping="Wrap"
                     LineHeight="24"
-                    MaxWidth="400"
+                    MaxWidth="410"
                     Margin="0,0,0,40"/>
 
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <fa:IconImage Icon="Shield" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Bank-level security" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <TextBlock Text="Wake Word and Voice Verification" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <fa:IconImage Icon="Bolt" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Lightning fast performance" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <TextBlock Text="Real-Time Execution" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <fa:IconImage Icon="Globe" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Global accessibility" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <fa:IconImage Icon="MagnifyingGlass" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
+                        <TextBlock Text="Smart File Tracking" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
