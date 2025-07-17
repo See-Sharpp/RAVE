@@ -863,13 +863,13 @@
                             <Ellipse Width="360" Height="360" Canvas.Left="20" Canvas.Top="20" Stroke="#4B5563" StrokeThickness="1" Fill="Transparent"/>
                             <Canvas x:Name="TickMarksCanvas" Width="400" Height="400">
                                 <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="198.5" Canvas.Top="20"/>
-                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="358" Canvas.Top="198.5" RenderTransformOrigin="0.5,0.5">
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="358" Canvas.Top="185.5" RenderTransformOrigin="0.5,0.5">
                                     <Rectangle.RenderTransform>
                                         <RotateTransform Angle="90"/>
                                     </Rectangle.RenderTransform>
                                 </Rectangle>
                                 <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="198.5" Canvas.Top="345"/>
-                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="37" Canvas.Top="198.5" RenderTransformOrigin="0.5,0.5">
+                                <Rectangle Width="4" Height="35" Fill="#6366F1" Canvas.Left="37" Canvas.Top="182.5" RenderTransformOrigin="0.5,0.5">
                                     <Rectangle.RenderTransform>
                                         <RotateTransform Angle="90"/>
                                     </Rectangle.RenderTransform>
@@ -946,9 +946,9 @@
                                     <DropShadowEffect Color="#6366F1" BlurRadius="10" ShadowDepth="0" Opacity="0.7"/>
                                 </Path.Effect>
                             </Path>
-                            <TextBlock Text="15H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="347" Canvas.Top="193"/>
+                            <TextBlock Text="15H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="347" Canvas.Top="179"/>
                             <TextBlock Text="18H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="189" Canvas.Top="325"/>
-                            <TextBlock Text="21H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="32" Canvas.Top="193"/>
+                            <TextBlock Text="21H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="32" Canvas.Top="177"/>
                             <TextBlock Text="12H" FontSize="14" Foreground="#9CA3AF" Canvas.Left="189" Canvas.Top="55"/>
                         </Canvas>
 

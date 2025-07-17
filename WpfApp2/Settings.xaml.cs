@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -49,6 +50,7 @@ namespace WpfApp2
 
     
         private static string? api;
+        private NotifyIcon _notifyIcon = null!;
 
         public Settings()
         {
@@ -67,6 +69,7 @@ namespace WpfApp2
 
             Loaded += (s, e) => {
                 _centerPoint = new Point(DialCanvas.ActualWidth / 2, DialCanvas.ActualHeight / 2);
+                _currentValue = Global.Scanning > 0 ? Global.Scanning : 12;
                 UpdateDialState(_currentValue);
             };
 
@@ -102,7 +105,11 @@ namespace WpfApp2
         {
             await Dispatcher.InvokeAsync(async () =>
             {
-             
+
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.ShowBalloonTip(500, "RAVE", $"Hey {Global.userName}, How RAVE can Help!", ToolTipIcon.Info);
+                }
                 System.Windows.MessageBox.Show("Hey Jarvis Detected!");
                 string? result = await HandelVoiceInput(this, new RoutedEventArgs());
                 if (!string.IsNullOrEmpty(result))
@@ -157,7 +164,7 @@ namespace WpfApp2
             if (!response.IsSuccessStatusCode)
             {
 
-                MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                System.Windows.MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
                 return string.Empty;
             }
 
@@ -315,7 +322,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error deleting existing file: {ex.Message}");
+                System.Windows.MessageBox.Show($"Error deleting existing file: {ex.Message}");
                 return;
             }
 
@@ -469,7 +476,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error playing audio: {ex.Message}");
+                System.Windows.MessageBox.Show($"Error playing audio: {ex.Message}");
             }
         }
 
@@ -481,7 +488,7 @@ namespace WpfApp2
 
         private void AcceptRecording(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Voice sample saved successfully!");
+            System.Windows.MessageBox.Show("Voice sample saved successfully!");
             RecordingOverlay.Visibility = Visibility.Collapsed;
         }
 
@@ -591,7 +598,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ERROR in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                System.Windows.MessageBox.Show($"ERROR in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
             }
         }
 
@@ -648,7 +655,7 @@ namespace WpfApp2
 
             if (e.Exception != null)
             {
-                MessageBox.Show($"An error occurred during recording: {e.Exception.Message}");
+                System.Windows.MessageBox.Show($"An error occurred during recording: {e.Exception.Message}");
                 recordingStoppedTcs?.TrySetException(e.Exception);
             }
         }
@@ -672,7 +679,7 @@ namespace WpfApp2
             }
         }
 
-        private void DialCanvas_MouseMove(object sender, MouseEventArgs e)
+        private void DialCanvas_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             if (_isDragging)
             {
@@ -779,12 +786,15 @@ namespace WpfApp2
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
             UpdateDialState(12);
+            Global.Scanning = 12;
+            Properties.Settings.Default.Scanning_Time = 12;
+            Properties.Settings.Default.Save();
         }
 
         private void ApplyButton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show($"Timer set to scan every {_currentValue} hours!", "Settings Applied",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show($"Timer set to scan every {_currentValue} hours!", "Settings Applied",
+                            System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 
             Properties.Settings.Default.Scanning_Time=_currentValue;
             Properties.Settings.Default.Save();

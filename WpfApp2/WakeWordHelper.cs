@@ -108,7 +108,7 @@ public class WakeWordHelper
             max = Math.Max(max, probability);
             Debug.WriteLine($"Max Probability: {max}");
 
-            if (probability > 0.68f && !isCurrentlyActive)
+            if (probability > 0.70f && !isCurrentlyActive)
             {
                 var now = DateTime.UtcNow;
                 if (now - lastDetectionTime > detectionCooldown)

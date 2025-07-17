@@ -804,6 +804,9 @@ namespace WpfApp2
         private async void NavLogoutButton_Click(object sender, RoutedEventArgs e)
         {
             await logoutMessage("Are you sure you want to log out?");
+            WakeWordManager.Stop();
+            Properties.Settings.Default.UserName = string.Empty;
+            Properties.Settings.Default.Save();
 
         }
 

@@ -102,6 +102,7 @@ namespace WpfApp2
                 if (remember == true)
                 {
                     Properties.Settings.Default.UserId = User.Id;
+                    Properties.Settings.Default.UserName = User.Username;
                     Properties.Settings.Default.RememberMe = true;
                     Properties.Settings.Default.Save();
                 }

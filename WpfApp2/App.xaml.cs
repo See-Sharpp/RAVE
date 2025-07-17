@@ -70,6 +70,7 @@ namespace WpfApp2
             WpfApp2.Properties.Settings.Default.Save();
 
             Global.Scanning = WpfApp2.Properties.Settings.Default.Scanning_Time;
+            Global.userName = WpfApp2.Properties.Settings.Default.UserName ?? "User";
 
         }
 
