@@ -28,24 +28,7 @@
             <ColumnDefinition Width="4*" />
         </Grid.ColumnDefinitions>
 
-        <Canvas Grid.ColumnSpan="2">
-            <Ellipse Canvas.Left="100" Canvas.Top="50" Width="300" Height="300" Opacity="0.03">
-                <Ellipse.Fill>
-                    <RadialGradientBrush>
-                        <GradientStop Color="#00D4AA" Offset="0" />
-                        <GradientStop Color="Transparent" Offset="1" />
-                    </RadialGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-            <Ellipse Canvas.Right="80" Canvas.Bottom="100" Width="250" Height="250" Opacity="0.04">
-                <Ellipse.Fill>
-                    <RadialGradientBrush>
-                        <GradientStop Color="#FF6B6B" Offset="0" />
-                        <GradientStop Color="Transparent" Offset="1" />
-                    </RadialGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-        </Canvas>
+        
 
         <Grid Grid.Column="0" Margin="60,0,30,0">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
@@ -91,27 +74,27 @@
                     LineHeight="40"/>
 
                 <TextBlock
-                    Text="Access your secure dashboard and manage your digital experience with cutting-edge technology."
-                    FontFamily="Segoe UI"
-                    FontSize="16"
-                    Foreground="#B0B3B8"
-                    TextWrapping="Wrap"
-                    LineHeight="24"
-                    MaxWidth="400"
-                    Margin="0,0,0,40"/>
+      Text="Take full control of your PC with secure, real-time voice commands. Launch apps, open files, browse the web, and execute system actions, all through natural language."
+      FontFamily="Segoe UI"
+      FontSize="16"
+      Foreground="#B0B3B8"
+      TextWrapping="Wrap"
+      LineHeight="24"
+      MaxWidth="410"
+      Margin="0,0,0,40"/>
 
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <fa:IconImage Icon="Shield" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Bank-level security" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <TextBlock Text="Wake Word and Voice Verification" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <fa:IconImage Icon="Bolt" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Lightning fast performance" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <TextBlock Text="Real-Time Execution" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <fa:IconImage Icon="Globe" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
-                        <TextBlock Text="Global accessibility" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
+                        <fa:IconImage Icon="MagnifyingGlass" Width="16" Height="16" Foreground="#00D4AA" Margin="0,0,12,0"/>
+                        <TextBlock Text="Smart File Tracking" FontFamily="Segoe UI" FontSize="14" Foreground="#E4E6EA"/>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
@@ -293,8 +276,22 @@
                                     FontSize="15"
                                     Foreground="White"
                                     VerticalContentAlignment="Center"
+                                    PasswordChanged="password_PasswordChanged"
                                     mah:TextBoxHelper.Watermark="Enter your password"
                                     Style="{DynamicResource MahApps.Styles.PasswordBox}"/>
+                                <TextBox
+                                    x:Name="passwordText"
+                                    Grid.Column="1"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    FontFamily="Segoe UI"
+                                    FontSize="15"
+                                    Foreground="White"
+                                    Visibility="Hidden"
+                                    VerticalContentAlignment="Center"
+                                    TextChanged="passwordText_TextChanged"
+                                    mah:TextBoxHelper.Watermark="Enter your password"
+                                    />
                                 <fa:IconImage
                                     Icon="Eye"
                                     Width="16"
@@ -304,7 +301,24 @@
                                     Foreground="#6B7280"
                                     Grid.Column="2"
                                     Cursor="Hand"
-                                    Opacity="0.7"/>
+                                    x:Name="eye"
+                                    Visibility="Hidden"
+                                    MouseLeftButtonDown="hidePassword"
+                                    Opacity="0.7"/> 
+
+                                <fa:IconImage
+                                  Icon="EyeSlash"
+                                  Width="16"
+                                  Height="16"
+                                  Margin="12,0,0,0"
+                                  VerticalAlignment="Center"
+                                  Foreground="#6B7280"
+                                  Grid.Column="2"
+                                  Cursor="Hand"
+                                  x:Name="eyeClosed"
+                                  Visibility="Visible"
+                                  MouseLeftButtonDown="showPassword"
+                                  Opacity="0.7"/>
                             </Grid>
                         </Border>
                     </Grid>
