@@ -1,5 +1,6 @@
 ﻿using IWshRuntimeLibrary;
 using Microsoft.Win32;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 
@@ -12,7 +13,7 @@ namespace WpfApp2
 
         public static void EnableAutoStart(bool enable, string appName = "RAVE")
         {
-            MessageBox.Show(exePath2);
+            Debug.WriteLine(exePath2);
             RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true);
 
             if (enable)
@@ -70,10 +71,10 @@ namespace WpfApp2
         {
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             string shortcutPath = Path.Combine(desktopPath, "RAVE.lnk");
-            MessageBox.Show("in AutoHelper");
+            Debug.WriteLine("in AutoHelper");
             if (!System.IO.File.Exists(shortcutPath))
             {
-                MessageBox.Show("creating icon");
+                Debug.WriteLine("creating icon");
                 try
                 {
                     WshShell shell = new WshShell();

@@ -115,7 +115,7 @@ namespace WpfApp2
                 }
                 Navbar dashboard = new Navbar();
                 Properties.Settings.Default.VerificationPass = User.Password;
-                System.Windows.MessageBox.Show(User.Password);
+             
                 Global.logout = false;
                 dashboard.Show();
                 this.Close();
@@ -129,7 +129,6 @@ namespace WpfApp2
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show("Redirecting to password recovery...");
         }
 
         private void Sign_Up(object sender, RoutedEventArgs e)

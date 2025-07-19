@@ -161,7 +161,7 @@ namespace WpfApp2
             }
             else
             {
-                MessageBox.Show("inside");
+                Debug.WriteLine("inside");
                 using var http = new HttpClient();
                 http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
                 using var form = new MultipartFormDataContent();

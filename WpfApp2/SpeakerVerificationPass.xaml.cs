@@ -71,7 +71,7 @@ namespace WpfApp2
         {
             EnteredPassword = PasswordInput.Password;
 
-            MessageBox.Show(EnteredPassword);
+           
 
             if (string.IsNullOrEmpty(EnteredPassword))
             {

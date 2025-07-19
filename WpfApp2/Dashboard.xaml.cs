@@ -140,7 +140,7 @@ namespace WpfApp2
                     if (!response.IsSuccessStatusCode)
                     {
 
-                        MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                        Debug.WriteLine($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
                         return string.Empty;
                     }
 
@@ -168,7 +168,7 @@ namespace WpfApp2
                 if (!response.IsSuccessStatusCode)
                 {
 
-                    MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                    Debug.WriteLine($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
                     return string.Empty;
                 }
 
@@ -192,7 +192,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error deleting existing file: {ex.Message}");
+                Debug.WriteLine($"Error deleting existing file: {ex.Message}");
                 return;
             }
 
@@ -348,7 +348,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ERROR in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                Debug.WriteLine($"ERROR  in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
             }
         }
 
@@ -416,7 +416,7 @@ namespace WpfApp2
 
             if (e.Exception != null)
             {
-                MessageBox.Show($"An error occurred during recording: {e.Exception.Message}");
+                Debug.WriteLine($"An error occurred during recording: {e.Exception.Message}");
                 recordingStoppedTcs?.TrySetException(e.Exception);
             }
         }

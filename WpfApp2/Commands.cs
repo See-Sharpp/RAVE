@@ -36,7 +36,7 @@ namespace WpfApp2
             {
                 string temp = null; 
                 string nircmdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nircmd-x64", "nircmd.exe");
-
+               
                 if (command.Contains("savescreenshot"))
                 {
                     if (Global.deafultScreenShotPath == null)
@@ -58,7 +58,7 @@ namespace WpfApp2
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = nircmdPath,
-                    Arguments = contentString,
+                    Arguments = command,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
@@ -465,13 +465,13 @@ namespace WpfApp2
         {
             try
             {
-                MessageBox.Show(fileName);
+                Debug.WriteLine(fileName);
                 string[] supportedTypes = { "pdf", "txt", "ppt", "docx" };
                 string[] arr = fileName.Trim().Split(".");
                 string fileType = arr[arr.Length - 1].ToLower();
-                MessageBox.Show(fileType);
+                Debug.WriteLine(fileType);
 
-                MessageBox.Show("in " + fileType);
+                Debug.WriteLine("in " + fileType);
                 SearchForDocsInDatabase(fileName,contentString,content);
             }
             catch(Exception e)
@@ -561,11 +561,11 @@ namespace WpfApp2
 
                 Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
 
-                MessageBox.Show(""+results.sim);
+                Debug.WriteLine(""+results.sim);
 
                 if (results?.FilePath != null && results.sim > 0.80f)
                 {
-                    MessageBox.Show(
+                    Debug.WriteLine(
                         $"Best match: {results.DisplayName}\n" +
                         $"Path: {results.FilePath}\n" +
                         $"Similarity: {results.sim:F4}"
@@ -623,7 +623,7 @@ namespace WpfApp2
                         Global.file_operation.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
-                    MessageBox.Show("No matching application found.");
+                    Debug.WriteLine("No matching application found.");
                 }
 
 
@@ -665,8 +665,8 @@ namespace WpfApp2
             try
             {
 
-                MessageBox.Show(command);
-                MessageBox.Show(search_query);
+                Debug.WriteLine(command);
+                Debug.WriteLine(search_query);
                 //string url = "https://www.google.com/search?q=" + Uri.EscapeDataString(search_query);
                 string powershellPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe");
 
@@ -708,7 +708,7 @@ namespace WpfApp2
                 }
 
                 string urlPath = command.Replace("{{q}}", Uri.EscapeDataString((search_query)));
-                MessageBox.Show(urlPath);
+                Debug.WriteLine(urlPath);
 
 
                 int urlIndex = command.IndexOf("http");

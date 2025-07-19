@@ -110,7 +110,7 @@ namespace WpfApp2
                 {
                     _notifyIcon.ShowBalloonTip(500, "RAVE", $"Hey {Global.userName}, How RAVE can Help!", ToolTipIcon.Info);
                 }
-                System.Windows.MessageBox.Show("Hey Jarvis Detected!");
+               
                 string? result = await HandelVoiceInput(this, new RoutedEventArgs());
                 if (!string.IsNullOrEmpty(result))
                 {
@@ -164,7 +164,7 @@ namespace WpfApp2
             if (!response.IsSuccessStatusCode)
             {
 
-                System.Windows.MessageBox.Show($"Error during transcription: {response.ReasonPhrase}\n{responseJson}");
+                
                 return string.Empty;
             }
 
@@ -322,7 +322,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error deleting existing file: {ex.Message}");
+               
                 return;
             }
 
@@ -476,7 +476,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Error playing audio: {ex.Message}");
+               
             }
         }
 
@@ -598,7 +598,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"ERROR in ProcessAndAmplifyAudio: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                
             }
         }
 
@@ -655,7 +655,7 @@ namespace WpfApp2
 
             if (e.Exception != null)
             {
-                System.Windows.MessageBox.Show($"An error occurred during recording: {e.Exception.Message}");
+                
                 recordingStoppedTcs?.TrySetException(e.Exception);
             }
         }

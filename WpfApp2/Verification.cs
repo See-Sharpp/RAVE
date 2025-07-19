@@ -28,7 +28,7 @@ public static class Verification
 
             if (audio1.Length == 0 || audio2.Length == 0)
             {
-                MessageBox.Show("Error: One or both audio files are empty or could not be read.", "Audio Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
                 return false;
             }
 
@@ -44,7 +44,7 @@ public static class Verification
 
 
             double similarity = Commands.CosineSimilarity(emb1, emb2);
-            MessageBox.Show("" + similarity);
+            
 
             if (similarity > 0.75)
                 return true;
@@ -55,14 +55,14 @@ public static class Verification
         }
         catch(OnnxRuntimeException onnxEx)
         {
-           Debug.WriteLine($"ONNX Runtime Error: {onnxEx.Message}", "Model Error", MessageBoxButton.OK, MessageBoxImage.Error);
+ 
             return false;
 
         }
         catch (Exception ex)
         {
 
-            MessageBox.Show($"An unexpected error occurred: {ex.Message}", "General Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          
             return false;
         }
 

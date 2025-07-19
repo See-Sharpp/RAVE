@@ -55,7 +55,7 @@ namespace WpfApp2
             {
                 Directory.CreateDirectory(Global.deafultScreenShotPath);
             }
-            MessageBox.Show("in app.xaml.cs");
+            Debug.WriteLine("in app.xaml.cs");
             if (!WpfApp2.Properties.Settings.Default.AutoRegister || !WpfApp2.Properties.Settings.Default.ShortcutCreated)
             {
                 AutoStartHelper.EnableAutoStart(true);
@@ -80,13 +80,13 @@ namespace WpfApp2
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
                 System.IO.File.AppendAllText("fatal.log", $"[Domain] {DateTime.Now} - {e.ExceptionObject}\n");
-                MessageBox.Show("Fatal error:\n" + e.ExceptionObject.ToString(), "Unhandled Domain Exception");
+                Debug.WriteLine("Fatal error:\n" + e.ExceptionObject.ToString(), "Unhandled Domain Exception");
             };
 
             DispatcherUnhandledException += (s, e) =>
             {
                 System.IO.File.AppendAllText("fatal.log", $"[Dispatcher] {DateTime.Now} - {e.Exception}\n");
-                MessageBox.Show("UI error:\n" + e.Exception.Message, "Unhandled UI Exception");
+                Debug.WriteLine("UI error:\n" + e.Exception.Message, "Unhandled UI Exception");
                 e.Handled = true;
             };
 
@@ -94,7 +94,7 @@ namespace WpfApp2
             TaskScheduler.UnobservedTaskException += (s, e) =>
             {
                 System.IO.File.AppendAllText("fatal.log", $"[Task] {DateTime.Now} - {e.Exception}\n");
-                MessageBox.Show("Task error:\n" + e.Exception.Message, "Unobserved Task Exception");
+                Debug.WriteLine("Task error:\n" + e.Exception.Message, "Unobserved Task Exception");
                 e.SetObserved();
             };
 

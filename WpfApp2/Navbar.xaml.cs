@@ -939,7 +939,11 @@ namespace WpfApp2
                             {
                                 ParallelScanDirectoryForFiles(drive.RootDirectory.FullName, CancellationToken.None);
                             }
+
                         }
+
+                        Properties.Settings.Default.InitialScan = true;
+                        Properties.Settings.Default.Save();
                     }
                     catch (Exception ex)
                     {
@@ -948,13 +952,13 @@ namespace WpfApp2
                     }
                 });
                 StartExeWatchers();
-                Properties.Settings.Default.InitialScan = true;
-                Properties.Settings.Default.Save();
+
                 if (!callFromDailyScan)
                 {
                     await System.Windows.Application.Current.Dispatcher.Invoke(async () =>
                     {
                         await scanMessageConfirm($"Saved {totalExes} exe and {totalDocs} files to database.");
+                       
                     });
                 }
 

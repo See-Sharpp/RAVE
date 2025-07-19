@@ -97,11 +97,11 @@ namespace WpfApp2
                         if (string.IsNullOrEmpty(contentString))
                         {
                             Process.Start("cmd.exe", "/c nircmd.exe speak text \"No Voice Was Detected\"");
-                            MessageBox.Show("No content received.");
+                            Debug.WriteLine("No content received.");
                             return;
                         }
                         
-                        MessageBox.Show(contentString);
+                        
                         var parsedJson = JsonDocument.Parse(contentString);
                         var root = parsedJson.RootElement;
 
@@ -133,6 +133,8 @@ namespace WpfApp2
                         var command_templates = root.TryGetProperty("command_templates", out var ct) && ct.ValueKind == JsonValueKind.Array
                                                 ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                                 : Array.Empty<string>();
+
+                      
 
                         if (primary_intent != null)
                         {
@@ -179,7 +181,7 @@ namespace WpfApp2
                         else
                         {
                             Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" ");
-                            MessageBox.Show("No valid response or unexpected format.");
+                            Debug.WriteLine("No valid response or unexpected format.");
                         }
                     }
                 }
@@ -188,7 +190,7 @@ namespace WpfApp2
             {
                 Debug.WriteLine($"Error: {ex.Message}");
                 Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \"");
-                MessageBox.Show("An error occurred while processing the request. Please try again.");
+                Debug.WriteLine("An error occurred while processing the request. Please try again.");
             }
         }
 
@@ -225,7 +227,7 @@ namespace WpfApp2
 
                         if (string.IsNullOrEmpty(contentString))
                         {
-                            MessageBox.Show("No content received.");
+                            Debug.WriteLine("No content received.");
                             return null;
                         }
                         return contentString.Trim();
@@ -237,7 +239,7 @@ namespace WpfApp2
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error: {ex.Message}");
-                MessageBox.Show("An error occurred while processing the request. Please try again.");
+                Debug.WriteLine("An error occurred while processing the request. Please try again.");
                 return null;
             }
 
