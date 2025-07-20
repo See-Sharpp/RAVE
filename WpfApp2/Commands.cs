@@ -31,7 +31,7 @@ namespace WpfApp2
             userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         }
 
-        public static void systemCommand(string command, string search_query, string contentString, string content)
+        public static async Task systemCommand(string command, string search_query, string contentString, string content)
         {
             try
             {
@@ -75,8 +75,7 @@ namespace WpfApp2
                         CommandType = "system_control"
                     };
 
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
 
                     if (Global.system_control.Count >= 20)
                     {
@@ -103,8 +102,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "system_control"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.system_control.Count >= 20)
                     {
                         Global.system_control.Dequeue();
@@ -120,7 +118,7 @@ namespace WpfApp2
             }
         }
 
-        public static void application_command(string application, string contentString, string content)
+        public static async Task application_command(string application, string contentString, string content)
         {
             string com = $"nircmd.exe speak text \"Opening {application}\'";
 
@@ -179,8 +177,7 @@ namespace WpfApp2
                                             CommandTime = DateTime.Now,
                                             CommandType = "application_control"
                                         };
-                                        _context.LLM_Detail.Add(entity);
-                                        _context.SaveChanges();
+                                        await AddHistoryRecordAsync(_context, entity);
                                         if (Global.application_control.Count >= 20)
                                         {
                                             Global.application_control.Dequeue();
@@ -216,8 +213,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "application_control"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.application_control.Count >= 20)
                     {
                         Global.application_control.Dequeue();
@@ -235,7 +231,7 @@ namespace WpfApp2
 
         }
 
-        public static void SearchInDatabase(string application, string contentString, string content)
+        public static async Task SearchInDatabase(string application, string contentString, string content)
         {
             try
             {
@@ -264,8 +260,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "application_control"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
@@ -321,8 +316,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "application_control"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
@@ -350,8 +344,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "application_control"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.application_control.Count >= 20)
                         {
                             Global.application_control.Dequeue();
@@ -380,8 +373,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "application_control"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.application_control.Count >= 20)
                     {
                         Global.application_control.Dequeue();
@@ -464,7 +456,7 @@ namespace WpfApp2
             return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
         }
 
-        public static void file_command(string fileName, string contentString, string content)
+        public static async Task file_command(string fileName, string contentString, string content)
         {
             try
             {
@@ -490,8 +482,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "file_operation"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.file_operation.Count >= 20)
                     {
                         Global.file_operation.Dequeue();
@@ -507,7 +498,7 @@ namespace WpfApp2
             }
         }
 
-        public static void SearchForDocsInDatabase(string filename, string contentString, string content)
+        public static async Task SearchForDocsInDatabase(string filename, string contentString, string content)
         {
             try
             {
@@ -532,8 +523,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "file_operation"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
@@ -589,8 +579,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "file_operation"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
@@ -624,8 +613,7 @@ namespace WpfApp2
                             CommandTime = DateTime.Now,
                             CommandType = "file_operation"
                         };
-                        _context.LLM_Detail.Add(entity);
-                        _context.SaveChanges();
+                        await AddHistoryRecordAsync(_context, entity);
                         if (Global.file_operation.Count >= 20)
                         {
                             Global.file_operation.Dequeue();
@@ -656,8 +644,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "file_operation"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.file_operation.Count >= 20)
                     {
                         Global.file_operation.Dequeue();
@@ -674,7 +661,7 @@ namespace WpfApp2
 
         }
 
-        public static void searchBrowser(string command, string search_query, string contentString, string content)
+        public static async Task searchBrowser(string command, string search_query, string contentString, string content)
         {
             try
             {
@@ -753,8 +740,7 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "web_browse"
                     };
-                    _context.LLM_Detail.Add(entity);
-                    _context.SaveChanges();
+                    await AddHistoryRecordAsync(_context, entity);
                     if (Global.web_browse.Count >= 20)
                     {
                         Global.web_browse.Dequeue();
@@ -794,6 +780,32 @@ namespace WpfApp2
                     Global.total_commands.Enqueue(entity);
                 }
                 Debug.WriteLine(exception);
+            }
+        }
+
+        public static async Task AddHistoryRecordAsync(ApplicationDbContext context,LLM_Detail newDetail)
+        {
+           
+            context.LLM_Detail.Add(newDetail);
+
+           
+            await context.SaveChangesAsync();
+
+            
+            int recordCount = await context.LLM_Detail.CountAsync();
+            const int maxRecords = 500;
+
+           
+            if (recordCount > maxRecords)
+            {
+               
+                int recordsToDeleteCount = recordCount - maxRecords;
+
+               
+                await context.LLM_Detail
+                    .OrderBy(detail => detail.CommandTime) 
+                    .Take(recordsToDeleteCount)            
+                    .ExecuteDeleteAsync();                 
             }
         }
     }
