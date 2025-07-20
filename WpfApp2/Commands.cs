@@ -25,18 +25,19 @@ namespace WpfApp2
 
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
 
-        public Commands() {
+        public Commands()
+        {
             _context = new ApplicationDbContext();
             userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         }
 
-        public static void systemCommand(string command, string search_query,string contentString,string content)
+        public static void systemCommand(string command, string search_query, string contentString, string content)
         {
             try
             {
-                string temp = null; 
+                string temp = null;
                 string nircmdPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nircmd-x64", "nircmd.exe");
-               
+
                 if (command.Contains("savescreenshot"))
                 {
                     if (Global.deafultScreenShotPath == null)
@@ -66,7 +67,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId= (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Success",
@@ -95,7 +96,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -119,10 +120,10 @@ namespace WpfApp2
             }
         }
 
-        public static void application_command(string application,string contentString,string content)
+        public static void application_command(string application, string contentString, string content)
         {
-            string com= $"nircmd.exe speak text \"Opening {application}\'";
-            
+            string com = $"nircmd.exe speak text \"Opening {application}\'";
+
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
             string query = $@"
                 SELECT TOP 1 System.ItemName, System.ItemPathDisplay
@@ -148,7 +149,7 @@ namespace WpfApp2
                                 var process = new Process();
                                 process.StartInfo.FileName = "cmd.exe";
                                 process.StartInfo.Arguments = $"/C start \"\" \"{path}\"";
-                                process.StartInfo.UseShellExecute = false; 
+                                process.StartInfo.UseShellExecute = false;
                                 process.StartInfo.RedirectStandardOutput = true;
                                 process.StartInfo.RedirectStandardError = true;
                                 process.StartInfo.CreateNoWindow = true;
@@ -163,7 +164,7 @@ namespace WpfApp2
 
                                 if (exitCode != 0)
                                 {
-                                    SearchInDatabase(application,contentString,content);
+                                    SearchInDatabase(application, contentString, content);
                                 }
                                 else
                                 {
@@ -171,7 +172,7 @@ namespace WpfApp2
                                     {
                                         var entity = new LLM_Detail
                                         {
-                                            SignUpDetail = userId,
+                                            UserId = (int)Global.UserId,
                                             Expected_json = contentString,
                                             user_command = content,
                                             Status = "Success",
@@ -196,7 +197,7 @@ namespace WpfApp2
                             }
                             else
                             {
-                                SearchInDatabase(application,contentString,content);
+                                SearchInDatabase(application, contentString, content);
                             }
                         }
                     }
@@ -208,7 +209,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -234,7 +235,7 @@ namespace WpfApp2
 
         }
 
-        public static void SearchInDatabase(string application,string contentString,string content)
+        public static void SearchInDatabase(string application, string contentString, string content)
         {
             try
             {
@@ -256,7 +257,7 @@ namespace WpfApp2
                     {
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Failed",
@@ -285,7 +286,7 @@ namespace WpfApp2
                 string bestName = null;
                 double bestScore = -1;
 
-              
+
                 var results = allExes
                 .AsParallel()
                 .Select(exe =>
@@ -309,9 +310,11 @@ namespace WpfApp2
                 {
                     if (Properties.Settings.Default.History)
                     {
+                        
+                        
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Success",
@@ -340,7 +343,7 @@ namespace WpfApp2
                     {
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Failed",
@@ -362,7 +365,7 @@ namespace WpfApp2
                     }
                     Process.Start("cmd.exe", "/c nircmd.exe speak text \"Application Not Found\"");
                 }
-                
+
             }
             catch (Exception e)
             {
@@ -370,7 +373,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -381,7 +384,7 @@ namespace WpfApp2
                     _context.SaveChanges();
                     if (Global.application_control.Count >= 20)
                     {
-                        Global.application_control.Dequeue(); 
+                        Global.application_control.Dequeue();
                     }
                     Global.application_control.Enqueue(entity);
                     if (Global.total_commands.Count >= 20)
@@ -410,7 +413,7 @@ namespace WpfApp2
             var (ids, mask, typeIds) = _tokenizer.Encode(text, maxLen);
 
 
-            var idTensor = new DenseTensor<long>(ids, new[] {1, ids.Length });
+            var idTensor = new DenseTensor<long>(ids, new[] { 1, ids.Length });
             var maskTensor = new DenseTensor<long>(mask, new[] { 1, mask.Length });
             var typeTensor = new DenseTensor<long>(typeIds, new[] { 1, typeIds.Length });
 
@@ -430,7 +433,7 @@ namespace WpfApp2
             var dims = outputTensor.Dimensions.ToArray();
             if (dims.Length == 3)
             {
-                
+
                 int hiddenDim = dims[2];
                 return outputTensor
                     .ToArray()
@@ -439,7 +442,7 @@ namespace WpfApp2
                     .ToArray();
             }
             else if (dims.Length == 2)
-            { 
+            {
                 return outputTensor.ToArray();
             }
             else
@@ -461,7 +464,7 @@ namespace WpfApp2
             return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
         }
 
-        public static void file_command(string fileName,string contentString,string content)
+        public static void file_command(string fileName, string contentString, string content)
         {
             try
             {
@@ -472,15 +475,15 @@ namespace WpfApp2
                 Debug.WriteLine(fileType);
 
                 Debug.WriteLine("in " + fileType);
-                SearchForDocsInDatabase(fileName,contentString,content);
+                SearchForDocsInDatabase(fileName, contentString, content);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 if (Properties.Settings.Default.History)
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -504,21 +507,25 @@ namespace WpfApp2
             }
         }
 
-        public static void SearchForDocsInDatabase(string filename,string contentString,string content)
+        public static void SearchForDocsInDatabase(string filename, string contentString, string content)
         {
             try
             {
                 using var _context = new ApplicationDbContext();
-                float[] queryEmbedding = GetEmbedding(filename);
+                float[] queryEmbedding = GetEmbedding(filename.ToLower());
 
+
+
+                MessageBox.Show(filename);
                 var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
                 if (!allDocs.Any())
                 {
+                    MessageBox.Show("No documents found in the database.");
                     if (Properties.Settings.Default.History)
                     {
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Failed",
@@ -538,14 +545,16 @@ namespace WpfApp2
                         }
                         Global.total_commands.Enqueue(entity);
                     }
-                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again.\" ");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found, Please Try Again ");
                     return;
                 }
-                
+
+
                 var results = allDocs
                 .AsParallel()
                 .Select(exe =>
                 {
+
                     float[] embedding;
                     if (string.IsNullOrEmpty(exe.Embedding))
                         embedding = GetEmbedding(exe.DisplayName);
@@ -559,13 +568,12 @@ namespace WpfApp2
                 .OrderByDescending(x => x.sim)
                 .FirstOrDefault();
 
-                Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
-
-                Debug.WriteLine(""+results.sim);
+              
+                Debug.WriteLine("" + results.sim);
 
                 if (results?.FilePath != null && results.sim > 0.80f)
                 {
-                    Debug.WriteLine(
+                    MessageBox.Show(
                         $"Best match: {results.DisplayName}\n" +
                         $"Path: {results.FilePath}\n" +
                         $"Similarity: {results.sim:F4}"
@@ -574,7 +582,7 @@ namespace WpfApp2
                     {
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Success",
@@ -594,16 +602,22 @@ namespace WpfApp2
                         Global.file_operation.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
-                    Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
+                    MessageBox.Show("file opnening");
+                    var process = new Process();
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/C start \"\" \"{results.FilePath}\"";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.Start();
                 }
                 else
                 {
-                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\"s ");
+                    Process.Start("cmd.exe", "/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again. ");
                     if (Properties.Settings.Default.History)
                     {
                         var entity = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Failed",
@@ -627,15 +641,15 @@ namespace WpfApp2
                 }
 
 
-                
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 if (Properties.Settings.Default.History)
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -660,7 +674,7 @@ namespace WpfApp2
 
         }
 
-        public static void searchBrowser(string command,string search_query,string contentString,string content)
+        public static void searchBrowser(string command, string search_query, string contentString, string content)
         {
             try
             {
@@ -684,7 +698,7 @@ namespace WpfApp2
                     {
                         var entity1 = new LLM_Detail
                         {
-                            SignUpDetail = userId,
+                            UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
                             Status = "Success",
@@ -713,9 +727,9 @@ namespace WpfApp2
 
                 int urlIndex = command.IndexOf("http");
 
-                if (urlIndex!=-1)
+                if (urlIndex != -1)
                 {
-                   
+
                     string prefix = urlPath.Substring(0, urlIndex);
                     string url = urlPath.Substring(urlIndex);
                     urlPath = $"{prefix}\"{url}\"";
@@ -732,7 +746,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Success",
@@ -759,7 +773,7 @@ namespace WpfApp2
                 {
                     var entity = new LLM_Detail
                     {
-                        SignUpDetail = userId,
+                        UserId = (int)Global.UserId,
                         Expected_json = contentString,
                         user_command = content,
                         Status = "Failed",
@@ -784,3 +798,4 @@ namespace WpfApp2
         }
     }
 }
+

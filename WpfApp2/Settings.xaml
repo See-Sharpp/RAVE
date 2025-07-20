@@ -6,6 +6,7 @@
       xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       mc:Ignorable="d"
+      Loaded="onLoad"
       d:DesignHeight="700" d:DesignWidth="900"
       Title="Settings">
     <Page.Resources>
@@ -808,7 +809,7 @@
                                 <ToggleButton x:Name="SaveHistoryToggle"
                                               Grid.Column="1"
                                               Style="{StaticResource SlideToggleButtonStyle}"
-                                              IsChecked="True"
+                                   
                                               Checked="SaveHistoryToggle_Checked"
                                               Unchecked="SaveHistoryToggle_Unchecked"/>
                             </Grid>

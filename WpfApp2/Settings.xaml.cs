@@ -55,10 +55,7 @@ namespace WpfApp2
         public Settings()
         {
             InitializeComponent();
-            SpeakerVerificationToggle.IsChecked = Properties.Settings.Default.Speaker_Verification;
-            WakeWordToggle.IsChecked = Properties.Settings.Default.WakeWord;
-            //DarkModeToggle.IsChecked = Properties.Settings.Default.Dark_Mode;
-            SaveHistoryToggle.IsChecked = Properties.Settings.Default.History;
+          
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
@@ -205,19 +202,19 @@ namespace WpfApp2
 
         private void SaveHistoryToggle_Checked(object sender, RoutedEventArgs e)
         {
-            if (!Properties.Settings.Default.History)
-            {
+           
+                SaveHistoryToggle.IsChecked = true;
                 Properties.Settings.Default.History = true;
                 Properties.Settings.Default.Save();
-            }
+            
         }
 
         private void SaveHistoryToggle_Unchecked(object sender, RoutedEventArgs e)
         {
-            if (Properties.Settings.Default.History) { 
+                SaveHistoryToggle.IsChecked = false;
                 Properties.Settings.Default.History = false;
                 Properties.Settings.Default.Save();
-            }
+            
         }
 
         private async void CountdownTimer_Tick(object sender, EventArgs e)
@@ -799,6 +796,14 @@ namespace WpfApp2
             Properties.Settings.Default.Scanning_Time=_currentValue;
             Properties.Settings.Default.Save();
             Global.Scanning = _currentValue;
+        }
+        private void onLoad(object sender, RoutedEventArgs e)
+        {
+
+            SpeakerVerificationToggle.IsChecked = Properties.Settings.Default.Speaker_Verification;
+            WakeWordToggle.IsChecked = Properties.Settings.Default.WakeWord;
+            //DarkModeToggle.IsChecked = Properties.Settings.Default.Dark_Mode;
+            SaveHistoryToggle.IsChecked = Properties.Settings.Default.History;
         }
     }
 }

@@ -38,7 +38,7 @@
 		  <Isolated>false</Isolated>
 		  <EmbedInteropTypes>true</EmbedInteropTypes>
 		</COMReference>
-	</ItemGroup> 
+	</ItemGroup>  
 
 	<ItemGroup>
 	  <None Include="bin\Debug\net8.0-windows\model\HEY_RAVE.onnx" />
