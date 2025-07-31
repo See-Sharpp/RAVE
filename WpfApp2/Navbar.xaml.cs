@@ -86,17 +86,6 @@ namespace WpfApp2
             SetupTrayIcon();
             Directory.CreateDirectory("logs");
 
-            //if (AutoStartHelper.IsAutoStartEnabled() && Global.autoOpen && Properties.Settings.Default.RememberMe)
-            //{
-            //    Global.autoOpen = true;
-            //    this.Loaded += (s, e) =>
-            //    {
-            //        this.Close();
-            //    };
-                
-            //}
-            //Global.autoOpen = false; 
-
             if (!Properties.Settings.Default.InitialScan)
             {
                this.Loaded += async (s, e) => await InitialScan();
@@ -404,23 +393,6 @@ namespace WpfApp2
         {
             try
             {
-                //e.Cancel = true;
-                //this.Hide();
-                //this.ShowInTaskbar = false;
-                //this.WindowState = WindowState.Minimized;
-                //Task.Run(async () =>
-                //{
-                //    await Task.Delay(300);
-                //    await Dispatcher.InvokeAsync(() =>
-                //    {
-                //        this.Hide();
-                //        _notifyIcon?.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
-                //        if (Global.floatingIcon != null && !Global.logout)
-                //        {
-                //            Global.floatingIcon.Show();
-                //        }
-                //    });
-                //});
                 e.Cancel = true;
                 this.Hide();
                 if (_notifyIcon != null)

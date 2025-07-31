@@ -1,7 +1,7 @@
-﻿using System.Windows;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Navigation;
 using WpfApp2.Models;
 
 namespace WpfApp2
@@ -10,7 +10,14 @@ namespace WpfApp2
     {
         public History()
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to initialize the History page.\n\nDetails: {ex.Message}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SystemControl_Click(object sender, RoutedEventArgs e)
@@ -39,9 +46,21 @@ namespace WpfApp2
 
         private void NavigateToHistoryDisplay(Queue<LLM_Detail> historyData, string categoryName, string categoryIcon)
         {
-            var historyDisplayPage = new HistoryDisplay();
-            historyDisplayPage.LoadHistoryData(historyData, categoryName, categoryIcon);
-            NavigationService.Navigate(historyDisplayPage);
+            try
+            {
+                if (NavigationService == null)
+                {
+                    throw new InvalidOperationException("The page cannot navigate because it is not hosted in a navigation container.");
+                }
+
+                var historyDisplayPage = new HistoryDisplay();
+                historyDisplayPage.LoadHistoryData(historyData, categoryName, categoryIcon);
+                NavigationService.Navigate(historyDisplayPage);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to display the history for '{categoryName}'.\n\nDetails: {ex.Message}", "Navigation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

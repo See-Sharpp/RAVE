@@ -65,6 +65,7 @@ namespace WpfApp2
             
             try
             {
+                MessageBox.Show("Hello");
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey1);
@@ -106,7 +107,6 @@ namespace WpfApp2
                         var root = parsedJson.RootElement;
 
                         var original_user_query = root.GetProperty("original_user_query").GetString();
-                        var processed_user_query = root.GetProperty("processed_user_query").GetString();
 
                         var intent_classification = root.GetProperty("intent_classification");
                         var primary_intent = intent_classification.GetProperty("primary_intent").GetString();
@@ -180,6 +180,7 @@ namespace WpfApp2
                         }
                         else
                         {
+                            MessageBox.Show("Hello Error");
                             Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" ");
                             Debug.WriteLine("No valid response or unexpected format.");
                         }
@@ -188,6 +189,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
+                MessageBox.Show("Error");
                 Debug.WriteLine($"Error: {ex.Message}");
                 Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \"");
                 Debug.WriteLine("An error occurred while processing the request. Please try again.");

@@ -1,25 +1,31 @@
-﻿using HandyControl.Tools.Extension;
-using MahApps.Metro.Controls;
-using MahApps.Metro.Controls.Dialogs;
+﻿using MahApps.Metro.Controls;
+using System;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using WpfApp2.Context;
 
 namespace WpfApp2
 {
     public partial class MainWindow : MetroWindow
     {
+        private ApplicationDbContext _context;
+        private string pass = "";
 
-        private ApplicationDbContext _context = new ApplicationDbContext();
-        string pass = "";
         public MainWindow()
         {
-            InitializeComponent();
-            this.Loaded += MainWindow_Loaded;
+            try
+            {
+                InitializeComponent();
+                _context = new ApplicationDbContext();
+                this.Loaded += MainWindow_Loaded;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"A fatal error occurred during application startup.\n\nDetails: {ex.Message}", "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+            }
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -39,11 +45,10 @@ namespace WpfApp2
                 eyeClosed.Visibility = Visibility.Hidden;
                 eye.Visibility = Visibility.Visible;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                MessageBox.Show($"An unexpected UI error occurred.\n\nDetails: {ex.Message}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
         }
 
         private void hidePassword(object sender, RoutedEventArgs e)
@@ -57,97 +62,85 @@ namespace WpfApp2
                 eyeClosed.Visibility = Visibility.Visible;
                 eye.Visibility = Visibility.Hidden;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Debug.WriteLine(ex);
+                MessageBox.Show($"An unexpected UI error occurred.\n\nDetails: {ex.Message}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
         }
-
 
         private void Login(object sender, RoutedEventArgs e)
         {
-         
-            string user = username.Text;
-            bool? remember = rememberMe.IsChecked;
-
-         
-
-            if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            try
             {
+                string user = username.Text;
+                bool? remember = rememberMe.IsChecked;
 
-                System.Windows.MessageBox.Show("Username and Password cannot be empty.");
-                return;
-            }
-
-        
-            var User = _context.SignUpDetails.FirstOrDefault(u => (u.Username == user || u.Email == user));
-
-            if (User == null)
-            {
-                System.Windows.MessageBox.Show("User not found.");
-                return;
-            }
-
-
-            if (User!=null)
-            {
-                if(!PasswordHelper.VerifyPassword(pass, User.Password))
+                if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
                 {
-                    System.Windows.MessageBox.Show("Invalid Password. Please try again.");
+                    MessageBox.Show("Username and Password cannot be empty.", "Input Required", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
-                Global.UserId = User?.Id;
 
+                var User = _context.SignUpDetails.FirstOrDefault(u => u.Username == user || u.Email == user);
+
+                if (User == null)
+                {
+                    MessageBox.Show("User not found.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (!PasswordHelper.VerifyPassword(pass, User.Password))
+                {
+                    MessageBox.Show("Invalid password. Please try again.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                Global.UserId = User.Id;
+                Properties.Settings.Default.VerificationPass = User.Password;
+                Properties.Settings.Default.RememberMe = remember == true;
                 if (remember == true)
                 {
                     Properties.Settings.Default.UserId = User.Id;
                     Properties.Settings.Default.UserName = User.Username;
-                    Properties.Settings.Default.RememberMe = true;
-                    Properties.Settings.Default.Save();
                 }
-                else
-                {
-                    Properties.Settings.Default.UserId = User.Id;
-                    Properties.Settings.Default.RememberMe = false;
-                    Properties.Settings.Default.Save();
+                Properties.Settings.Default.Save();
 
-                }
                 Navbar dashboard = new Navbar();
-                Properties.Settings.Default.VerificationPass = User.Password;
-             
                 Global.logout = false;
                 dashboard.Show();
                 this.Close();
-                return;
             }
-
-           
-
-
-        }
-
-        private void ForgotPassword_Click(object sender, RoutedEventArgs e)
-        {
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred during the login process.\nThis could be a database or configuration issue.\n\nDetails: {ex.Message}", "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Sign_Up(object sender, RoutedEventArgs e)
         {
-            SignUp signUpWindow = new SignUp();
-            signUpWindow.Show();
-            Global.SignUp = true;
-            
-            this.Close();
+            try
+            {
+                SignUp signUpWindow = new SignUp();
+                signUpWindow.Show();
+                Global.SignUp = true;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not open the Sign Up window.\n\nDetails: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            if(Global.UserId == null && !Global.SignUp)
+            // This logic is for application lifetime management, no try-catch needed here.
+            base.OnClosing(e);
+            if (Global.UserId == null && !Global.SignUp)
             {
-                System.Windows.Application.Current.Shutdown();
+                Application.Current.Shutdown();
             }
-
         }
+
         private void password_PasswordChanged(object sender, RoutedEventArgs e)
         {
             pass = password.Password;
@@ -158,29 +151,34 @@ namespace WpfApp2
             pass = passwordText.Text;
         }
 
-
         private void AutoLogin()
         {
-            bool userExists = _context.SignUpDetails.Any(u => u.Id == Properties.Settings.Default.UserId);
-
-            if (Properties.Settings.Default.RememberMe && Properties.Settings.Default.UserId != 0 && userExists)
+            try
             {
-                Global.UserId = Properties.Settings.Default.UserId;
-
-
-                Navbar dashboard = new Navbar();
-                dashboard.Show();
-                dashboard.Show();
-                this.Hide();         // Instantly hides current window
-
-                this.Dispatcher.BeginInvoke(() =>
+                if (Properties.Settings.Default.RememberMe && Properties.Settings.Default.UserId != 0)
                 {
-                    this.Close(); 
-                }, System.Windows.Threading.DispatcherPriority.Background);
+                    bool userExists = _context.SignUpDetails.Any(u => u.Id == Properties.Settings.Default.UserId);
+                    if (userExists)
+                    {
+                        Global.UserId = Properties.Settings.Default.UserId;
+                        Navbar dashboard = new Navbar();
+                        dashboard.Show();
+                        this.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Auto-login failed. Please log in manually.\nThis may be due to a database connection issue.\n\nDetails: {ex.Message}", "Auto-Login Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Clear the faulty "Remember Me" setting so it doesn't fail again.
+                Properties.Settings.Default.RememberMe = false;
+                Properties.Settings.Default.Save();
             }
         }
 
-
-
+        private void ForgotPassword_Click(object sender, RoutedEventArgs e)
+        {
+            // To be implemented
+        }
     }
 }

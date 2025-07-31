@@ -123,7 +123,7 @@
                                 <fa:IconImage Icon="Microphone" Width="48" Foreground="#10B981" Margin="0,0,0,16"/>
                                 <TextBlock Text="Voice Recognition" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="Advanced AI-powered speech recognition that understands natural language commands"
-                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                                Style="{StaticResource BodyText}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" Style="{StaticResource FeatureCard}" Margin="6,0">
@@ -131,7 +131,7 @@
                                 <fa:IconImage Icon="Cogs" Width="48" Foreground="#F59E0B" Margin="0,0,0,16"/>
                                 <TextBlock Text="Smart Automation" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="Automatically executes system commands, opens applications, and performs complex tasks"
-                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                                Style="{StaticResource BodyText}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -140,7 +140,7 @@
                                 <fa:IconImage Icon="Brain" Width="48" Foreground="#8B5CF6" Margin="0,0,0,16"/>
                                 <TextBlock Text="AI Intelligence" Style="{StaticResource SubHeader}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="Learns from your usage patterns and provides intelligent command suggestions"
-                                Style="{StaticResource BodyText}" TextAlignment="Center"/>
+                                Style="{StaticResource BodyText}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </Grid>

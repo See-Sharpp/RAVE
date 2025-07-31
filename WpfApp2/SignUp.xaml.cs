@@ -19,10 +19,7 @@ using WpfApp2.Context;
 using WpfApp2.Models;
 
 namespace WpfApp2
-{
-    /// <summary>
-    /// Interaction logic for SignUp.xaml
-    /// </summary>
+{ 
     public partial class SignUp : MetroWindow
     {
         private ApplicationDbContext _context = new ApplicationDbContext();
