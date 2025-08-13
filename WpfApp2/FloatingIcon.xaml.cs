@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -24,247 +25,28 @@ namespace WpfApp2
         private const int FRAME_SIZE = 480;
         private const int BYTES_PER_SAMPLE = 2;
         private const int FRAME_SIZE_BYTES = FRAME_SIZE * BYTES_PER_SAMPLE;
-        private string tempRawPath = Path.Combine(Path.GetTempPath(), "temp_raw.raw");
-        private string denoisedFilePath = Path.Combine(Path.GetTempPath(), "denoised_output.wav");
-        private TaskCompletionSource<bool>? recordingStoppedTcs;
+        private string tempRawPath = "temp_raw.raw";
+        private string denoisedFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "denoised_output.wav");
+        private TaskCompletionSource<bool> recordingStoppedTcs = new TaskCompletionSource<bool>();
         private DateTime _lastRightClickTime = DateTime.MinValue;
         private const int DoubleClickThreshold = 300;
 
+
         public FloatingIcon()
         {
-            try
-            {
-                InitializeComponent();
-                this.Left = SystemParameters.PrimaryScreenWidth - this.Width - 10;
-                this.Top = SystemParameters.PrimaryScreenHeight - this.Height - 100;
+            InitializeComponent();
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+            var screenWidth = SystemParameters.PrimaryScreenWidth;
+            this.Left = screenWidth - this.Width - 10;
+            this.Top = screenHeight - this.Height - 100;
+            var config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("AppSetting.json", optional: true, reloadOnChange: true)
+                .Build();
+            api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("APIKey not found");
 
-                var config = new ConfigurationBuilder()
-                    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                    .AddJsonFile("AppSetting.json", optional: false, reloadOnChange: true)
-                    .Build();
-
-                api = config["Groq_Api_Key"] ?? throw new InvalidOperationException("Groq API Key not found in AppSetting.json.");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"A critical error occurred while initializing the floating icon.\n\nDetails: {ex.Message}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                this.Close(); // Close the window if initialization fails
-            }
         }
 
-        private async Task OnMicClick()
-        {
-            // Stop wake word detection while processing manual command
-            Global._wakeWordHelper?.Stop();
-
-            // UI animation logic
-            var figure = new PathFigure { StartPoint = new Point(40 + 36, 40) };
-            var arc = new ArcSegment { Size = new Size(36, 36), Point = figure.StartPoint, SweepDirection = SweepDirection.Clockwise };
-            figure.Segments.Add(arc);
-            RecordingArc.Data = new PathGeometry { Figures = { figure } };
-            RecordingArc.Visibility = Visibility.Visible;
-
-            try
-            {
-                string result = await HandelVoiceInput();
-                if (!string.IsNullOrEmpty(result))
-                {
-                    // Process the command
-                    _ = new llm(result);
-                }
-                else
-                {
-                    // This case is handled inside TranscribeAsync if verification fails
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"An error occurred during the voice command process.\n\nDetails: {ex.Message}", "Voice Command Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                // Ensure UI is always cleaned up
-                RecordingArc.Visibility = Visibility.Collapsed;
-                // Optionally restart wake word detection
-                if (Properties.Settings.Default.WakeWord)
-                {
-                    Global._wakeWordHelper?.Start();
-                }
-            }
-        }
-
-        public async Task<string> HandelVoiceInput()
-        {
-            StartRecording();
-            await Task.Delay(5000);
-            await StopRecording();
-
-            if (File.Exists(denoisedFilePath) && new FileInfo(denoisedFilePath).Length > 0)
-            {
-                return await TranscribeAsync(denoisedFilePath);
-            }
-            return string.Empty;
-        }
-
-        public async Task<string> TranscribeAsync(string path)
-        {
-            try
-            {
-                if (Properties.Settings.Default.Speaker_Verification && !Verification.verify())
-                {
-                    MessageBox.Show("Your voice did not match the authorized voice. Please try again.", "Verification Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return string.Empty;
-                }
-
-                using var http = new HttpClient();
-                http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
-
-                using var form = new MultipartFormDataContent();
-                var fileBytes = await File.ReadAllBytesAsync(path);
-                var fileContent = new ByteArrayContent(fileBytes);
-                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
-
-                form.Add(fileContent, "file", Path.GetFileName(path));
-                form.Add(new StringContent("whisper-large-v3"), "model");
-                form.Add(new StringContent("en"), "language");
-
-                var response = await http.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form);
-                var json = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"API request failed: {response.ReasonPhrase}\n{json}");
-                }
-
-                dynamic? obj = JsonConvert.DeserializeObject(json);
-                return obj?.text ?? string.Empty;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to transcribe audio.\nPlease check your internet connection and API key.\n\nDetails: {ex.Message}", "Transcription Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return string.Empty;
-            }
-        }
-
-        public void StartRecording()
-        {
-            try
-            {
-                waveIn?.Dispose();
-                _tempRawStream?.Dispose();
-
-                if (File.Exists(denoisedFilePath)) File.Delete(denoisedFilePath);
-                if (File.Exists(tempRawPath)) File.Delete(tempRawPath);
-
-                _tempRawStream = new FileStream(tempRawPath, FileMode.Create, FileAccess.Write);
-                waveIn = new WaveInEvent { WaveFormat = new WaveFormat(SAMPLE_RATE, 16, 1) };
-
-                recordingStoppedTcs = new TaskCompletionSource<bool>();
-                waveIn.DataAvailable += WaveIn_DataAvailable;
-                waveIn.RecordingStopped += WaveIn_RecordingStopped;
-                waveIn.StartRecording();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to start audio recording.\nPlease ensure a microphone is connected and not in use.\n\nDetails: {ex.Message}", "Recording Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        public async Task StopRecording()
-        {
-            try
-            {
-                waveIn?.StopRecording();
-                if (recordingStoppedTcs != null) await recordingStoppedTcs.Task;
-            }
-            finally
-            {
-                _tempRawStream?.Dispose();
-                _tempRawStream = null;
-
-                // Denoising happens after the raw stream is fully written and closed.
-                await DenoiseRawAudioAsync(tempRawPath, denoisedFilePath);
-
-                try
-                {
-                    if (File.Exists(tempRawPath)) File.Delete(tempRawPath);
-                }
-                catch (IOException) { /* Silently ignore, temp file will be cleaned up later */ }
-            }
-        }
-
-        private async Task DenoiseRawAudioAsync(string inp, string outp)
-        {
-            await Task.Run(() =>
-            {
-                IntPtr st = IntPtr.Zero;
-                try
-                {
-                    if (!File.Exists(inp)) return;
-
-                    st = RNNoise.rnnoise_create();
-                    var wf = new WaveFormat(SAMPLE_RATE, 16, 1);
-                    using var rawReader = new RawSourceWaveStream(File.OpenRead(inp), wf);
-                    using var writer = new WaveFileWriter(outp, wf);
-
-                    var buffer = new byte[FRAME_SIZE_BYTES];
-                    var inFloat = new float[FRAME_SIZE];
-                    var outFloat = new float[FRAME_SIZE];
-
-                    while (rawReader.Read(buffer, 0, buffer.Length) == buffer.Length)
-                    {
-                        for (int i = 0; i < FRAME_SIZE; i++) inFloat[i] = BitConverter.ToInt16(buffer, i * 2) / 32768f;
-                        RNNoise.rnnoise_process_frame(st, outFloat, inFloat);
-                        for (int i = 0; i < FRAME_SIZE; i++)
-                        {
-                            var s = (short)(Math.Clamp(outFloat[i], -1f, 1f) * 32767);
-                            var b = BitConverter.GetBytes(s);
-                            buffer[i * 2] = b[0];
-                            buffer[i * 2 + 1] = b[1];
-                        }
-                        writer.Write(buffer, 0, buffer.Length);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // This runs on a background thread, so we dispatch the error to the UI thread.
-                    Application.Current.Dispatcher.Invoke(() =>
-                        MessageBox.Show($"Failed to denoise audio.\n\nDetails: {ex.Message}", "Audio Processing Error", MessageBoxButton.OK, MessageBoxImage.Error));
-                }
-                finally
-                {
-                    if (st != IntPtr.Zero) RNNoise.rnnoise_destroy(st);
-                }
-            });
-        }
-
-        public void WaveIn_DataAvailable(object? sender, WaveInEventArgs e)
-        {
-            try
-            {
-                _tempRawStream?.Write(e.Buffer, 0, e.BytesRecorded);
-            }
-            catch (ObjectDisposedException) { /* Stream was closed, ignore */ }
-            catch (Exception ex) { Trace.WriteLine($"Error writing to temp audio stream: {ex.Message}"); }
-        }
-
-        public void WaveIn_RecordingStopped(object? sender, StoppedEventArgs e)
-        {
-            if (e.Exception != null)
-            {
-                MessageBox.Show($"An error occurred during recording: {e.Exception.Message}", "Recording Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                recordingStoppedTcs?.TrySetException(e.Exception);
-            }
-            else
-            {
-                recordingStoppedTcs?.TrySetResult(true);
-            }
-
-            waveIn?.Dispose();
-            waveIn = null;
-        }
-
-        // --- UI Event Handlers for Dragging and Right-Click ---
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _startPoint = e.GetPosition(this);
@@ -274,11 +56,10 @@ namespace WpfApp2
 
         private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed && (sender as UIElement)?.IsMouseCaptured == true)
+            if (e.LeftButton == MouseButtonState.Pressed)
             {
-                Point currentPos = e.GetPosition(this);
-                if (Math.Abs(currentPos.X - _startPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(currentPos.Y - _startPoint.Y) > SystemParameters.MinimumVerticalDragDistance)
+                var current = e.GetPosition(this);
+                if (!_isDragging && (Math.Abs(current.X - _startPoint.X) > 4 || Math.Abs(current.Y - _startPoint.Y) > 4))
                 {
                     _isDragging = true;
                     DragMove();
@@ -289,10 +70,7 @@ namespace WpfApp2
         private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             (sender as UIElement)?.ReleaseMouseCapture();
-            if (!_isDragging)
-            {
-                _ = OnMicClick();
-            }
+            if (!_isDragging) _ = OnMicClick();
             _isDragging = false;
         }
 
@@ -300,10 +78,197 @@ namespace WpfApp2
         {
             var now = DateTime.Now;
             if ((now - _lastRightClickTime).TotalMilliseconds <= DoubleClickThreshold)
-            {
-                this.Hide();
-            }
+                Global.floatingIcon?.Hide();
             _lastRightClickTime = now;
+        }
+
+        private async Task OnMicClick()
+        {
+            const double durationSeconds = 5;
+            const double radius = 36;
+            var center = new Point(40, 40);
+            Global._wakeWordHelper?.Stop();
+            var figure = new PathFigure { StartPoint = new Point(center.X + radius, center.Y) };
+            var arc = new ArcSegment { Size = new Size(radius, radius), Point = figure.StartPoint, SweepDirection = SweepDirection.Clockwise };
+            figure.Segments.Add(arc);
+            var geo = new PathGeometry();
+            geo.Figures.Add(figure);
+            RecordingArc.Data = geo;
+            RecordingArc.Visibility = Visibility.Visible;
+
+            DateTime start = DateTime.Now;
+            EventHandler handler = null;
+            handler = (s, e) =>
+            {
+                var prog = Math.Min((DateTime.Now - start).TotalSeconds / durationSeconds, 1);
+                var angle = 360 * prog;
+                var rad = angle * Math.PI / 180;
+                arc.Point = new Point(center.X + radius * Math.Cos(rad), center.Y + radius * Math.Sin(rad));
+                arc.IsLargeArc = angle > 180;
+                if (prog >= 1)
+                {
+                    CompositionTarget.Rendering -= handler;
+                    RecordingArc.Visibility = Visibility.Collapsed;
+                }
+            };
+            CompositionTarget.Rendering += handler;
+
+            var result = await HandelVoiceInput();
+            CompositionTarget.Rendering -= handler;
+            RecordingArc.Visibility = Visibility.Collapsed;
+            if (!string.IsNullOrEmpty(result))
+            {
+                _ = new llm(result);
+            }
+            else
+            {
+
+                MessageBox.Show("Your Voice Did Not Match the authorized voice, Try Again" + " in floating icon");
+            }
+        }
+
+        public async Task<string> HandelVoiceInput()
+        {
+            StartRecording();
+            await Task.Delay(5000).ConfigureAwait(false);
+            await StopRecording().ConfigureAwait(false);
+            if (File.Exists(denoisedFilePath) && new FileInfo(denoisedFilePath).Length > 0)
+                return await TranscribeAsync(denoisedFilePath).ConfigureAwait(false);
+            return string.Empty;
+        }
+
+        public async Task<string> TranscribeAsync(string path)
+        {
+            if (Properties.Settings.Default.Speaker_Verification)
+            {
+                if (Verification.verify())
+                {
+                    using var http = new HttpClient();
+                    http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
+                    using var form = new MultipartFormDataContent();
+                    var file = new ByteArrayContent(await File.ReadAllBytesAsync(path).ConfigureAwait(false));
+                    file.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+                    form.Add(file, "file", Path.GetFileName(path));
+                    form.Add(new StringContent("whisper-large-v3"), "model");
+                    form.Add(new StringContent("en"), "language");
+                    var resp = await http.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form).ConfigureAwait(false);
+                    var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (!resp.IsSuccessStatusCode) return string.Empty;
+                    dynamic obj = JsonConvert.DeserializeObject(json);
+                    return obj?.text ?? string.Empty;
+                }
+                return string.Empty;
+            }
+            else
+            {
+                Debug.WriteLine("inside");
+                using var http = new HttpClient();
+                http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", api);
+                using var form = new MultipartFormDataContent();
+                var file = new ByteArrayContent(await File.ReadAllBytesAsync(path).ConfigureAwait(false));
+                file.Headers.ContentType = MediaTypeHeaderValue.Parse("audio/wav");
+                form.Add(file, "file", Path.GetFileName(path));
+                form.Add(new StringContent("whisper-large-v3"), "model");
+                form.Add(new StringContent("en"), "language");
+                var resp = await http.PostAsync("https://api.groq.com/openai/v1/audio/transcriptions", form).ConfigureAwait(false);
+                var json = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                if (!resp.IsSuccessStatusCode) return string.Empty;
+                dynamic obj = JsonConvert.DeserializeObject(json);
+                return obj?.text ?? string.Empty;
+
+            }
+
+        }
+
+        public void StartRecording()
+        {
+            waveIn?.Dispose();
+            if (_tempRawStream != null)
+            {
+                lock (_tempRawStream) { _tempRawStream.Flush(); _tempRawStream.Dispose(); _tempRawStream = null; }
+            }
+            if (File.Exists(denoisedFilePath)) File.Delete(denoisedFilePath);
+            for (int i = 0; i < 5; i++)
+            {
+                try { if (File.Exists(tempRawPath)) File.Delete(tempRawPath); break; }
+                catch (IOException) { Task.Delay(100).Wait(); }
+            }
+            _tempRawStream = new FileStream(tempRawPath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+            waveIn = new WaveInEvent { WaveFormat = new WaveFormat(SAMPLE_RATE, 16, 1) };
+            recordingStoppedTcs = new TaskCompletionSource<bool>();
+            waveIn.DataAvailable += WaveIn_DataAvailable;
+            waveIn.RecordingStopped += WaveIn_RecordingStopped;
+            waveIn.StartRecording();
+        }
+
+        public async Task StopRecording()
+        {
+            waveIn?.StopRecording();
+            if (recordingStoppedTcs != null) await recordingStoppedTcs.Task.ConfigureAwait(false);
+            if (_tempRawStream != null)
+            {
+                lock (_tempRawStream) { _tempRawStream.Flush(); _tempRawStream.Dispose(); _tempRawStream = null; }
+            }
+            await DenoiseRawAudioAsync(tempRawPath, denoisedFilePath).ConfigureAwait(false);
+            try { if (File.Exists(tempRawPath)) File.Delete(tempRawPath); }
+            catch { }
+        }
+
+        private async Task DenoiseRawAudioAsync(string inp, string outp)
+        {
+            await Task.Run(() =>
+            {
+                var wf = new WaveFormat(SAMPLE_RATE, 16, 1);
+                IntPtr st = IntPtr.Zero;
+                try
+                {
+                    st = RNNoise.rnnoise_create();
+                    using var raw = new RawSourceWaveStream(File.Open(inp, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), wf);
+                    using var w = new WaveFileWriter(outp, wf);
+                    var buf = new byte[FRAME_SIZE_BYTES];
+                    var inF = new float[FRAME_SIZE];
+                    var outF = new float[FRAME_SIZE];
+                    int read;
+                    while ((read = raw.Read(buf, 0, buf.Length)) == buf.Length)
+                    {
+                        for (int i = 0; i < FRAME_SIZE; i++) inF[i] = BitConverter.ToInt16(buf, i * BYTES_PER_SAMPLE) / 32768f;
+                        RNNoise.rnnoise_process_frame(st, outF, inF);
+                        for (int i = 0; i < FRAME_SIZE; i++)
+                        {
+                            var s = (short)(Math.Clamp(outF[i], -1f, 1f) * 32767);
+                            var b = BitConverter.GetBytes(s);
+                            buf[i * BYTES_PER_SAMPLE] = b[0];
+                            buf[i * BYTES_PER_SAMPLE + 1] = b[1];
+                        }
+                        w.Write(buf, 0, buf.Length);
+                    }
+                }
+                finally { if (st != IntPtr.Zero) RNNoise.rnnoise_destroy(st); }
+            }).ConfigureAwait(false);
+        }
+
+        public void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
+        {
+            if (_tempRawStream == null || e.BytesRecorded == 0) return;
+            lock (_tempRawStream)
+            {
+                _tempRawStream.Write(e.Buffer, 0, e.BytesRecorded);
+                _tempRawStream.Flush();
+            }
+        }
+
+        public void WaveIn_RecordingStopped(object sender, StoppedEventArgs e)
+        {
+            if (_tempRawStream != null)
+            {
+                lock (_tempRawStream) { _tempRawStream.Flush(); }
+            }
+            waveIn!.DataAvailable -= WaveIn_DataAvailable;
+            waveIn!.RecordingStopped -= WaveIn_RecordingStopped;
+            waveIn.Dispose();
+            waveIn = null;
+            recordingStoppedTcs.TrySetResult(true);
+            if (e.Exception != null) recordingStoppedTcs.TrySetException(e.Exception);
         }
     }
 }

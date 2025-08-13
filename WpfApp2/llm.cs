@@ -19,6 +19,7 @@ namespace WpfApp2
         private string userInput { get; set; }
         private string processedQuery { get; set; }
         private string apiKey1 { get; set; }
+        private string? nircmdPath = Global.nircmdPath;
         private string apiKey2 { get; set; }
         private static readonly string apiUrl = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -65,7 +66,7 @@ namespace WpfApp2
             
             try
             {
-                MessageBox.Show("Hello");
+             
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey1);
@@ -97,7 +98,7 @@ namespace WpfApp2
 
                         if (string.IsNullOrEmpty(contentString))
                         {
-                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"No Voice Was Detected\"");
+                            Process.Start("cmd.exe", $"/c nircmd.exe speak text \"No Voice Was Detected\"");
                             Debug.WriteLine("No content received.");
                             return;
                         }
@@ -180,8 +181,7 @@ namespace WpfApp2
                         }
                         else
                         {
-                            MessageBox.Show("Hello Error");
-                            Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \" ");
+                            Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Error Processing the Query. Please Try Again\"");
                             Debug.WriteLine("No valid response or unexpected format.");
                         }
                     }
@@ -189,9 +189,9 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error");
+              
                 Debug.WriteLine($"Error: {ex.Message}");
-                Process.Start("cmd.exe", "/c nircmd.exe speak text \"Error Processing the Query. Please Try Again \"");
+                Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Error Processing the Query. Please Try Again\"");
                 Debug.WriteLine("An error occurred while processing the request. Please try again.");
             }
         }

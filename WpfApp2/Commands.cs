@@ -3,13 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.OleDb;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using WpfApp2.Context;
 using WpfApp2.Models;
@@ -19,66 +14,44 @@ namespace WpfApp2
 {
     public class Commands
     {
-        public static ApplicationDbContext? _context;
-        public static SignUpDetail? userId;
-        private static readonly tokenizer? _tokenizer;
-        private static readonly InferenceSession? _session;
+        public static ApplicationDbContext _context;
+        public static SignUpDetail userId;
+        private static readonly tokenizer _tokenizer =
+            new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
+        static string? nircmdPath = Global.nircmdPath;
+
+        private static readonly InferenceSession _session =
+            new InferenceSession(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "model", "mini-lm.onnx"));
+
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
-
-        static Commands()
-        {
-            try
-            {
-                string tokenizerPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt");
-                string modelPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "model", "mini-lm.onnx");
-
-                if (!File.Exists(tokenizerPath) || !File.Exists(modelPath))
-                {
-                    throw new FileNotFoundException("A required AI model or tokenizer file is missing.");
-                }
-
-                _tokenizer = new tokenizer(tokenizerPath);
-                _session = new InferenceSession(modelPath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"A critical error occurred while loading the AI model files.\nThe application cannot function without them and will now close.\n\nPlease ensure 'tokenizer' and 'model' folders are present and accessible.\n\nDetails: {ex.Message}", "Fatal Startup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Environment.Exit(1);
-            }
-        }
 
         public Commands()
         {
-            try
-            {
-                _context = new ApplicationDbContext();
-                userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Could not establish a connection to the database.\nHistory and other features may not work correctly.\n\nDetails: {ex.Message}", "Database Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
+            _context = new ApplicationDbContext();
+            userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         }
-
         public static async Task systemCommand(string command, string search_query, string contentString, string content)
         {
             try
             {
-                string nircmdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nircmd-x64", "nircmd.exe");
+                string? temp = null;
+
 
                 if (command.Contains("savescreenshot"))
                 {
-                    if (string.IsNullOrEmpty(Global.deafultScreenShotPath))
+                    if (Global.deafultScreenShotPath == null)
                     {
-                        throw new InvalidOperationException("Default screenshot path is not set.");
+                        throw new InvalidOperationException("Global.deafultScreenShotPath is null.");
                     }
+
                     long current = Properties.Settings.Default.MediaCounter;
-                    string temp = Path.Combine(Global.deafultScreenShotPath, $"shot{current}.png");
+                    temp = System.IO.Path.Combine(Global.deafultScreenShotPath, $"shot{current}.png");
                     Properties.Settings.Default.MediaCounter = current + 1;
                     Properties.Settings.Default.Save();
-                    command += $" \"{temp}\"";
-                }
 
+                    command = command + " " + '"' + temp + '"';
+                    Debug.WriteLine(command);
+                }
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = nircmdPath,
@@ -86,8 +59,7 @@ namespace WpfApp2
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
-
-                if (Properties.Settings.Default.History && _context != null)
+                if (Properties.Settings.Default.History)
                 {
                     var entity = new LLM_Detail
                     {
@@ -98,17 +70,24 @@ namespace WpfApp2
                         CommandTime = DateTime.Now,
                         CommandType = "system_control"
                     };
+
                     await AddHistoryRecordAsync(_context, entity);
-                    if (Global.system_control.Count >= 20) { Global.system_control.Dequeue(); }
-                    if (Global.total_commands.Count >= 20) { Global.total_commands.Dequeue(); }
+
+                    if (Global.system_control.Count >= 20)
+                    {
+                        Global.system_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
                     Global.system_control.Enqueue(entity);
                     Global.total_commands.Enqueue(entity);
                 }
             }
             catch (Exception exception)
             {
-                MessageBox.Show($"Failed to execute system command.\nEnsure 'nircmd.exe' exists and is accessible.\n\nDetails: {exception.Message}", "Command Execution Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                if (Properties.Settings.Default.History && _context != null)
+                if (Properties.Settings.Default.History)
                 {
                     var entity = new LLM_Detail
                     {
@@ -120,40 +99,212 @@ namespace WpfApp2
                         CommandType = "system_control"
                     };
                     await AddHistoryRecordAsync(_context, entity);
-                    if (Global.system_control.Count >= 20) { Global.system_control.Dequeue(); }
-                    if (Global.total_commands.Count >= 20) { Global.total_commands.Dequeue(); }
+                    if (Global.system_control.Count >= 20)
+                    {
+                        Global.system_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
                     Global.system_control.Enqueue(entity);
                     Global.total_commands.Enqueue(entity);
                 }
+                Debug.WriteLine(exception);
+
             }
         }
 
         public static async Task application_command(string application, string contentString, string content)
         {
+            
+
+            string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
+            string query = $@"
+                SELECT TOP 1 System.ItemName, System.ItemPathDisplay
+                FROM SYSTEMINDEX
+                WHERE System.ItemName LIKE '%{application}%'
+            ";
+
             try
             {
-                string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
-                string query = $"SELECT TOP 1 System.ItemPathDisplay FROM SYSTEMINDEX WHERE CONTAINS(System.ItemName, '\"{application}*\"')";
-                string? path = null;
-
-                using (var connection = new OleDbConnection(connectionString))
+                using (OleDbConnection connection = new OleDbConnection(connectionString))
                 {
-                    await connection.OpenAsync();
-                    using (var dbCommand = new OleDbCommand(query, connection))
-                    using (var reader = await dbCommand.ExecuteReaderAsync())
+                    connection.Open();
+
+                    using (OleDbCommand command = new OleDbCommand(query, connection))
                     {
-                        if (await reader.ReadAsync())
+                        using (OleDbDataReader reader = command.ExecuteReader())
                         {
-                            path = reader["System.ItemPathDisplay"]?.ToString();
+                            if (reader.Read())
+                            {
+                                string name = reader["System.ItemName"].ToString();
+                                string path = reader["System.ItemPathDisplay"].ToString();
+                                Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Opening {application}\"");
+                                var process = new Process();
+                                process.StartInfo.FileName = "cmd.exe";
+                                process.StartInfo.Arguments = $"/C start \"\" \"{path}\"";
+                                process.StartInfo.UseShellExecute = false;
+                                process.StartInfo.RedirectStandardOutput = true;
+                                process.StartInfo.RedirectStandardError = true;
+                                process.StartInfo.CreateNoWindow = true;
+
+                                process.Start();
+
+                                string output = process.StandardOutput.ReadToEnd();
+                                string error = process.StandardError.ReadToEnd();
+
+                                process.WaitForExit();
+                                int exitCode = process.ExitCode;
+
+                                if (exitCode != 0)
+                                {
+                                    SearchInDatabase(application, contentString, content);
+                                }
+                                else
+                                {
+                                    if (Properties.Settings.Default.History)
+                                    {
+                                        var entity = new LLM_Detail
+                                        {
+                                            UserId = (int)Global.UserId,
+                                            Expected_json = contentString,
+                                            user_command = content,
+                                            Status = "Success",
+                                            CommandTime = DateTime.Now,
+                                            CommandType = "application_control"
+                                        };
+                                        await AddHistoryRecordAsync(_context, entity);
+                                        if (Global.application_control.Count >= 20)
+                                        {
+                                            Global.application_control.Dequeue();
+                                        }
+                                        if (Global.total_commands.Count >= 20)
+                                        {
+                                            Global.total_commands.Dequeue();
+                                        }
+                                        Global.application_control.Enqueue(entity);
+                                        Global.total_commands.Enqueue(entity);
+                                    }
+                                }
+
+                            }
+                            else
+                            {
+                                SearchInDatabase(application, contentString, content);
+                            }
                         }
                     }
                 }
-
-                if (!string.IsNullOrEmpty(path))
+            }
+            catch (Exception ex)
+            {
+                if (Properties.Settings.Default.History)
                 {
-                    Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-                    if (Properties.Settings.Default.History && _context != null)
+                    var entity = new LLM_Detail
                     {
+                        UserId = (int)Global.UserId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "application_control"
+                    };
+                    await AddHistoryRecordAsync(_context, entity);
+                    if (Global.application_control.Count >= 20)
+                    {
+                        Global.application_control.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.application_control.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
+                Debug.WriteLine(ex.Message);
+            }
+
+
+        }
+
+        public static async Task SearchInDatabase(string application, string contentString, string content)
+        {
+            try
+            {
+               
+
+                using var _context = new ApplicationDbContext();
+                char firstChar = application.Trim().ToLower().FirstOrDefault();
+
+                var allExes = _context.AllExes
+                     .Where(e => e.DisplayName != null && e.FilePath != null &&
+                                 EF.Functions.Like(e.DisplayName, $"{firstChar}%"))
+                     .Select(e => new { e.DisplayName, e.FilePath, e.Embedding })
+                     .ToList();
+
+
+                if (!allExes.Any())
+                {
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            UserId = (int)Global.UserId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "application_control"
+                        };
+                        await AddHistoryRecordAsync(_context, entity);
+                        if (Global.application_control.Count >= 20)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.application_control.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
+
+                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Application Not Found\"");
+                    return;
+                }
+
+                var queryEmbedding = GetCachedEmbedding(application);
+                string bestPath = null;
+                string bestName = null;
+                double bestScore = -1;
+
+
+                var results = allExes
+                .AsParallel()
+                .Select(exe =>
+                {
+                    float[] embedding;
+                    if (string.IsNullOrEmpty(exe.Embedding))
+                        embedding = GetEmbedding(exe.DisplayName);
+                    else
+                        embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
+
+                    double sim = CosineSimilarity(queryEmbedding, embedding);
+
+                    return new { exe.DisplayName, exe.FilePath, sim };
+                })
+                .OrderByDescending(x => x.sim)
+                .FirstOrDefault();
+
+                Debug.WriteLine(results.DisplayName + " " + results.FilePath, results.sim);
+
+                if (results?.FilePath != null && results.sim > 0.87f)
+                {
+                    if (Properties.Settings.Default.History)
+                    {
+
+
                         var entity = new LLM_Detail
                         {
                             UserId = (int)Global.UserId,
@@ -164,53 +315,23 @@ namespace WpfApp2
                             CommandType = "application_control"
                         };
                         await AddHistoryRecordAsync(_context, entity);
-                        if (Global.application_control.Count >= 20) { Global.application_control.Dequeue(); }
-                        if (Global.total_commands.Count >= 20) { Global.total_commands.Dequeue(); }
+                        if (Global.application_control.Count >= 20)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
                         Global.application_control.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
+                  
+                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Opening {application}\"");
+                    Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
                 else
                 {
-                    await SearchInDatabase(application, contentString, content);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to find '{application}' via Windows Search.\nThis can happen if the service is disabled. Falling back to internal database search.\n\nDetails: {ex.Message}", "Application Search Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                await SearchInDatabase(application, contentString, content);
-            }
-        }
-
-        public static async Task SearchInDatabase(string application, string contentString, string content)
-        {
-            try
-            {
-                using var dbContext = new ApplicationDbContext();
-                var allExes = await dbContext.AllExes.Where(e => e.DisplayName != null && e.FilePath != null).ToListAsync();
-
-                if (!allExes.Any())
-                {
-                    Process.Start("nircmd.exe", "speak text \"Application Not Found\"");
-                    return;
-                }
-
-                var queryEmbedding = GetEmbedding(application);
-                var results = allExes.AsParallel()
-                    .Select(exe =>
-                    {
-                        var embedding = string.IsNullOrEmpty(exe.Embedding)
-                            ? GetEmbedding(exe.DisplayName)
-                            : exe.Embedding.Split(',').Select(float.Parse).ToArray();
-                        double sim = CosineSimilarity(queryEmbedding, embedding);
-                        return new { exe.DisplayName, exe.FilePath, sim };
-                    })
-                    .OrderByDescending(x => x.sim)
-                    .FirstOrDefault();
-
-                if (results?.FilePath != null && results.sim > 0.87f)
-                {
-                    Process.Start(new ProcessStartInfo(results.FilePath) { UseShellExecute = true });
                     if (Properties.Settings.Default.History)
                     {
                         var entity = new LLM_Detail
@@ -218,124 +339,29 @@ namespace WpfApp2
                             UserId = (int)Global.UserId,
                             Expected_json = contentString,
                             user_command = content,
-                            Status = "Success",
+                            Status = "Failed",
                             CommandTime = DateTime.Now,
                             CommandType = "application_control"
                         };
-                        await AddHistoryRecordAsync(dbContext, entity);
-                        if (Global.application_control.Count >= 20) { Global.application_control.Dequeue(); }
-                        if (Global.total_commands.Count >= 20) { Global.total_commands.Dequeue(); }
+                        await AddHistoryRecordAsync(_context, entity);
+                        if (Global.application_control.Count >= 20)
+                        {
+                            Global.application_control.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
                         Global.application_control.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
+                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Application Not Found\"");
                 }
-                else
-                {
-                    Process.Start("nircmd.exe", "speak text \"Application Not Found\"");
-                }
+
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                MessageBox.Show($"An error occurred while searching for '{application}' in the database.\n\nDetails: {ex.Message}", "Database Search Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        public static async Task file_command(string fileName, string contentString, string content)
-        {
-            try
-            {
-                await SearchForDocsInDatabase(fileName, contentString, content);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"An unexpected error occurred while processing the file command.\n\nDetails: {ex.Message}", "File Command Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                if (Properties.Settings.Default.History && _context != null)
-                {
-                    var entity = new LLM_Detail { /*...Failed History...*/ };
-                    await AddHistoryRecordAsync(_context, entity);
-                }
-            }
-        }
-
-        public static async Task SearchForDocsInDatabase(string filename, string contentString, string content)
-        {
-            try
-            {
-                using var dbContext = new ApplicationDbContext();
-                var allDocs = await dbContext.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).ToListAsync();
-
-                if (!allDocs.Any())
-                {
-                    Process.Start("nircmd.exe", "speak text \"File Not Found\"");
-                    return;
-                }
-
-                float[] queryEmbedding = GetEmbedding(filename.ToLower());
-                var results = allDocs.AsParallel()
-                    .Select(doc =>
-                    {
-                        float[] embedding = string.IsNullOrEmpty(doc.Embedding) ? GetEmbedding(doc.DisplayName) : doc.Embedding.Split(',').Select(float.Parse).ToArray();
-                        double sim = CosineSimilarity(queryEmbedding, embedding);
-                        return new { doc.DisplayName, doc.FilePath, sim };
-                    })
-                    .OrderByDescending(x => x.sim)
-                    .FirstOrDefault();
-
-                if (results?.FilePath != null && results.sim > 0.80f)
-                {
-                    Process.Start(new ProcessStartInfo(results.FilePath) { UseShellExecute = true });
-                    if (Properties.Settings.Default.History)
-                    {
-                        var entity = new LLM_Detail { /*...Success History...*/ };
-                        await AddHistoryRecordAsync(dbContext, entity);
-                    }
-                }
-                else
-                {
-                    Process.Start("nircmd.exe", "speak text \"File Not Found. Please try again.\"");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"An error occurred while searching for the file '{filename}'.\n\nDetails: {ex.Message}", "File Search Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        public static async Task searchBrowser(string command, string search_query, string contentString, string content)
-        {
-            try
-            {
-                string urlToOpen = command;
-                if (!string.IsNullOrEmpty(search_query))
-                {
-                    urlToOpen = command.Replace("{{q}}", Uri.EscapeDataString(search_query));
-                }
-
-                // Use ShellExecute to open the default browser, which is more reliable.
-                Process.Start(new ProcessStartInfo(urlToOpen) { UseShellExecute = true });
-
-                if (Properties.Settings.Default.History && _context != null)
-                {
-                    var entity = new LLM_Detail
-                    {
-                        UserId = (int)Global.UserId,
-                        Expected_json = contentString,
-                        user_command = content,
-                        Status = "Success",
-                        CommandTime = DateTime.Now,
-                        CommandType = "web_browse"
-                    };
-                    await AddHistoryRecordAsync(_context, entity);
-                    if (Global.web_browse.Count >= 20) { Global.web_browse.Dequeue(); }
-                    if (Global.total_commands.Count >= 20) { Global.total_commands.Dequeue(); }
-                    Global.web_browse.Enqueue(entity);
-                    Global.total_commands.Enqueue(entity);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to open the browser or perform the search.\n\nDetails: {ex.Message}", "Browser Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                if (Properties.Settings.Default.History && _context != null)
+                if (Properties.Settings.Default.History)
                 {
                     var entity = new LLM_Detail
                     {
@@ -344,10 +370,21 @@ namespace WpfApp2
                         user_command = content,
                         Status = "Failed",
                         CommandTime = DateTime.Now,
-                        CommandType = "web_browse"
+                        CommandType = "application_control"
                     };
                     await AddHistoryRecordAsync(_context, entity);
+                    if (Global.application_control.Count >= 20)
+                    {
+                        Global.application_control.Dequeue();
+                    }
+                    Global.application_control.Enqueue(entity);
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.total_commands.Enqueue(entity);
                 }
+                Debug.WriteLine(e.Message);
             }
         }
 
@@ -363,32 +400,23 @@ namespace WpfApp2
 
         public static float[] GetEmbedding(string text, int maxLen = 128)
         {
-            try
+
+            var (ids, mask, typeIds) = _tokenizer.Encode(text, maxLen);
+
+
+            var idTensor = new DenseTensor<long>(ids, new[] { 1, ids.Length });
+            var maskTensor = new DenseTensor<long>(mask, new[] { 1, mask.Length });
+            var typeTensor = new DenseTensor<long>(typeIds, new[] { 1, typeIds.Length });
+
+            using var results = _session.Run(new[]
             {
-                if (_tokenizer == null || _session == null)
-                {
-                    throw new InvalidOperationException("AI models are not initialized.");
-                }
+                NamedOnnxValue.CreateFromTensor("input_ids",      idTensor),
+                NamedOnnxValue.CreateFromTensor("attention_mask", maskTensor),
+                NamedOnnxValue.CreateFromTensor("token_type_ids", typeTensor)
+            });
 
-                var (ids, mask, typeIds) = _tokenizer.Encode(text, maxLen);
-                var idTensor = new DenseTensor<long>(ids, new[] { 1, ids.Length });
-                var maskTensor = new DenseTensor<long>(mask, new[] { 1, mask.Length });
-                var typeTensor = new DenseTensor<long>(typeIds, new[] { 1, typeIds.Length });
 
-                using var results = _session.Run(new[]
-                {
-                    NamedOnnxValue.CreateFromTensor("input_ids", idTensor),
-                    NamedOnnxValue.CreateFromTensor("attention_mask", maskTensor),
-                    NamedOnnxValue.CreateFromTensor("token_type_ids", typeTensor)
-                });
-
-                return ExtractEmbeddingVector(results.First().AsTensor<float>());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Could not generate AI embedding for text: '{text}'.\nThis may indicate a problem with the ONNX model.\n\nDetails: {ex.Message}", "AI Model Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return Array.Empty<float>();
-            }
+            return ExtractEmbeddingVector(results.First().AsTensor<float>());
         }
 
         private static float[] ExtractEmbeddingVector(Tensor<float> outputTensor)
@@ -396,14 +424,22 @@ namespace WpfApp2
             var dims = outputTensor.Dimensions.ToArray();
             if (dims.Length == 3)
             {
+
                 int hiddenDim = dims[2];
-                return outputTensor.ToArray().Take(hiddenDim).ToArray();
+                return outputTensor
+                    .ToArray()
+                    .Skip(0 * dims[1] * hiddenDim + 0 * hiddenDim)
+                    .Take(hiddenDim)
+                    .ToArray();
             }
-            if (dims.Length == 2)
+            else if (dims.Length == 2)
             {
                 return outputTensor.ToArray();
             }
-            throw new InvalidOperationException($"Unexpected output dimensions: [{string.Join(",", dims)}]");
+            else
+            {
+                throw new InvalidOperationException($"Unexpected output dimensions: [{string.Join(",", dims)}]");
+            }
         }
 
         public static double CosineSimilarity(float[] a, float[] b)
@@ -419,29 +455,358 @@ namespace WpfApp2
             return dot / (Math.Sqrt(magA) * Math.Sqrt(magB));
         }
 
-        public static async Task AddHistoryRecordAsync(ApplicationDbContext context, LLM_Detail newDetail)
+        public static async Task file_command(string fileName, string contentString, string content)
         {
             try
             {
-                if (context == null) return;
-                context.LLM_Detail.Add(newDetail);
-                await context.SaveChangesAsync();
+                Debug.WriteLine(fileName);
+                string[] supportedTypes = { "pdf", "txt", "ppt", "docx" };
+                string[] arr = fileName.Trim().Split(".");
+                string fileType = arr[arr.Length - 1].ToLower();
+                Debug.WriteLine(fileType);
 
-                const int maxRecords = 500;
-                int recordCount = await context.LLM_Detail.CountAsync();
-                if (recordCount > maxRecords)
+                Debug.WriteLine("in " + fileType);
+                SearchForDocsInDatabase(fileName, contentString, content);
+            }
+            catch (Exception e)
+            {
+                if (Properties.Settings.Default.History)
                 {
-                    int recordsToDeleteCount = recordCount - maxRecords;
-                    await context.LLM_Detail
-                        .OrderBy(detail => detail.CommandTime)
-                        .Take(recordsToDeleteCount)
-                        .ExecuteDeleteAsync();
+                    var entity = new LLM_Detail
+                    {
+                        UserId = (int)Global.UserId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "file_operation"
+                    };
+                    await AddHistoryRecordAsync(_context, entity);
+                    if (Global.file_operation.Count >= 20)
+                    {
+                        Global.file_operation.Dequeue();
+                    }
+                    Global.file_operation.Enqueue(entity);
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.total_commands.Enqueue(entity);
                 }
+                Debug.WriteLine(e.Message);
+            }
+        }
+
+        public static async Task SearchForDocsInDatabase(string filename, string contentString, string content)
+        {
+            try
+            {
+                using var _context = new ApplicationDbContext();
+                float[] queryEmbedding = GetEmbedding(filename.ToLower());
+
+
+
+                
+                var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
+                if (!allDocs.Any())
+                {
+                    MessageBox.Show("No documents found in the database.");
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            UserId = (int)Global.UserId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        await AddHistoryRecordAsync(_context, entity);
+                        if (Global.file_operation.Count >= 20)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.total_commands.Enqueue(entity);
+                    }
+                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"File Not Found, Please Try Again \"");
+                    return;
+                }
+
+
+                var results = allDocs
+                .AsParallel()
+                .Select(exe =>
+                {
+
+                    float[] embedding;
+                    if (string.IsNullOrEmpty(exe.Embedding))
+                        embedding = GetEmbedding(exe.DisplayName);
+                    else
+                        embedding = exe.Embedding.Split(',').Select(float.Parse).ToArray();
+
+                    double sim = CosineSimilarity(queryEmbedding, embedding);
+
+                    return new { exe.DisplayName, exe.FilePath, sim };
+                })
+                .OrderByDescending(x => x.sim)
+                .FirstOrDefault();
+
+
+                Debug.WriteLine("" + results.sim);
+
+                if (results?.FilePath != null && results.sim > 0.80f)
+                {
+                    //MessageBox.Show(
+                    //    $"Best match: {results.DisplayName}\n" +
+                    //    $"Path: {results.FilePath}\n" +
+                    //    $"Similarity: {results.sim:F4}"
+                    //);
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            UserId = (int)Global.UserId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Success",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        await AddHistoryRecordAsync(_context, entity);
+                        if (Global.file_operation.Count >= 20)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
+                  
+                    var process = new Process();
+                    process.StartInfo.FileName = "cmd.exe";
+                    process.StartInfo.Arguments = $"/C start \"\" \"{results.FilePath}\"";
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.CreateNoWindow = true;
+                    process.Start();
+                }
+                else
+                {
+                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"File Not Found. Ensure you said correct Name and Try Again.\"");
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity = new LLM_Detail
+                        {
+                            UserId = (int)Global.UserId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Failed",
+                            CommandTime = DateTime.Now,
+                            CommandType = "file_operation"
+                        };
+                        await AddHistoryRecordAsync(_context, entity);
+                        if (Global.file_operation.Count >= 20)
+                        {
+                            Global.file_operation.Dequeue();
+                        }
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.file_operation.Enqueue(entity);
+                        Global.total_commands.Enqueue(entity);
+                    }
+                    Debug.WriteLine("No matching application found.");
+                }
+
+
+
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not save the command to your history.\n\nDetails: {ex.Message}", "History Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        UserId = (int)Global.UserId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "file_operation"
+                    };
+                    await AddHistoryRecordAsync(_context, entity);
+                    if (Global.file_operation.Count >= 20)
+                    {
+                        Global.file_operation.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.file_operation.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
+                Debug.WriteLine(ex.Message);
+            }
+
+        }
+
+        public static async Task searchBrowser(string command, string search_query, string contentString, string content)
+        {
+            try
+            {
+
+                Debug.WriteLine(command);
+                Debug.WriteLine(search_query);
+                //string url = "https://www.google.com/search?q=" + Uri.EscapeDataString(search_query);
+                string powershellPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell\\v1.0\\powershell.exe");
+
+                if (search_query == null)
+                {
+
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = powershellPath,
+                        Arguments = $"-NoProfile -Command {command}",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    if (Properties.Settings.Default.History)
+                    {
+                        var entity1 = new LLM_Detail
+                        {
+                            UserId = (int)Global.UserId,
+                            Expected_json = contentString,
+                            user_command = content,
+                            Status = "Success",
+                            CommandTime = DateTime.Now,
+                            CommandType = "web_browse"
+                        };
+                        _context.LLM_Detail.Add(entity1);
+                        _context.SaveChanges();
+                        if (Global.web_browse.Count >= 20)
+                        {
+                            Global.web_browse.Dequeue();
+                        }
+                        Global.web_browse.Enqueue(entity1);
+                        if (Global.total_commands.Count >= 20)
+                        {
+                            Global.total_commands.Dequeue();
+                        }
+                        Global.total_commands.Enqueue(entity1);
+                    }
+                    return;
+                }
+
+                string urlPath = command.Replace("{{q}}", Uri.EscapeDataString((search_query)));
+                Debug.WriteLine(urlPath);
+
+
+                int urlIndex = command.IndexOf("http");
+
+                if (urlIndex != -1)
+                {
+
+                    string prefix = urlPath.Substring(0, urlIndex);
+                    string url = urlPath.Substring(urlIndex);
+                    urlPath = $"{prefix}\"{url}\"";
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = powershellPath,
+                    Arguments = $"-NoProfile -Command {urlPath}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        UserId = (int)Global.UserId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Success",
+                        CommandTime = DateTime.Now,
+                        CommandType = "web_browse"
+                    };
+                    await AddHistoryRecordAsync(_context, entity);
+                    if (Global.web_browse.Count >= 20)
+                    {
+                        Global.web_browse.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.web_browse.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
+            }
+            catch (Exception exception)
+            {
+                if (Properties.Settings.Default.History)
+                {
+                    var entity = new LLM_Detail
+                    {
+                        UserId = (int)Global.UserId,
+                        Expected_json = contentString,
+                        user_command = content,
+                        Status = "Failed",
+                        CommandTime = DateTime.Now,
+                        CommandType = "web_browse"
+                    };
+                    _context.LLM_Detail.Add(entity);
+                    _context.SaveChanges();
+                    if (Global.web_browse.Count >= 20)
+                    {
+                        Global.web_browse.Dequeue();
+                    }
+                    if (Global.total_commands.Count >= 20)
+                    {
+                        Global.total_commands.Dequeue();
+                    }
+                    Global.web_browse.Enqueue(entity);
+                    Global.total_commands.Enqueue(entity);
+                }
+                Debug.WriteLine(exception);
+            }
+        }
+
+        public static async Task AddHistoryRecordAsync(ApplicationDbContext context, LLM_Detail newDetail)
+        {
+
+            context.LLM_Detail.Add(newDetail);
+
+
+            await context.SaveChangesAsync();
+
+
+            int recordCount = await context.LLM_Detail.CountAsync();
+            const int maxRecords = 500;
+
+
+            if (recordCount > maxRecords)
+            {
+
+                int recordsToDeleteCount = recordCount - maxRecords;
+
+
+                await context.LLM_Detail
+                    .OrderBy(detail => detail.CommandTime)
+                    .Take(recordsToDeleteCount)
+                    .ExecuteDeleteAsync();
             }
         }
     }
 }
+

@@ -16,7 +16,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to initialize the History page.\n\nDetails: {ex.Message}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+              
             }
         }
 
@@ -59,7 +59,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to display the history for '{categoryName}'.\n\nDetails: {ex.Message}", "Navigation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
             }
         }
     }

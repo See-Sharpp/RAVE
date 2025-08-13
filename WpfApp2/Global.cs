@@ -1,4 +1,5 @@
-﻿using WpfApp2.Models;
+﻿using System.Windows.Forms;
+using WpfApp2.Models;
 
 namespace WpfApp2
 {
@@ -26,6 +27,7 @@ namespace WpfApp2
 
         public static int Scanning = 0;
         public static string userName = "User";
+        public static string? nircmdPath = null;
 
     }
 }

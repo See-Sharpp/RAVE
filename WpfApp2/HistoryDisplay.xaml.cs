@@ -16,7 +16,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to initialize the History Display page.\n\nDetails: {ex.Message}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+             
             }
         }
 
@@ -47,7 +47,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred while loading the history data.\n\nDetails: {ex.Message}", "Data Loading Error", MessageBoxButton.OK, MessageBoxImage.Error);
+               
                 EmptyState.Visibility = Visibility.Visible;
             }
         }
@@ -63,7 +63,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to navigate back.\n\nDetails: {ex.Message}", "Navigation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+              
             }
         }
     }

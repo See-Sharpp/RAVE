@@ -33,8 +33,6 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                // Converters should never throw exceptions, as it can crash the application.
-                // Instead, log the error for debugging purposes and return a safe default value.
                 Trace.WriteLine($"[LastItemConverter Error]: {ex.Message}");
                 return false;
             }
@@ -42,7 +40,7 @@ namespace WpfApp2
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            // This method is not used, so it correctly throws an exception.
+           
             throw new NotImplementedException();
         }
     }

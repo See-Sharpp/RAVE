@@ -23,7 +23,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"A fatal error occurred during application startup.\n\nDetails: {ex.Message}", "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+              
                 Application.Current.Shutdown();
             }
         }
@@ -47,7 +47,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An unexpected UI error occurred.\n\nDetails: {ex.Message}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+               
             }
         }
 
@@ -64,7 +64,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An unexpected UI error occurred.\n\nDetails: {ex.Message}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            
             }
         }
 
@@ -112,7 +112,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred during the login process.\nThis could be a database or configuration issue.\n\nDetails: {ex.Message}", "Login Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
             }
         }
 
@@ -127,13 +127,13 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Could not open the Sign Up window.\n\nDetails: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
             }
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            // This logic is for application lifetime management, no try-catch needed here.
+          
             base.OnClosing(e);
             if (Global.UserId == null && !Global.SignUp)
             {
@@ -169,8 +169,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Auto-login failed. Please log in manually.\nThis may be due to a database connection issue.\n\nDetails: {ex.Message}", "Auto-Login Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
-                // Clear the faulty "Remember Me" setting so it doesn't fail again.
+              
                 Properties.Settings.Default.RememberMe = false;
                 Properties.Settings.Default.Save();
             }

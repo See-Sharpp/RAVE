@@ -65,7 +65,11 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"A critical error occurred while initializing the dashboard.\n\nDetails: {ex.Message}", "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    File.AppendAllText("fatal.log", $"[Dashboard] {DateTime.Now} - {ex}\n");
+                }
+                catch { /* Swallow logging errors */ }
             }
         }
 
@@ -83,7 +87,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred during the voice command process.\n\nDetails: {ex.Message}", "Voice Error", MessageBoxButton.OK, MessageBoxImage.Error);
+               
                 CommandInput.Clear();
                 CommandInput.AppendText("Error processing voice input.");
             }
@@ -149,17 +153,17 @@ namespace WpfApp2
             }
             catch (HttpRequestException ex)
             {
-                MessageBox.Show($"A network error occurred while transcribing audio.\nPlease check your internet connection.\n\nDetails: {ex.Message}", "Transcription Network Error", MessageBoxButton.OK, MessageBoxImage.Error);
+              
                 return string.Empty;
             }
             catch (JsonException ex)
             {
-                MessageBox.Show($"Failed to parse the response from the transcription service.\n\nDetails: {ex.Message}", "Transcription Response Error", MessageBoxButton.OK, MessageBoxImage.Error);
+               
                 return string.Empty;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An unexpected error occurred during transcription.\n\nDetails: {ex.Message}", "Transcription Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
                 return string.Empty;
             }
         }
@@ -187,7 +191,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to start audio recording.\nPlease ensure a microphone is connected and not in use by another application.\n\nDetails: {ex.Message}", "Recording Error", MessageBoxButton.OK, MessageBoxImage.Error);
+              
             }
         }
 
@@ -298,7 +302,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to process the recorded audio.\nThe final audio file may be corrupt or missing.\n\nDetails: {ex.Message}", "Audio Processing Error", MessageBoxButton.OK, MessageBoxImage.Error);
+               
             }
         }
 
@@ -306,7 +310,7 @@ namespace WpfApp2
         {
             if (e.Exception != null)
             {
-                MessageBox.Show($"An error occurred during recording: {e.Exception.Message}", "Recording Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                
                 recordingStoppedTcs?.TrySetException(e.Exception);
             }
             else
@@ -332,7 +336,6 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to process command.\n\nDetails: {ex.Message}", "Command Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -352,7 +355,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to load command history.\n\nDetails: {ex.Message}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+              
             }
         }
 

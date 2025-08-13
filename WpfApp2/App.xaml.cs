@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq; // Added for .Any()
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
@@ -15,9 +17,40 @@ namespace WpfApp2
     {
         public Mutex? _mutex;
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected async override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+
+            
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string raveAppFolder = Path.Combine(appDataPath, "RaveApp");
+            Directory.CreateDirectory(raveAppFolder); 
+
+          
+            string nircmdExePath = Path.Combine(raveAppFolder, "nircmd.exe");
+            string? nircmdParentFolder = Path.GetDirectoryName(nircmdExePath);
+
+  
+            try
+            {
+                if (File.Exists(nircmdExePath))
+                {
+                    Global.nircmdPath = nircmdExePath;
+                }
+                else
+                {
+                    
+                    Global.nircmdPath = await AutoStartHelper.EnsureNirCmdExistsAsync();
+                }
+
+                AddDirectoryToUserPath(nircmdParentFolder); 
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to download a required component (NirCmd). The application will now close.\n\n" + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+                return;
+            }
 
             const string name = "RAVE_INSTANCE";
             bool createdNew;
@@ -30,38 +63,33 @@ namespace WpfApp2
 
                 if (!createdNew)
                 {
-                    MessageBox.Show("Another instance of the application is already running.", "Application Already Running", MessageBoxButton.OK, MessageBoxImage.Information);
                     Shutdown();
                     return;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"A critical error occurred while checking for other instances of the application. Please restart your computer.\n\nDetails: {ex.Message}", "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
                 return;
             }
 
+            // 4. Set Culture Info
             var culture = new CultureInfo("en-US");
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
+            
             try
             {
+              
                 if (!string.IsNullOrEmpty(Global.deafultScreenShotPath) && !Directory.Exists(Global.deafultScreenShotPath))
                 {
                     Directory.CreateDirectory(Global.deafultScreenShotPath);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to create the default screenshot directory. Screenshots may not save correctly.\n\nPlease check your permissions for the folder.\n\nDetails: {ex.Message}", "Directory Creation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
 
-            try
-            {
+               
                 if (!WpfApp2.Properties.Settings.Default.AutoRegister || !WpfApp2.Properties.Settings.Default.ShortcutCreated)
                 {
                     AutoStartHelper.EnableAutoStart(true);
@@ -71,38 +99,27 @@ namespace WpfApp2
                     WpfApp2.Properties.Settings.Default.Save();
                 }
 
+               
                 Global.autoOpen = true;
                 WpfApp2.Properties.Settings.Default.Is_First = false;
                 WpfApp2.Properties.Settings.Default.Save();
-
                 Global.Scanning = WpfApp2.Properties.Settings.Default.Scanning_Time;
                 Global.userName = WpfApp2.Properties.Settings.Default.UserName ?? "User";
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"An error occurred during initial setup (auto-start, shortcut, or settings).\n\nPlease run the application as an administrator to resolve this issue.\n\nDetails: {ex.Message}", "Setup Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+           
             }
         }
 
         public App()
         {
-            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-            {
-                try { File.AppendAllText("fatal.log", $"[Domain] {DateTime.Now} - {e.ExceptionObject}\n"); } catch { }
-            };
+           
+            AppDomain.CurrentDomain.UnhandledException += (s, e) => LogException(e.ExceptionObject?.ToString());
+            DispatcherUnhandledException += (s, e) => { LogException(e.Exception?.ToString()); e.Handled = true; };
+            TaskScheduler.UnobservedTaskException += (s, e) => { LogException(e.Exception?.ToString()); e.SetObserved(); };
 
-            DispatcherUnhandledException += (s, e) =>
-            {
-                try { File.AppendAllText("fatal.log", $"[Dispatcher] {DateTime.Now} - {e.Exception}\n"); } catch { }
-                e.Handled = true;
-            };
-
-            TaskScheduler.UnobservedTaskException += (s, e) =>
-            {
-                try { File.AppendAllText("fatal.log", $"[Task] {DateTime.Now} - {e.Exception}\n"); } catch { }
-                e.SetObserved();
-            };
-
+            
             try
             {
                 using (var context = new ApplicationDbContext())
@@ -112,16 +129,43 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"A critical error occurred while initializing the local database. The application may not function correctly.\n\nDetails: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Shutdown();
+                LogException("CRITICAL: Database migration failed on startup. " + ex.Message);
             }
-
-            AddEnvironmentVariable();
         }
 
-        public void AddEnvironmentVariable()
+   
+        private void AddDirectoryToUserPath(string directoryPath)
         {
-            AddEnvironmentPath.AddNircmd();
+            try
+            {
+                string pathVariable = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) ?? "";
+                var allPaths = pathVariable.Split(';').ToList();
+
+                if (!allPaths.Any(p => p.Trim().Equals(directoryPath, StringComparison.OrdinalIgnoreCase)))
+                {
+                    string newPath = pathVariable.TrimEnd(';') + ";" + directoryPath;
+                    Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
+                    Debug.WriteLine($"'{directoryPath}' added to User PATH.");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException("Failed to modify PATH variable: " + ex.Message);
+            }
+        }
+
+        
+        private void LogException(string? message)
+        {
+            if (string.IsNullOrEmpty(message)) return;
+            try
+            {
+                File.AppendAllText("fatal.log", $"[{DateTime.Now}] - {message}\n");
+            }
+            catch
+            {
+              
+            }
         }
     }
 }

@@ -1,7 +1,10 @@
 ﻿using IWshRuntimeLibrary;
 using Microsoft.Win32;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Security;
 using System.Windows;
 
@@ -17,7 +20,6 @@ namespace WpfApp2
             {
                 if (string.IsNullOrEmpty(exePath))
                 {
-                    MessageBox.Show("Could not determine the application path. Auto-start feature cannot be changed.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
@@ -25,7 +27,6 @@ namespace WpfApp2
                 {
                     if (key == null)
                     {
-                        MessageBox.Show("Unable to access the registry for auto-start configuration.", "Registry Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -39,13 +40,21 @@ namespace WpfApp2
                     }
                 }
             }
-            catch (SecurityException)
+            catch (SecurityException ex)
             {
-                MessageBox.Show("Permission to modify auto-start settings was denied.\n\nPlease try running the application as an administrator.", "Permission Denied", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    System.IO.File.AppendAllText("fatal.log", $"[AutoStartHelper:Enable] {DateTime.Now} - {ex}\n");
+                }
+                catch { /* Swallow logging errors */ }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An unexpected error occurred while changing auto-start settings.\n\nDetails: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                try
+                {
+                    System.IO.File.AppendAllText("fatal.log", $"[AutoStartHelper:Enable] {DateTime.Now} - {ex}\n");
+                }
+                catch { /* Swallow logging errors */ }
             }
         }
 
@@ -64,6 +73,53 @@ namespace WpfApp2
             }
         }
 
+        public static async Task<String> EnsureNirCmdExistsAsync()
+        {
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string raveAppFolder = Path.Combine(appDataPath, "RaveApp");
+            Directory.CreateDirectory(raveAppFolder);
+            string nircmdExePath = Path.Combine(raveAppFolder, "nircmd.exe");
+
+            if(System.IO.File.Exists(nircmdExePath))
+            {
+                return nircmdExePath;
+            }
+
+            string zipUrl = "https://www.nirsoft.net/utils/nircmd.zip";
+            string tempZipPath = Path.Combine(raveAppFolder, "nircmd_temp.zip");
+
+            try
+            {
+                using (var httpClient = new HttpClient())
+                {
+
+                    byte[] fileBytes = await httpClient.GetByteArrayAsync(zipUrl);
+                    await System.IO.File.WriteAllBytesAsync(tempZipPath, fileBytes);
+                }
+                ZipFile.ExtractToDirectory(tempZipPath, raveAppFolder);
+                System.IO.File.Delete(tempZipPath);
+
+                if (System.IO.File.Exists(nircmdExePath))
+                {
+                    return nircmdExePath;
+                }
+                else
+                {
+                    throw new Exception("NirCmd download or extraction failed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText("fatal.log", $"[AutoStartHelper:EnsureNirCmdExistsAsync] {DateTime.Now} - {ex}\n");
+                }
+                catch { /* Swallow logging errors */ }
+                throw new Exception("Failed to ensure NirCmd exists.", ex);
+            }
+
+        }
+
         public static void CreateDesktopShortcut()
         {
             try
@@ -75,7 +131,7 @@ namespace WpfApp2
                 {
                     if (string.IsNullOrEmpty(exePath))
                     {
-                        MessageBox.Show("Could not determine the application path. Shortcut was not created.", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        
                         return;
                     }
 
@@ -91,8 +147,47 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to create a desktop shortcut.\nThis can happen due to system permissions or a missing component.\n\nDetails: {ex.Message}", "Shortcut Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                try
+                {
+                    System.IO.File.AppendAllText("fatal.log", $"[AutoStartHelper:Enable] {DateTime.Now} - {ex}\n");
+                }
+                catch { /* Swallow logging errors */ }
             }
         }
+
+        //public static void CreateDesktopShortcut()
+        //{
+        //    string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        //    string shortcutPath = Path.Combine(desktopPath, "RAVE.lnk");
+        //    string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
+
+        //    if (!System.IO.File.Exists(shortcutPath))
+        //    {
+        //        try
+        //        {
+        //            Type? shellType = Type.GetTypeFromProgID("WScript.Shell");
+        //            if (shellType == null)
+        //            {
+        //                MessageBox.Show("WScript.Shell not found.");
+        //                return;
+        //            }
+
+        //            dynamic shell = Activator.CreateInstance(shellType)!;
+        //            dynamic shortcut = shell.CreateShortcut(shortcutPath);
+
+        //            shortcut.TargetPath = exePath;
+        //            shortcut.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        //            shortcut.Description = "RAVE Shortcut";
+        //            shortcut.IconLocation = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
+        //            shortcut.Save();
+
+        //            MessageBox.Show("Shortcut created successfully.");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MessageBox.Show("Failed to create shortcut: " + ex.Message);
+        //        }
+        //    }
+        //}
     }
 }

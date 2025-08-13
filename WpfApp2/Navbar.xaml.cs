@@ -492,7 +492,7 @@ namespace WpfApp2
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Unexpected error: {ex.Message}"+"bhlehhhh");
+              
             }
             finally
             {
