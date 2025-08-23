@@ -64,8 +64,6 @@ namespace WpfApp2
                 @"C:\RecoveryImage",
             };
 
-        private Commands _commands = new Commands();
-
         private static readonly List<Regex> ignorePatterns = new()
         {
             new Regex(@"\\Microsoft Visual Studio\\", RegexOptions.IgnoreCase),
@@ -86,17 +84,6 @@ namespace WpfApp2
             SetupTrayIcon();
             Directory.CreateDirectory("logs");
 
-            //if (AutoStartHelper.IsAutoStartEnabled() && Global.autoOpen && Properties.Settings.Default.RememberMe)
-            //{
-            //    Global.autoOpen = true;
-            //    this.Loaded += (s, e) =>
-            //    {
-            //        this.Close();
-            //    };
-                
-            //}
-            //Global.autoOpen = false; 
-
             if (!Properties.Settings.Default.InitialScan)
             {
                this.Loaded += async (s, e) => await InitialScan();
@@ -107,9 +94,6 @@ namespace WpfApp2
                 StartExeWatchers();
             }
             MainContentFrame.Navigate(new Dashboard());
-
-         
-
 
         }
         private void Dashboard_Loaded(object sender, RoutedEventArgs e)
@@ -404,23 +388,6 @@ namespace WpfApp2
         {
             try
             {
-                //e.Cancel = true;
-                //this.Hide();
-                //this.ShowInTaskbar = false;
-                //this.WindowState = WindowState.Minimized;
-                //Task.Run(async () =>
-                //{
-                //    await Task.Delay(300);
-                //    await Dispatcher.InvokeAsync(() =>
-                //    {
-                //        this.Hide();
-                //        _notifyIcon?.ShowBalloonTip(500, "RAVE", "Running in background", ToolTipIcon.Info);
-                //        if (Global.floatingIcon != null && !Global.logout)
-                //        {
-                //            Global.floatingIcon.Show();
-                //        }
-                //    });
-                //});
                 e.Cancel = true;
                 this.Hide();
                 if (_notifyIcon != null)
@@ -501,7 +468,6 @@ namespace WpfApp2
                         }
                         catch (Exception ex)
                         {
-                           
                             continue;
                         }
                     }
@@ -794,7 +760,11 @@ namespace WpfApp2
         {
             if (_notifyIcon != null)
             {
-              
+                foreach (var watcher in _watchers)
+                {
+                    watcher.Dispose();
+                }
+                _watchers.Clear();
                 _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
                 _notifyIcon = null!;

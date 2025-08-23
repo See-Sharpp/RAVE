@@ -1,15 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Xml.Linq;
 using WpfApp2.Context;
-using WpfApp2.Models;
 
 namespace WpfApp2
 {
@@ -106,7 +102,6 @@ namespace WpfApp2
                         var root = parsedJson.RootElement;
 
                         var original_user_query = root.GetProperty("original_user_query").GetString();
-                        var processed_user_query = root.GetProperty("processed_user_query").GetString();
 
                         var intent_classification = root.GetProperty("intent_classification");
                         var primary_intent = intent_classification.GetProperty("primary_intent").GetString();
@@ -134,7 +129,7 @@ namespace WpfApp2
                                                 ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                                 : Array.Empty<string>();
 
-                      
+                        MessageBox.Show(original_user_query);
 
                         if (primary_intent != null)
                         {

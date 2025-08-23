@@ -121,10 +121,6 @@ namespace WpfApp2
                 this.Close();
                 return;
             }
-
-           
-
-
         }
 
         private void ForgotPassword_Click(object sender, RoutedEventArgs e)
