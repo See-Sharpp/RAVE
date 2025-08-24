@@ -14,8 +14,8 @@ namespace WpfApp2
 
     public class Commands
     {
-        public static ApplicationDbContext _context;
-        public static SignUpDetail userId;
+        public static ApplicationDbContext _context=new ApplicationDbContext();
+        public static SignUpDetail userId= _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         private static readonly tokenizer _tokenizer =
             new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
 
@@ -24,12 +24,6 @@ namespace WpfApp2
             new InferenceSession(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "model", "mini-lm.onnx"));
 
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
-
-        public Commands()
-        {
-            _context = new ApplicationDbContext();
-            userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
-        }
 
         public static async Task systemCommand(string command, string search_query, string contentString, string content)
         {
@@ -785,7 +779,15 @@ namespace WpfApp2
 
         public static async Task AddHistoryRecordAsync(ApplicationDbContext context,LLM_Detail newDetail)
         {
-           
+            if (context == null)
+                throw new ArgumentNullException(nameof(context), "DbContext is null!");
+
+            if (newDetail == null)
+                throw new ArgumentNullException(nameof(newDetail), "New detail is null!");
+
+            if (context.LLM_Detail == null)
+                throw new InvalidOperationException("LLM_Detail DbSet is not initialized in the context!");
+
             context.LLM_Detail.Add(newDetail);
 
            

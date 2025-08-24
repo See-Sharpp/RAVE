@@ -3,51 +3,79 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
       xmlns:local="clr-namespace:WpfApp2"
       mc:Ignorable="d"
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="History"
-      Background="#121212">
+      Title="History">
+
+    <Page.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#0A0A0A" Offset="0.0"/>
+            <GradientStop Color="#1A1A1A" Offset="0.5"/>
+            <GradientStop Color="#0F0F0F" Offset="1.0"/>
+        </LinearGradientBrush>
+    </Page.Background>
 
     <Page.Resources>
+        <!-- Enhanced modern button style with better shadows and effects -->
         <Style x:Key="ModernButtonStyle" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" 
-                                CornerRadius="12" 
-                                BorderThickness="1"
-                                BorderBrush="#3A3A5C"
+                                CornerRadius="20" 
+                                BorderThickness="2"
+                                BorderBrush="#404040"
                                 Background="{TemplateBinding Background}"
-                                Padding="16">
+                                Padding="24">
                             <Border.Effect>
                                 <DropShadowEffect Color="#000000" 
-                                                  BlurRadius="8" 
-                                                  ShadowDepth="4" 
-                                                  Opacity="0.3"/>
+                                                  BlurRadius="25" 
+                                                  ShadowDepth="8" 
+                                                  Opacity="0.4"/>
                             </Border.Effect>
 
                             <StackPanel HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"
                                        Orientation="Vertical">
-                                <TextBlock x:Name="icon" 
-                                          Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
-                                          FontSize="28"
-                                          HorizontalAlignment="Center"
-                                          Margin="0,0,0,8"
-                                          Foreground="#E0E6ED"/>
+                                <Border x:Name="iconContainer"
+                                        Background="#FFFFFF"
+                                        CornerRadius="25"
+                                        Width="50"
+                                        Height="50"
+                                        Margin="0,0,0,16"
+                                        HorizontalAlignment="Center">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="2" Opacity="0.2"/>
+                                    </Border.Effect>
+                                    <TextBlock x:Name="icon" 
+                                              Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                              FontSize="24"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Foreground="#2A2A2A"/>
+                                </Border>
                                 <TextBlock x:Name="title"
                                           Text="{TemplateBinding Content}"
-                                          FontSize="14"
-                                          FontWeight="SemiBold"
+                                          FontSize="16"
+                                          FontWeight="Bold"
                                           HorizontalAlignment="Center"
                                           TextWrapping="Wrap"
                                           TextAlignment="Center"
                                           Foreground="White"
-                                          LineHeight="18"/>
+                                          LineHeight="20"/>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#FFFFFF"/>
+                                <Setter TargetName="border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#FFFFFF" BlurRadius="20" ShadowDepth="0" Opacity="0.3"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background">
                                     <Setter.Value>
@@ -70,12 +98,14 @@
             <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
         </Style>
 
+        <!-- Enhanced system control style with modern gradients -->
         <Style x:Key="SystemControlStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
             <Setter Property="Background">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#059669" Offset="0"/>
-                        <GradientStop Color="#10B981" Offset="1"/>
+                        <GradientStop Color="#047857" Offset="0"/>
+                        <GradientStop Color="#10B981" Offset="0.5"/>
+                        <GradientStop Color="#34D399" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
@@ -84,23 +114,24 @@
                     <Setter Property="Background">
                         <Setter.Value>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#047857" Offset="0"/>
-                                <GradientStop Color="#059669" Offset="1"/>
+                                <GradientStop Color="#059669" Offset="0"/>
+                                <GradientStop Color="#10B981" Offset="0.5"/>
+                                <GradientStop Color="#6EE7B7" Offset="1"/>
                             </LinearGradientBrush>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="BorderBrush" Value="#10B981"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
-
+        <!-- Enhanced web browse style with sophisticated blue gradients -->
         <Style x:Key="WebBrowseStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
             <Setter Property="Background">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#1E3A8A" Offset="0"/>
-                        <GradientStop Color="#3B82F6" Offset="1"/>
+                        <GradientStop Color="#1E40AF" Offset="0"/>
+                        <GradientStop Color="#3B82F6" Offset="0.5"/>
+                        <GradientStop Color="#60A5FA" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
@@ -110,22 +141,23 @@
                         <Setter.Value>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#1D4ED8" Offset="0"/>
-                                <GradientStop Color="#60A5FA" Offset="1"/>
+                                <GradientStop Color="#3B82F6" Offset="0.5"/>
+                                <GradientStop Color="#93C5FD" Offset="1"/>
                             </LinearGradientBrush>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="BorderBrush" Value="#3B82F6"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
-
+        <!-- Enhanced application control style with rich purple gradients -->
         <Style x:Key="ApplicationControlStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
             <Setter Property="Background">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="#581C87" Offset="0"/>
-                        <GradientStop Color="#8B5CF6" Offset="1"/>
+                        <GradientStop Color="#8B5CF6" Offset="0.5"/>
+                        <GradientStop Color="#A78BFA" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
@@ -135,21 +167,23 @@
                         <Setter.Value>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#6D28D9" Offset="0"/>
-                                <GradientStop Color="#A78BFA" Offset="1"/>
+                                <GradientStop Color="#8B5CF6" Offset="0.5"/>
+                                <GradientStop Color="#C4B5FD" Offset="1"/>
                             </LinearGradientBrush>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="BorderBrush" Value="#8B5CF6"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
+        <!-- Enhanced file operation style with warm orange gradients -->
         <Style x:Key="FileOperationStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
             <Setter Property="Background">
                 <Setter.Value>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#B91C1C" Offset="0"/>
-                        <GradientStop Color="#F97316" Offset="1"/>
+                        <GradientStop Color="#DC2626" Offset="0"/>
+                        <GradientStop Color="#F97316" Offset="0.5"/>
+                        <GradientStop Color="#FBBF24" Offset="1"/>
                     </LinearGradientBrush>
                 </Setter.Value>
             </Setter>
@@ -158,12 +192,12 @@
                     <Setter Property="Background">
                         <Setter.Value>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#DC2626" Offset="0"/>
-                                <GradientStop Color="#FB923C" Offset="1"/>
+                                <GradientStop Color="#EF4444" Offset="0"/>
+                                <GradientStop Color="#F97316" Offset="0.5"/>
+                                <GradientStop Color="#FCD34D" Offset="1"/>
                             </LinearGradientBrush>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="BorderBrush" Value="#F97316"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -193,30 +227,34 @@
                 <Border.Effect>
                     <DropShadowEffect Color="#4F46E5" BlurRadius="16" ShadowDepth="0" Opacity="0.4"/>
                 </Border.Effect>
-                <TextBlock Text="⚙" 
-                          FontSize="28" 
-                          Foreground="White" 
-                          HorizontalAlignment="Center" 
-                          VerticalAlignment="Center"/>
+                <fa:IconBlock Icon="History" FontSize="23" Foreground="Black"/>
             </Border>
 
-            <!-- Main Heading -->
-            <TextBlock Text="Select Command History"
-                       FontSize="32"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,8"
-                       Foreground="White"/>
+            <TextBlock Text="Command History"
+           FontSize="38"
+           FontWeight="Bold"
+           HorizontalAlignment="Center"
+           Margin="0,0,0,12">
+                <TextBlock.Foreground>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#FFFFFF" Offset="0.0"/>
+                        <GradientStop Color="#E5E7EB" Offset="1.0"/>
+                    </LinearGradientBrush>
+                </TextBlock.Foreground>
+            </TextBlock>
 
-            <!-- Subtitle -->
+            <!-- Main Heading -->
             <TextBlock Text="Choose from the available command categories to view your execution history"
-                       FontSize="14"
+                       FontSize="16"
                        HorizontalAlignment="Center"
-                       Margin="0,0,0,40"
+                       Margin="0,0,0,48"
                        Foreground="#9CA3AF"
                        TextAlignment="Center"
-                       MaxWidth="500"
-                       TextWrapping="Wrap"/>
+                       MaxWidth="600"
+                       TextWrapping="Wrap"
+                       LineHeight="22"/>
+
+            <!-- Subtitle -->
 
             <!-- Button Grid -->
             <Grid HorizontalAlignment="Center">
@@ -231,52 +269,53 @@
 
                 <!-- System Control Button -->
                 <Button Grid.Row="0" Grid.Column="0"
-                        Content="System Control"
-                        Tag="⚙️"
-                        Width="200" Height="120"
-                        Margin="12"
-                        Cursor="Hand"
-                        Style="{StaticResource SystemControlStyle}"
-                        Click="SystemControl_Click"/>
+            Content="System Control"
+            Tag="⚙️"
+            Width="220" Height="140"
+            Margin="16"
+            Cursor="Hand"
+            Style="{StaticResource SystemControlStyle}"
+            Click="SystemControl_Click"/>
 
                 <!-- Web Browse Button -->
                 <Button Grid.Row="0" Grid.Column="1"
-                        Content="Web Browse"
-                        Tag="🌐"
-                        Width="200" Height="120"
-                        Margin="12"
-                        Cursor="Hand"
-                        Style="{StaticResource WebBrowseStyle}"
-                        Click="WebBrowse_Click"/>
+            Content="Web Browse"
+            Tag="🌐"
+            Width="220" Height="140"
+            Margin="16"
+            Cursor="Hand"
+            Style="{StaticResource WebBrowseStyle}"
+            Click="WebBrowse_Click"/>
 
                 <!-- Application Control Button -->
                 <Button Grid.Row="1" Grid.Column="0"
-                        Content="Application Control"
-                        Tag="🖥️"
-                        Width="200" Height="120"
-                        Margin="12"
-                        Cursor="Hand"
-                        Style="{StaticResource ApplicationControlStyle}"
-                        Click="ApplicationControl_Click"/>
+            Content="Application Control"
+            Tag="🖥️"
+            Width="220" Height="140"
+            Margin="16"
+            Cursor="Hand"
+            Style="{StaticResource ApplicationControlStyle}"
+            Click="ApplicationControl_Click"/>
 
                 <!-- File Operation Button -->
                 <Button Grid.Row="1" Grid.Column="1"
-                        Content="File Operation"
-                        Tag="📁"
-                        Width="200" Height="120"
-                        Margin="12"
-                        Cursor="Hand"
-                        Style="{StaticResource FileOperationStyle}"
-                        Click="FileOperation_Click"/>
+            Content="File Operation"
+            Tag="📁"
+            Width="220" Height="140"
+            Margin="16"
+            Cursor="Hand"
+            Style="{StaticResource FileOperationStyle}"
+            Click="FileOperation_Click"/>
             </Grid>
 
             <!-- Footer Text -->
-            <TextBlock Text="Click on any option to view the corresponding command history"
-                       FontSize="12"
-                       HorizontalAlignment="Center"
-                       Margin="0,32,0,0"
-                       Foreground="#6B7280"
-                       TextAlignment="Center"/>
+            <TextBlock Text="Click on any category to explore your command execution history"
+           FontSize="14"
+           HorizontalAlignment="Center"
+           Margin="0,40,0,0"
+           Foreground="#6B7280"
+           TextAlignment="Center"
+           FontWeight="Medium"/>
         </StackPanel>
     </Grid>
 </Page>
