@@ -14,8 +14,8 @@ namespace WpfApp2
 {
     public class Commands
     {
-        public static ApplicationDbContext _context;
-        public static SignUpDetail userId;
+        public static ApplicationDbContext _context=new ApplicationDbContext();
+        public static SignUpDetail userId= _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
         private static readonly tokenizer _tokenizer =
             new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
         static string? nircmdPath = Global.nircmdPath;
@@ -25,11 +25,6 @@ namespace WpfApp2
 
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
 
-        public Commands()
-        {
-            _context = new ApplicationDbContext();
-            userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
-        }
         public static async Task systemCommand(string command, string search_query, string contentString, string content)
         {
             try
@@ -784,7 +779,7 @@ namespace WpfApp2
 
         public static async Task AddHistoryRecordAsync(ApplicationDbContext context, LLM_Detail newDetail)
         {
-
+           
             context.LLM_Detail.Add(newDetail);
 
 

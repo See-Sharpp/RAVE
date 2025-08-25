@@ -64,8 +64,6 @@ namespace WpfApp2
                 @"C:\RecoveryImage",
             };
 
-        private Commands _commands = new Commands();
-
         private static readonly List<Regex> ignorePatterns = new()
         {
             new Regex(@"\\Microsoft Visual Studio\\", RegexOptions.IgnoreCase),
@@ -96,9 +94,6 @@ namespace WpfApp2
                 StartExeWatchers();
             }
             MainContentFrame.Navigate(new Dashboard());
-
-         
-
 
         }
         private void Dashboard_Loaded(object sender, RoutedEventArgs e)
@@ -473,7 +468,6 @@ namespace WpfApp2
                         }
                         catch (Exception ex)
                         {
-                           
                             continue;
                         }
                     }
@@ -766,7 +760,11 @@ namespace WpfApp2
         {
             if (_notifyIcon != null)
             {
-              
+                foreach (var watcher in _watchers)
+                {
+                    watcher.Dispose();
+                }
+                _watchers.Clear();
                 _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
                 _notifyIcon = null!;

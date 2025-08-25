@@ -1,15 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Xml.Linq;
 using WpfApp2.Context;
-using WpfApp2.Models;
 
 namespace WpfApp2
 {
@@ -135,7 +131,7 @@ namespace WpfApp2
                                                 ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                                 : Array.Empty<string>();
 
-                      
+                        MessageBox.Show(original_user_query);
 
                         if (primary_intent != null)
                         {
