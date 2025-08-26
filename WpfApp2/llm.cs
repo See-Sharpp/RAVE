@@ -131,7 +131,6 @@ namespace WpfApp2
                                                 ? ct.EnumerateArray().Select(e => e.GetString()).ToArray()
                                                 : Array.Empty<string>();
 
-                        MessageBox.Show(original_user_query);
 
                         if (primary_intent != null)
                         {

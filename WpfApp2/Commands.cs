@@ -14,8 +14,8 @@ namespace WpfApp2
 {
     public class Commands
     {
-        public static ApplicationDbContext _context=new ApplicationDbContext();
-        public static SignUpDetail userId= _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
+        public static ApplicationDbContext _context;
+        public static SignUpDetail userId;
         private static readonly tokenizer _tokenizer =
             new tokenizer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokenizer", "vocab.txt"));
         static string? nircmdPath = Global.nircmdPath;
@@ -25,6 +25,11 @@ namespace WpfApp2
 
         private static readonly Dictionary<string, float[]> embeddingCache = new Dictionary<string, float[]>();
 
+        public Commands()
+        {
+            _context = new ApplicationDbContext();
+            userId = _context.SignUpDetails.FirstOrDefault(u => u.Id == Global.UserId);
+        }
         public static async Task systemCommand(string command, string search_query, string contentString, string content)
         {
             try
@@ -112,14 +117,15 @@ namespace WpfApp2
 
         public static async Task application_command(string application, string contentString, string content)
         {
-            
+
 
             string connectionString = @"Provider=Search.CollatorDSO;Extended Properties='Application=Windows'";
             string query = $@"
-                SELECT TOP 1 System.ItemName, System.ItemPathDisplay
-                FROM SYSTEMINDEX
-                WHERE System.ItemName LIKE '%{application}%'
-            ";
+                    SELECT TOP 1 System.ItemName, System.ItemPathDisplay
+                    FROM SYSTEMINDEX
+                    WHERE System.ItemName LIKE '%{application}%'
+                      AND System.Kind = 'program'
+                ";
 
             try
             {
@@ -135,7 +141,7 @@ namespace WpfApp2
                             {
                                 string name = reader["System.ItemName"].ToString();
                                 string path = reader["System.ItemPathDisplay"].ToString();
-                                Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Opening {application}\"");
+                               
                                 var process = new Process();
                                 process.StartInfo.FileName = "cmd.exe";
                                 process.StartInfo.Arguments = $"/C start \"\" \"{path}\"";
@@ -158,6 +164,7 @@ namespace WpfApp2
                                 }
                                 else
                                 {
+                                    Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Opening {application}\"");
                                     if (Properties.Settings.Default.History)
                                     {
                                         var entity = new LLM_Detail
@@ -227,7 +234,7 @@ namespace WpfApp2
         {
             try
             {
-               
+
 
                 using var _context = new ApplicationDbContext();
                 char firstChar = application.Trim().ToLower().FirstOrDefault();
@@ -241,6 +248,7 @@ namespace WpfApp2
 
                 if (!allExes.Any())
                 {
+          
                     if (Properties.Settings.Default.History)
                     {
                         var entity = new LLM_Detail
@@ -273,6 +281,7 @@ namespace WpfApp2
                 string bestPath = null;
                 string bestName = null;
                 double bestScore = -1;
+              
 
 
                 var results = allExes
@@ -321,7 +330,8 @@ namespace WpfApp2
                         Global.application_control.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
-                  
+
+
                     Process.Start("cmd.exe", $"/c nircmd.exe speak text \"Opening {application}\"");
                     Process.Start("cmd.exe", $"/C start \"\" \"{results.FilePath}\"");
                 }
@@ -501,7 +511,7 @@ namespace WpfApp2
 
 
 
-                
+
                 var allDocs = _context.AllDocs.Where(d => d.DisplayName != null && d.FilePath != null).Select(d => new { d.DisplayName, d.FilePath, d.Embedding }).ToList();
                 if (!allDocs.Any())
                 {
@@ -555,7 +565,7 @@ namespace WpfApp2
 
                 Debug.WriteLine("" + results.sim);
 
-                if (results?.FilePath != null && results.sim > 0.80f)
+                if (results?.FilePath != null && results.sim > 0.79f)
                 {
                     //MessageBox.Show(
                     //    $"Best match: {results.DisplayName}\n" +
@@ -585,7 +595,7 @@ namespace WpfApp2
                         Global.file_operation.Enqueue(entity);
                         Global.total_commands.Enqueue(entity);
                     }
-                  
+
                     var process = new Process();
                     process.StartInfo.FileName = "cmd.exe";
                     process.StartInfo.Arguments = $"/C start \"\" \"{results.FilePath}\"";
@@ -779,7 +789,7 @@ namespace WpfApp2
 
         public static async Task AddHistoryRecordAsync(ApplicationDbContext context, LLM_Detail newDetail)
         {
-           
+
             context.LLM_Detail.Add(newDetail);
 
 

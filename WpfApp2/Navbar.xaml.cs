@@ -30,7 +30,7 @@ namespace WpfApp2
         private System.Threading.Timer dailyScanTimer;
         private bool _isDailyScanRunning = false;
         string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs/last_scan.txt");
-        
+
 
         readonly string[] excludedPaths = new string[]
             {
@@ -64,6 +64,8 @@ namespace WpfApp2
                 @"C:\RecoveryImage",
             };
 
+        private Commands _commands = new Commands();
+
         private static readonly List<Regex> ignorePatterns = new()
         {
             new Regex(@"\\Microsoft Visual Studio\\", RegexOptions.IgnoreCase),
@@ -86,7 +88,7 @@ namespace WpfApp2
 
             if (!Properties.Settings.Default.InitialScan)
             {
-               this.Loaded += async (s, e) => await InitialScan();
+                this.Loaded += async (s, e) => await InitialScan();
             }
             else
             {
@@ -94,6 +96,9 @@ namespace WpfApp2
                 StartExeWatchers();
             }
             MainContentFrame.Navigate(new Dashboard());
+
+
+
 
         }
         private void Dashboard_Loaded(object sender, RoutedEventArgs e)
@@ -124,8 +129,8 @@ namespace WpfApp2
         {
             dailyScanTimer = new System.Threading.Timer(async _ =>
             {
-            if (_isDailyScanRunning)
-                return;
+                if (_isDailyScanRunning)
+                    return;
                 try
                 {
                     _isDailyScanRunning = true;
@@ -136,7 +141,7 @@ namespace WpfApp2
                 {
                     _isDailyScanRunning = false;
                 }
-            }, null, TimeSpan.FromHours(Global.Scanning), TimeSpan.FromHours(Global.Scanning)); 
+            }, null, TimeSpan.FromHours(Global.Scanning), TimeSpan.FromHours(Global.Scanning));
         }
 
 
@@ -200,7 +205,7 @@ namespace WpfApp2
 
                     var versionInfo = FileVersionInfo.GetVersionInfo(e.FullPath);
                     string displayName = versionInfo.FileDescription ?? info.Name;
-                   
+
                     if (ext == ".exe")
                     {
                         float[] newEmbedding = Commands.GetEmbedding(info.Name);
@@ -316,16 +321,16 @@ namespace WpfApp2
 
         private void SetupTrayIcon()
         {
-          string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
+            string iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "RAVE2.ico");
 
 
-        
+
             if (!File.Exists(iconPath))
             {
-                
+
                 System.Windows.MessageBox.Show($"Warning: RAVE2.ico not found at {iconPath}. Tray icon might not display correctly.",
                                                "Icon Missing", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                _notifyIcon = new NotifyIcon { Visible = true, Text = "RAVE" }; 
+                _notifyIcon = new NotifyIcon { Visible = true, Text = "RAVE" };
             }
             else
             {
@@ -365,19 +370,19 @@ namespace WpfApp2
             contextMenu.Items.Add("Show", null, (s, e) =>
             {
                 this.Show();
-                this.WindowState = WindowState.Normal; 
+                this.WindowState = WindowState.Normal;
                 this.Activate();
                 if (Global.floatingIcon != null)
                 {
                     Global.floatingIcon.Hide();
                 }
-               
+
 
             });
             contextMenu.Items.Add("Exit", null, (s, e) =>
             {
                 _notifyIcon.Visible = false;
-                _notifyIcon.Dispose(); 
+                _notifyIcon.Dispose();
                 System.Windows.Application.Current.Shutdown();
             });
 
@@ -453,51 +458,52 @@ namespace WpfApp2
                 _cancellationTokenSource = new CancellationTokenSource();
                 CancellationToken token = _cancellationTokenSource.Token;
 
-            try
-            {
-                await Task.Run(() =>
+                try
                 {
-                    foreach(var driver in DriveInfo.GetDrives())
+                    await Task.Run(() =>
                     {
-                        try
+                        foreach (var driver in DriveInfo.GetDrives())
                         {
-                            if(driver.IsReady && driver.DriveType== DriveType.Fixed)
+                            try
                             {
-                                ParallelScanDirectoryForFiles(driver.RootDirectory.FullName, token);
+                                if (driver.IsReady && driver.DriveType == DriveType.Fixed)
+                                {
+                                    ParallelScanDirectoryForFiles(driver.RootDirectory.FullName, token);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
+                                continue;
                             }
                         }
-                        catch (Exception ex)
+                        System.Windows.Application.Current.Dispatcher.Invoke(async () =>
                         {
-                            continue;
-                        }
+                            await scanMessageConfirm($"Saved {totalExes} exe files and {totalDocs} docs to database.");
+                            totalDocs = 0;
+                            totalExes = 0;
+                        });
                     }
-                    System.Windows.Application.Current.Dispatcher.Invoke(async () =>
-                    {
-                        await scanMessageConfirm($"Saved {totalExes} exe files and {totalDocs} docs to database.");
-                        totalDocs = 0;
-                        totalExes = 0;
-                    });
+                    );
                 }
-                );
-            }
-            catch (OperationCanceledException)
-            {
-                System.Windows.MessageBox.Show("Scan was canceled.");
-            }
-            catch (Exception ex)
-            {
-              
-            }
-            finally
-            {
-                _isScanning = false;
-                if (spinner != null)
+                catch (OperationCanceledException)
                 {
-                    spinner.IsActive = false;
-                    spinner.Visibility = Visibility.Collapsed;
+                    System.Windows.MessageBox.Show("Scan was canceled.");
                 }
-                _cancellationTokenSource = null;
-            }
+                catch (Exception ex)
+                {
+
+                }
+                finally
+                {
+                    _isScanning = false;
+                    if (spinner != null)
+                    {
+                        spinner.IsActive = false;
+                        spinner.Visibility = Visibility.Collapsed;
+                    }
+                    _cancellationTokenSource = null;
+                }
 
                 NavScanButton.IsEnabled = true;
             }
@@ -526,7 +532,7 @@ namespace WpfApp2
 
             var directories = new Stack<string>();
 
-            var extensions = new[] { ".exe", ".pdf", ".docx", ".pptx",".txt" };
+            var extensions = new[] { ".exe", ".pdf", ".docx", ".pptx", ".txt" };
             directories.Push(rootPath);
 
             while (directories.Count > 0)
@@ -563,7 +569,7 @@ namespace WpfApp2
 
                             var ext = Path.GetExtension(file).ToLower();
 
-                            if(ext == ".exe")
+                            if (ext == ".exe")
                             {
                                 exeFiles.Add((file, fi));
                             }
@@ -605,7 +611,7 @@ namespace WpfApp2
                     try
                     {
 
-                      
+
                         if (_context.AllExes.Any(x => x.FilePath == path && x.SignUpDetail.Id == userId))
                             continue;
 
@@ -616,7 +622,7 @@ namespace WpfApp2
                         var exes = new AllExes
                         {
                             FilePath = path,
-                            UserId= userId,
+                            UserId = userId,
                             SignUpDetail = user,
                             FileName = info.Name,
                             DisplayName = displayName,
@@ -674,7 +680,7 @@ namespace WpfApp2
                     }
                     catch (Exception e)
                     {
-                      Debug.WriteLine(e.Message);
+                        Debug.WriteLine(e.Message);
                     }
                 }
                 _context.SaveChanges();
@@ -689,7 +695,7 @@ namespace WpfApp2
         {
             using ApplicationDbContext _context = new ApplicationDbContext();
 
-           var allExes= _context.AllExes.Where(exes => exes.UserId == userId).ToList();
+            var allExes = _context.AllExes.Where(exes => exes.UserId == userId).ToList();
             try
             {
                 foreach (var exes in allExes)
@@ -712,7 +718,7 @@ namespace WpfApp2
 
                 _context.SaveChanges();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
             }
@@ -745,7 +751,7 @@ namespace WpfApp2
             return $"{len:0.##} {sizes[order]}";
         }
 
-        private void NavSettings_Click(object sender,RoutedEventArgs e)
+        private void NavSettings_Click(object sender, RoutedEventArgs e)
         {
             MainContentFrame.Navigate(new Settings());
         }
@@ -765,6 +771,7 @@ namespace WpfApp2
                     watcher.Dispose();
                 }
                 _watchers.Clear();
+
                 _notifyIcon.Visible = false;
                 _notifyIcon.Dispose();
                 _notifyIcon = null!;
@@ -794,8 +801,8 @@ namespace WpfApp2
 
             if (metroWindow != null)
             {
-                var result = await metroWindow.ShowMessageAsync("Confirm", message, MessageDialogStyle.AffirmativeAndNegative,settings);
-                
+                var result = await metroWindow.ShowMessageAsync("Confirm", message, MessageDialogStyle.AffirmativeAndNegative, settings);
+
                 if (result == MessageDialogResult.Affirmative)
                 {
                     Global.UserId = null;
@@ -805,7 +812,7 @@ namespace WpfApp2
                     Properties.Settings.Default.Save();
 
                     RemoveTrayIcon();
-                 
+
                     await System.Windows.Application.Current.Dispatcher.BeginInvoke(
                                 new Action(() =>
                                 {
@@ -827,7 +834,7 @@ namespace WpfApp2
 
         private async Task<bool> scanMessage(string message)
         {
-            
+
             MahApps.Metro.Controls.MetroWindow metroWindow = null;
             await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -839,7 +846,7 @@ namespace WpfApp2
                 return false;
             }
 
-        
+
             var settings = new MahApps.Metro.Controls.Dialogs.MetroDialogSettings()
             {
                 AffirmativeButtonText = "Yes",
@@ -854,10 +861,10 @@ namespace WpfApp2
                                                   settings)
             );
 
-           
+
             Task<MessageDialogResult> dialogTask = await dispatcherOp;
 
-         
+
             MessageDialogResult result = await dialogTask;
 
             return (result == MessageDialogResult.Affirmative);
@@ -875,7 +882,7 @@ namespace WpfApp2
 
             if (metroWindow == null)
             {
-                return ;
+                return;
             }
 
             var dispatcherOp = System.Windows.Application.Current.Dispatcher.InvokeAsync(
@@ -928,7 +935,7 @@ namespace WpfApp2
                     await System.Windows.Application.Current.Dispatcher.Invoke(async () =>
                     {
                         await scanMessageConfirm($"Saved {totalExes} exe and {totalDocs} files to database.");
-                       
+
                     });
                 }
 
